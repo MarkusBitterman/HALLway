@@ -12,7 +12,7 @@
 
 Not "privacy theater." Not paranoia. Just _practical_ **peace of mind**.
 
-*an OS 📲🖥️💻 + router 🌐🛜 + wallet 🫆👛 + local-first "cloud" 👟🥅*
+*a modern device OS* 📲🖥️💻 + *router* 🌐🛜 + *digital wallet* 🫆👛 + *local-first "cloud"* 👟🥅
 
 ## Project Documentation
 
