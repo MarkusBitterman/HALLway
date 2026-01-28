@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Nix Flake Check",
+      "type": "shell",
+      "command": "nix flake check",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Nix Format",
+      "type": "shell",
+      "command": "nix fmt",
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}
