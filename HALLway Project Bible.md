@@ -38,7 +38,7 @@ That’s the core vibe: **calm, deliberate computing** 🧘🏾‍♀️🧑🏻
 - Makes **secure-by-default** feel normal, not like a punishment 🔐✨  
 - Treats devices like **relationships** with tiers *(pro → acquaintance → friend → homie → family)* instead of one giant flat network 🌐  
 - Makes **access control understandable**, not “go read a 400-page firewall grimoire” 📜🧙  
-- Builds your home setup like a **well-lit hallway with doors** 🏡🚪🔐, not a haunted house of full mystery devices and broken _Windows_ 🏚️🪟👻  
+- Builds your home setup like a **well-lit hallway with doors** 🏡🚪🔐, not a haunted house of full mystery devices and _broken Windows_ 🏚️🪟👻😭😿🦠
 
 ---
 
