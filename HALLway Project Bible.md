@@ -6,7 +6,7 @@ HALLway is an operating system stack — and a whole way of doing computing — 
 
 Not “privacy theater.” Not survivalist paranoia. Just **practical peace of mind**
 
-a modern device OS + router + wallet + local-first “cloud” that treats the public internet like what it often is…
+- *a modern device OS* 📲🖥️💻 + *router* 🌐🛜 + *digital wallet* 🫆👛 + *local-first "cloud"* 👟🥅 that treats the public internet 🌐 like *what it often is…* 🤮🦠💉😷
 
 ## The Dirty Internet Sewer Pipe 🕳️🧫🦠🚇™️
 
