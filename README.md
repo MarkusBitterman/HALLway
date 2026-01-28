@@ -2,7 +2,9 @@
 
 ## Table of Contents
 - [Overview](#overview)
+- [Getting Started](#getting-started)
 - [Project Documentation](#project-documentation)
+- [Contributing](#contributing)
 
 ## Overview
 
@@ -14,6 +16,40 @@ Not "privacy theater." Not paranoia. Just _practical_ **peace of mind**.
 
 - *a modern device OS* 📲🖥️💻 + *router* 🌐🛜 + *digital wallet* 🫆👛 + *local-first "cloud"* 👟🥅 that treats the public internet 🌐 like *what it often is…* 🤮🦠💉😷
 
+## Getting Started
+
+### Prerequisites
+
+- [Nix](https://nixos.org/) with flakes enabled
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/MarkusBitterman/HALLway.git
+cd HALLway
+
+# Enter the development shell
+nix develop
+
+# Validate the flake
+nix flake check
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
+
 ## Project Documentation
 
-For comprehensive project details, see the [HALLway Project Bible](HALLway%20Project%20Bible.md).
+- [HALLway Project Bible](HALLway%20Project%20Bible.md) — Comprehensive project vision and details
+- [Contributing Guide](CONTRIBUTING.md) — How to contribute to HALLway
+- [Development Tools](docs/dev-tools.md) — Tools and workflows for development
+
+## Contributing
+
+We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) before getting started.
+
+### Quick Links
+
+- [Dev Environment Quickstart](CONTRIBUTING.md#dev-environment-quickstart)
+- [Working with Copilot](CONTRIBUTING.md#working-with-copilot)
+- [Code Style and Formatting](CONTRIBUTING.md#code-style-and-formatting)

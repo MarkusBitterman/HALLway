@@ -4,3 +4,25 @@ result-*
 
 # Ignore automatically generated direnv output
 .direnv
+
+# Local direnv configuration (created by user for automatic shell activation)
+.envrc
+
+# Nix flake lock (tracked, but ignore local modifications)
+# flake.lock is intentionally tracked
+
+# Editor artifacts
+*.swp
+*.swo
+*~
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local environment overrides
+.env
+.env.local
