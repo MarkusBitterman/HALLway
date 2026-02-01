@@ -1,0 +1,198 @@
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║  HALLway - Host: 2600AD                                                   ║
+# ║  Atari VCS 800 Gaming/Media Workstation                                   ║
+# ║  https://github.com/markusbittermang/hallway                              ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
+{ config, pkgs, lib, ... }:
+
+{
+  imports = [
+    ./hardware-configuration.nix
+  ];
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BOOT
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.kernelPackages = pkgs.linuxPackages_zen;
+  boot.resumeDevice = "/dev/mapper/cryptswap";
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ZFS
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  services.zfs = {
+    trim.enable = true;
+    autoScrub.enable = true;
+  };
+
+  zramSwap = {
+    enable = true;
+    memoryPercent = 50;
+  };
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # NETWORKING
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  networking.hostId = "ad42069f";  # Required for ZFS
+  networking.hostName = "2600AD";
+  
+  systemd.network.enable = true;
+  systemd.network.networks."10-lan" = {
+    matchConfig.Name = "en*";
+    networkConfig.DHCP = "yes";
+  };
+  
+  networking.firewall.enable = true;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # NIX
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  nix.settings = {
+    auto-optimise-store = true;
+    experimental-features = [ "nix-command" "flakes" ];
+  };
+  nixpkgs.config.allowUnfree = true;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # LOCALIZATION
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  time.timeZone = "America/Chicago";
+  i18n.defaultLocale = "en_US.UTF-8";
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # ENVIRONMENT
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  
+  environment.systemPackages = with pkgs; [
+    nano
+    agenix
+  ];
+
+  fonts.packages = with pkgs; [
+    corefonts
+  ];
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # AUDIO & BLUETOOTH
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  services.pipewire = {
+    enable = true;
+    pulse.enable = true;
+  };
+
+  hardware.bluetooth = {
+    enable = true;
+    powerOnBoot = true;
+  };
+  services.blueman.enable = true;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SECURITY
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  security.polkit.enable = true;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PROGRAMS
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  programs = {
+    mtr.enable = true;
+    zsh.enable = true;
+    gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+    };
+    gamescope = {
+      enable = true;
+      capSysNice = true;
+    };
+    steam = {
+      enable = true;
+      gamescopeSession.enable = true;
+      protontricks.enable = true;
+    };
+  };
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SERVICES
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  services.openssh.enable = true;
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # USERS (via HALLway roles module)
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  roles.users.bittermang = {
+    description = "Matthew Hall";
+    uid = 1000;
+    
+    extraGroups = [ 
+      "wheel"
+      "audio" 
+      "video" 
+      "input"
+      "gamemode"
+    ];
+    
+    groups = [
+      "developers"
+      "sysadmin"
+      "desktop"
+      "gaming"
+      "images-viewing"
+      "images-editing"
+      "music-listening"
+      "music-production"
+      "music-mixing"
+      "music-management"
+      "video-viewing"
+      "video-production"
+      "video-editing"
+      "web"
+      "communication"
+      "office"
+    ];
+    
+    extraPackages = with pkgs; [
+      unityhub
+      blender
+    ];
+  };
+
+  roles.users.guest = {
+    description = "Guest Session";
+    uid = 1001;
+    shell = pkgs.bash;
+    isGuest = true;
+    guestTmpfsSize = "2G";
+    
+    extraGroups = [ "audio" "video" ];
+    
+    groups = [
+      "desktop"
+      "web"
+      "images-viewing"
+      "video-viewing"
+      "music-listening"
+      "gaming"
+    ];
+  };
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # SYSTEM
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  system.stateVersion = "25.11";
+}

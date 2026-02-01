@@ -42,7 +42,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
 
 - [HALLway Project Bible](HALLway%20Project%20Bible.md) — Comprehensive project vision and details
 - [Contributing Guide](CONTRIBUTING.md) — How to contribute to HALLway
+- [Committing Guide](COMMITTING.md) — How to commit changes to the repository
 - [Development Tools](docs/dev-tools.md) — Tools and workflows for development
+
+### Host Documentation
+
+- **2600AD** (Atari VCS 800) — First reference implementation (v0.0.1)
+  - [Installation Guide](hosts/2600AD/INSTALLATION.md) — Two-stage USB-bridged installation with ZFS on LUKS
+  - [Overview](hosts/2600AD/README.md) — Host-specific configuration details
 
 ## Contributing
 
