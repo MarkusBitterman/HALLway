@@ -134,7 +134,7 @@ let
     ];
 
     music-management = with pkgs; [
-      musicbrainz-picard
+      picard #MusicBrainz
       easytag
       soundconverter
     ];
@@ -156,7 +156,7 @@ let
     ];
 
     video-editing = with pkgs; [
-      kdenlive
+      kdePackages.kdenlive
       shotcut
       handbrake
       ffmpeg
@@ -182,7 +182,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
     
     office = with pkgs; [
-      onlyoffice-bin
+      onlyoffice-desktopeditors
       obsidian
       zathura
     ];
@@ -194,7 +194,7 @@ let
     desktop = with pkgs; [
       kitty
       pcmanfm
-      rofi-wayland
+      rofi
       waybar
       dunst
       hyprpaper

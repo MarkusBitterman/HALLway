@@ -18,7 +18,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages_zen;
-  boot.resumeDevice = "/dev/mapper/cryptswap";
+  boot.resumeDevice = "/dev/mapper/stella";  # Encrypted swap for hibernation
 
   # ═══════════════════════════════════════════════════════════════════════════
   # ZFS
@@ -71,6 +71,12 @@
   # ═══════════════════════════════════════════════════════════════════════════
 
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  
+  # XDG portal paths for Home Manager
+  environment.pathsToLink = [
+    "/share/applications"
+    "/share/xdg-desktop-portal"
+  ];
   
   environment.systemPackages = with pkgs; [
     nano

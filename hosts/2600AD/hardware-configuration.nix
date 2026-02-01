@@ -8,22 +8,33 @@
   # ZFS filesystem support
   boot.supportedFilesystems = [ "zfs" ];
 
-  # LUKS encrypted devices (Atari-themed labels for clarity)
-  # Note: TPM2 auto-unlock is enrolled via systemd-cryptenroll after install
-  boot.initrd.luks.devices."cryptswap" = {
-    device = "/dev/disk/by-label/STELLA";  # Encrypted swap (named after the Atari 2600 chip)
+  # ─────────────────────────────────────────────────────────────────────────
+  # LUKS Encrypted Devices (Atari-themed labels)
+  # ─────────────────────────────────────────────────────────────────────────
+  # Layout:
+  #   - /dev/sda (1TB SSD) → LUKS "CARTRIDGE" → ZFS pool "cartridge"
+  #   - /dev/mmcblk0p1 (2GB eMMC) → FAT32 "/boot" labeled "COMBAT"
+  #   - /dev/mmcblk0p2 (27GB eMMC) → LUKS "STELLA" → encrypted swap
+  #
+  # TPM2 auto-unlock can be enrolled after install via systemd-cryptenroll
+
+  # Encrypted swap on eMMC (STELLA = Atari 2600 chip name)
+  boot.initrd.luks.devices."stella" = {
+    device = "/dev/disk/by-label/STELLA";
     # For TPM2 auto-unlock, add:
     # crypttabExtraOpts = [ "tpm2-device=auto" ];
   };
-  boot.initrd.luks.devices."cryptroot" = {
-    device = "/dev/disk/by-label/COMBAT";  # Encrypted root (named after the pack-in game)
+
+  # Encrypted root on SSD (CARTRIDGE = game cartridge)
+  boot.initrd.luks.devices."cartridge_crypt" = {
+    device = "/dev/disk/by-label/CARTRIDGE";
     # For TPM2 auto-unlock, add:
     # crypttabExtraOpts = [ "tpm2-device=auto" ];
   };
   
-  # Boot partition on eMMC (FAT32, labeled BOOT)
+  # Boot partition on eMMC (FAT32, labeled COMBAT = Atari pack-in game)
   fileSystems."/boot" = {
-    device = "/dev/disk/by-label/BOOT";
+    device = "/dev/disk/by-label/COMBAT";
     fsType = "vfat";
     options = [ "nofail" "noatime" ];
     neededForBoot = true;
@@ -46,8 +57,9 @@
   # Encrypted swap on eMMC partition 2
   swapDevices = [
     { 
-      device = "/dev/mapper/cryptswap";
+      device = "/dev/mapper/stella";
       # randomEncryption.enable = true; # Alternative: re-encrypt on each boot
+      # ^ this would disable hibernation; keeping it crypted with TPM2 lets us hibernate
     }
   ];
 
@@ -77,11 +89,6 @@
   ];
   hardware.graphics.enable32Bit = true;
   hardware.amdgpu.initrd.enable = true;
-  hardware.amdgpu.amdvlk = {
-    enable = true;
-    support32Bit.enable = true;
-    supportExperimental.enable = true;
-  };
 
   # PCIe ASPM for power saving (optional)
   powerManagement.cpuFreqGovernor = lib.mkDefault "ondemand";

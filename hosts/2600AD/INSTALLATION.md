@@ -1,61 +1,91 @@
-# 2600AD: Two-Stage Installation Guide
+# 2600AD: Installation Guide
 
 **Target Hardware**: Atari VCS 800 with upgraded 1TB SSD  
-**Current Constraint**: 32GB eMMC (running NixOS), 1TB SSD (empty), USB installer  
-**Strategy**: Two-stage install with USB bridge
+**Install From**: NixOS Graphical Installer USB  
+**Strategy**: USB-based installation with ZFS on LUKS
+
+---
+
+## Disk Layout
+
+| Device | Size | Purpose | Label | Filesystem |
+|--------|------|---------|-------|------------|
+| `/dev/sda` | 1TB SSD | Encrypted root (LUKS → ZFS) | `CARTRIDGE` | LUKS2 → ZFS |
+| `/dev/mmcblk0p1` | 2GB eMMC | EFI boot partition | `COMBAT` | FAT32 |
+| `/dev/mmcblk0p2` | ~27GB eMMC | Encrypted swap (LUKS) | `STELLA` | LUKS2 → swap |
+
+**Naming Theme**: Atari 2600 references
+- **CARTRIDGE** = Game cartridge (where the game/OS lives)
+- **COMBAT** = Pack-in game (first thing you boot)
+- **STELLA** = The 2600's CPU chip (handles the work)
 
 ---
 
 ## Pre-Install Checklist
 
-- [ ] HALLway flake is committed to GitHub (or accessible via USB)
 - [ ] NixOS installer USB created and tested
-- [ ] Current system backed up (optional but recommended)
-- [ ] Disk layout verified with `sudo fdisk -l`
+- [ ] Disk layout planned (see above)
+- [ ] LUKS passphrases chosen and recorded in vault
+- [ ] Network access available (for GitHub clone)
 
 ---
 
-## Stage 1: Boot USB & Install NixOS to SSD
+## Step 1: Boot from USB Installer
 
-**Duration**: ~45-60 minutes  
-**Running From**: NixOS Installer USB (sdc)  
-**Target**: `/dev/sda` (1TB SSD)  
-**Why USB?**: The installer has ZFS kernel modules pre-built for its kernel; your current eMMC system can't load ZFS dynamically.
-
-### Step 1.1: Boot from USB
-
-1. Insert NixOS installer USB into a USB port
-2. Power cycle or reboot the Atari VCS 800
-3. During boot, press **Esc** (or your BIOS key) to enter boot menu
-4. Select the USB device (likely `sdc`)
+1. Insert NixOS installer USB
+2. Power on/reboot the Atari VCS 800
+3. Press **Esc** during boot to enter boot menu
+4. Select USB device
 5. Boot into NixOS live environment
 
-### Step 1.2: Verify Disk Recognition
+### Verify Disks
 
 ```bash
-# List disks
 sudo fdisk -l
 
-# You should see:
-# - /dev/mmcblk0 (32GB eMMC, currently running - DO NOT TOUCH)
-# - /dev/sda (1TB SSD, target for installation)
-# - /dev/sdb (58GB USB home - can ignore)
-# - /dev/sdc (USB installer you just booted from - can ignore)
+# Expected:
+# /dev/sda      - 1TB SSD (target for CARTRIDGE)
+# /dev/mmcblk0  - 32GB eMMC (for COMBAT boot + STELLA swap)
+# /dev/sdc      - USB installer (ignore)
 ```
 
-### Step 1.3: Prepare SSD with LUKS + ZFS
+---
+
+## Step 2: Partition eMMC
+
+```bash
+# Wipe eMMC partition table
+sudo sgdisk --zap-all /dev/mmcblk0
+
+# Create partitions:
+#   p1: 2GB EFI boot (COMBAT)
+#   p2: Remaining ~27GB encrypted swap (STELLA)
+sudo sgdisk -n 1:0:+2G -t 1:ef00 -c 1:"COMBAT" /dev/mmcblk0
+sudo sgdisk -n 2:0:0 -t 2:8200 -c 2:"STELLA" /dev/mmcblk0
+
+# Format boot partition
+sudo mkfs.fat -F 32 -n COMBAT /dev/mmcblk0p1
+
+# Setup encrypted swap
+sudo cryptsetup luksFormat --type luks2 --label STELLA /dev/mmcblk0p2
+sudo cryptsetup open /dev/disk/by-label/STELLA stella
+sudo mkswap -L SWAP /dev/mapper/stella
+```
+
+---
+
+## Step 3: Prepare SSD with LUKS + ZFS
 
 ⚠️ **WARNING: This will erase `/dev/sda` completely**
 
 ```bash
 # Create LUKS encrypted container
-# Set a strong passphrase - WRITE IT DOWN IN YOUR VAULT
 sudo cryptsetup luksFormat --type luks2 --label CARTRIDGE /dev/sda
 
 # Open the encrypted container
 sudo cryptsetup open /dev/disk/by-label/CARTRIDGE cartridge_crypt
 
-# Create ZFS pool "cartridge"
+# Create ZFS pool
 sudo zpool create -f \
   -o ashift=12 \
   -o autotrim=on \
@@ -69,7 +99,7 @@ sudo zpool create -f \
   -O mountpoint=none \
   cartridge /dev/mapper/cartridge_crypt
 
-# Create ZFS datasets
+# Create ZFS datasets (with optimized recordsizes)
 sudo zfs create -o mountpoint=legacy -o recordsize=128K cartridge/root
 sudo zfs create -o mountpoint=legacy -o recordsize=1M cartridge/home
 sudo zfs create -o mountpoint=legacy -o recordsize=16K cartridge/nix
@@ -81,380 +111,161 @@ sudo zpool status cartridge
 sudo zfs list -t filesystem
 ```
 
-### Step 1.4: Mount Staging Area
+---
+
+## Step 4: Mount Everything
 
 ```bash
-# Create mount point
-sudo mkdir -p /mnt/newroot/{home,nix,boot}
+# Create mount structure
+sudo mkdir -p /mnt/2600AD/{boot,home,nix}
 
 # Mount ZFS datasets
-sudo mount -t zfs cartridge/root /mnt/newroot
-sudo mount -t zfs cartridge/home /mnt/newroot/home
-sudo mount -t zfs cartridge/nix /mnt/newroot/nix
+sudo mount -t zfs cartridge/root /mnt/2600AD
+sudo mkdir -p /mnt/2600AD/{boot,home,nix}
+sudo mount -t zfs cartridge/home /mnt/2600AD/home
+sudo mount -t zfs cartridge/nix /mnt/2600AD/nix
 
-# Verify mounts
-mount | grep cartridge
+# Mount boot partition
+sudo mount /dev/disk/by-label/COMBAT /mnt/2600AD/boot
+
+# Enable swap
+sudo swapon /dev/mapper/stella
+
+# Verify
+mount | grep 2600AD
+swapon --show
 ```
 
-### Step 1.5: Get HALLway Config
+---
 
-**Option A: Clone from GitHub** (recommended)
+## Step 5: Clone HALLway Configuration
 
 ```bash
-sudo mkdir -p /mnt/newroot/etc/nixos
-cd /mnt/newroot/etc/nixos
+sudo mkdir -p /mnt/2600AD/etc/nixos
+cd /mnt/2600AD/etc/nixos
 sudo git clone https://github.com/MarkusBitterman/HALLway.git .
 ```
 
-**Option B: From USB Device** (if offline)
+---
+
+## Step 6: Install NixOS
 
 ```bash
-# Find your USB device
-lsblk
-
-# Mount it (adjust sdb1 if needed)
-sudo mkdir -p /mnt/usb
-sudo mount /dev/sdb1 /mnt/usb
-
-# Copy HALLway
-sudo mkdir -p /mnt/newroot/etc/nixos
-sudo cp -r /mnt/usb/hallway/* /mnt/newroot/etc/nixos/
-
-sudo umount /mnt/usb
-```
-
-### Step 1.6: Install NixOS to SSD
-
-```bash
-# Perform the installation
 sudo nixos-install \
-  --root /mnt/newroot \
-  --flake '/mnt/newroot/etc/nixos#2600AD' \
-  --no-root-passwd
+  --root /mnt/2600AD \
+  --flake /mnt/2600AD/etc/nixos#2600AD \
+  --no-root-password
 
-# When prompted:
-# - Enter password for bittermang user
-# - Confirm root gets no password (we'll set it later)
+# When prompted: Set password for bittermang user
 ```
 
-**If installation fails**, check:
-```bash
-ls -la /mnt/newroot/etc/nixos/
-ls -la /mnt/newroot/etc/nixos/hosts/2600AD/
-sudo nixos-generate-config --root /mnt/newroot  # Generate fallback config
-```
-
-### Step 1.7: Verify Installation
-
-```bash
-# Check that system was installed
-ls -la /mnt/newroot/etc/nixos
-ls -la /mnt/newroot/boot
-ls -la /mnt/newroot/nix/store | head
-
-# Verify no bootloader was installed yet (we'll do that in Stage 2)
-echo "✅ Stage 1 Complete - SSD has full NixOS installation!"
-```
-
-### Step 1.8: Unmount & Stay on USB
-
-```bash
-# Do NOT reboot yet - we're staying on USB for Stage 2
-
-# Just unmount and export
-sudo umount -R /mnt/newroot
-sudo zpool export cartridge
-sudo cryptsetup close cartridge_crypt
-
-# Verify
-mount | grep cartridge
-
-echo "✅ SSD safely prepared - Ready for Stage 2"
-```
+**If errors occur**, check `error.txt` in the repo for common fixes.
 
 ---
 
-## Stage 2: Reformat eMMC & Install Bootloader
-
-**Duration**: ~20-30 minutes  
-**Running From**: USB Installer (still running)  
-**Targets**: `/dev/mmcblk0p1` (boot), `/dev/mmcblk0p2` (swap)
-
-### Step 2.1: Verify SSD Installation
+## Step 7: Finalize
 
 ```bash
-# Check that SSD has the full installation from Stage 1
-sudo cryptsetup open /dev/disk/by-label/CARTRIDGE cartridge_crypt
-
-# Import pool
-sudo zpool import cartridge
-
-# Verify datasets exist
-sudo zfs list cartridge
-sudo zfs list -r cartridge
-
-# Mount briefly to confirm NixOS is installed
-sudo mount -t zfs cartridge/root /mnt
-ls -la /mnt/etc/nixos/  # Should see flake.nix, hosts/, modules/, etc.
-sudo umount /mnt
-
-# Keep pool imported but unmounted
-sudo zpool export cartridge
-```
-
-### Step 2.2: Wipe & Repartition eMMC (DANGER ZONE)
-
-⚠️ **This destroys the current eMMC OS - but USB keeps us alive and SSD has backup**
-
-```bash
-# Wipe eMMC partition table completely
-sudo sgdisk --zap-all /dev/mmcblk0
-
-# Create new partitions with Atari labels:
-#   p1: 2GB EFI boot (labeled COMBAT)
-#   p2: Remaining ~30GB encrypted swap (labeled STELLA)
-sudo sgdisk -n 1:0:+2G -t 1:ef00 -c 1:"COMBAT" /dev/mmcblk0
-sudo sgdisk -n 2:0:0 -t 2:8200 -c 2:"STELLA" /dev/mmcblk0
-
-# Verify the new layout
-sudo sgdisk -p /dev/mmcblk0
-```
-
-Expected output:
-```
-Number  Start (sector)    End (sector)  Size       Code  Name
-   1           2048        4196351   2.0 GiB   EF00  COMBAT
-   2        4196352       67108830   30.0 GiB  8200  STELLA
-```
-
-### Step 2.3: Format Boot & Swap Partitions
-
-```bash
-# Format boot partition as FAT32
-sudo mkfs.fat -F 32 -n COMBAT /dev/mmcblk0p1
-
-# Create encrypted swap with LUKS2
-sudo cryptsetup luksFormat --type luks2 --label STELLA /dev/mmcblk0p2
-
-# When prompted, enter passphrase for swap
-# (Can be same or different from CARTRIDGE passphrase)
-
-# Open the swap
-sudo cryptsetup open /dev/disk/by-label/STELLA stella
-
-# Format swap
-sudo mkswap -L SWAP /dev/mapper/stella
-```
-
-### Step 2.4: Mount Everything Fresh
-
-```bash
-# Create temporary mount point
-sudo mkdir -p /mnt/{boot,nix,home}
-
-# Reopen SSD pool
-sudo cryptsetup open /dev/disk/by-label/CARTRIDGE cartridge_crypt
-sudo zpool import cartridge
-
-# Mount ZFS datasets from SSD
-sudo mount -t zfs cartridge/root /mnt
-sudo mount -t zfs cartridge/home /mnt/home
-sudo mount -t zfs cartridge/nix /mnt/nix
-
-# Mount newly formatted boot partition
-sudo mount /dev/disk/by-label/COMBAT /mnt/boot
-
-# Activate swap
-sudo swapon /dev/mapper/stella
-
-# Verify all mounts
-mount | grep -E "/mnt|cartridge"
-swapon --show
-```
-
-### Step 2.5: Install Bootloader to eMMC
-
-```bash
-# The HALLway configuration already specifies GRUB
-# We just need to let nixos-install generate it
-
-cd /mnt/etc/nixos
-
-# Install the bootloader to eMMC
-sudo nixos-install \
-  --root /mnt \
-  --flake '.#2600AD' \
-  --install-grub
-
-# Set root password when prompted
-```
-
-### Step 2.6: Enroll TPM2 (Optional but Recommended)
-
-```bash
-# Chroot into new system to enroll TPM2
-sudo nixos-enter --root /mnt
-
-# Inside chroot:
-systemd-cryptenroll --tpm2-device=auto /dev/disk/by-label/CARTRIDGE
-systemd-cryptenroll --tpm2-device=auto /dev/disk/by-label/STELLA
-
-# Verify enrollment
-systemd-cryptenroll /dev/disk/by-label/CARTRIDGE
-
-# Exit chroot
-exit
-```
-
-### Step 2.7: Unmount & Prepare for Final Reboot
-
-```bash
-# Unmount everything cleanly
-sudo umount -R /mnt
+# Unmount everything
+sudo umount -R /mnt/2600AD
 sudo swapoff /dev/mapper/stella
+sudo zpool export cartridge
 sudo cryptsetup close stella
 sudo cryptsetup close cartridge_crypt
-sudo zpool export cartridge
 
-# Verify everything is unmounted
-mount | grep cartridge
-
-echo "✅ Stage 2 Complete - eMMC has bootloader, SSD has full system!"
-```
-
-### Step 2.8: Final Reboot
-
-```bash
+# Reboot
 sudo reboot
 ```
 
-**When you see the prompt:**
-1. Remove the USB installer
-2. Press Enter to continue boot
-
-**First boot should:**
-1. Boot from eMMC COMBAT partition (EFI)
-2. Prompt for CARTRIDGE LUKS passphrase (or auto-unlock if TPM2 enrolled)
-3. Mount root filesystem from SSD cartridge pool
-4. Boot into NixOS with your HALLway configuration
+Remove USB when prompted.
 
 ---
 
-## Post-Install Verification
+## First Boot
 
-After first boot into new system:
+1. System boots from eMMC (COMBAT partition)
+2. Enter LUKS passphrase for CARTRIDGE (SSD)
+3. Enter LUKS passphrase for STELLA (swap)
+4. NixOS boots with HALLway configuration
+
+---
+
+## Post-Install: TPM2 Auto-Unlock (Optional)
+
+Enroll TPM2 to avoid typing passphrases on every boot:
 
 ```bash
-# Verify disk layout
-sudo fdisk -l
+# Enroll both LUKS volumes
+sudo systemd-cryptenroll --tpm2-device=auto /dev/disk/by-label/CARTRIDGE
+sudo systemd-cryptenroll --tpm2-device=auto /dev/disk/by-label/STELLA
 
-# Check ZFS
-sudo zpool status cartridge
-sudo zfs list
-
-# Check mounted filesystems
-mount | grep -E "cartridge|SWAP"
-
-# Verify swap
-swapon --show
-
-# Test gaming (optional)
-# Launch a game!
+# Verify enrollment
+sudo systemd-cryptenroll /dev/disk/by-label/CARTRIDGE
 ```
 
----
-
-## Passphrase Reference Card
-
-Keep this safe (or in your password manager):
-
-```
-╔════════════════════════════════════════════════════════════╗
-║  2600AD PASSPHRASES                                        ║
-├════════════════════════════════════════════════════════════┤
-║  CARTRIDGE (SSD root LUKS):      ________________________  ║
-║  STELLA (eMMC swap LUKS):        ________________________  ║
-║  root user:                      ________________________  ║
-║  bittermang user:                ________________________  ║
-╚════════════════════════════════════════════════════════════╝
+Then uncomment the TPM2 lines in `hardware-configuration.nix`:
+```nix
+boot.initrd.luks.devices."stella".crypttabExtraOpts = [ "tpm2-device=auto" ];
+boot.initrd.luks.devices."cartridge_crypt".crypttabExtraOpts = [ "tpm2-device=auto" ];
 ```
 
 ---
 
 ## Troubleshooting
 
-### "cryptsetup: command not found"
+### "ZFS pool already imported"
 ```bash
-nix-shell -p cryptsetup zfs gitMinimal
+sudo zpool export cartridge
 ```
 
-### "ZFS pool already exists"
+### "Mount point busy"
 ```bash
-sudo zpool destroy cartridge
-# Then retry creating the pool
+sudo umount -R /mnt/2600AD
+sudo fuser -km /mnt/2600AD  # Kill processes using mount
 ```
 
-### "Mount already in use"
+### "LUKS device already open"
 ```bash
-sudo umount -R /mnt
-sudo umount -R /newroot
+sudo cryptsetup close cartridge_crypt
+sudo cryptsetup close stella
 ```
 
-### "Bootloader installation failed"
-```bash
-# Remount and try again
-cd /mnt/etc/nixos
-sudo nixos-install --flake .#2600AD --repair
+### Home Manager XDG Portal Error
+Already fixed in `hosts/2600AD/configuration.nix`:
+```nix
+environment.pathsToLink = [ "/share/applications" "/share/xdg-desktop-portal" ];
 ```
 
-### "Can't boot from eMMC after Stage 2"
-Boot from USB again, verify:
-```bash
-sudo mount -t zfs cartridge/root /mnt
-cd /mnt/boot
-ls -la
-```
-
-Should see kernel, initrd, etc. If empty, bootloader didn't install.
+### Package Renames/Removals
+Check `error.txt` for known fixes. Common ones:
+- `rofi-wayland` → `rofi`
+- `onlyoffice-bin` → `onlyoffice-desktopeditors`
+- `amdvlk` → removed (RADV is default)
 
 ---
 
-## Space Optimization Tips
+## Passphrase Reference Card
 
-If running low on space during installation:
-
-```bash
-# Use gitMinimal instead of git
-nix-shell -p gitMinimal
-
-# Clean nix store before Stage 2
-sudo nix-collect-garbage -d
-
-# Check current usage
-df -h
+```
+╔════════════════════════════════════════════════════════════╗
+║  2600AD PASSPHRASES                                        ║
+├────────────────────────────────────────────────────────────┤
+║  CARTRIDGE (SSD root):     ______________________________  ║
+║  STELLA (eMMC swap):       ______________________________  ║
+║  bittermang user:          ______________________________  ║
+╚════════════════════════════════════════════════════════════╝
 ```
 
 ---
 
-## Reference: Disk Layout After Installation
+## Final Disk Layout
 
 ```
-eMMC (/dev/mmcblk0)               SSD (/dev/sda)
-├─ COMBAT (2GB boot)              └─ CARTRIDGE (LUKS)
-│  └─ EFI files                       └─ cartridge (zpool)
-└─ STELLA (swap, ~28GB)               ├─ root → /
-   └─ SWAP                            ├─ home → /home
-                                      └─ nix → /nix
+eMMC (/dev/mmcblk0)                 SSD (/dev/sda)
+├─ mmcblk0p1 (COMBAT, 2GB)          └─ CARTRIDGE (LUKS2)
+│  └─ FAT32 /boot (EFI)                 └─ cartridge_crypt
+└─ mmcblk0p2 (STELLA, ~27GB)                └─ cartridge (ZFS pool)
+   └─ LUKS2 → stella                            ├─ root → /
+      └─ swap                                   ├─ home → /home
+                                                └─ nix → /nix
 ```
-
----
-
-## Ready to Begin?
-
-1. **Pre-Installation**: Commit HALLway to GitHub or prepare USB with files
-2. **Stage 1**: Run from current system - ✅ This installs NixOS to SSD
-3. **USB Boot**: Reboot into installer
-4. **Stage 2**: Run from USB - ✅ This reformats eMMC and installs bootloader
-5. **Final Boot**: Remove USB, reboot into 2600AD!
-
-Good luck! 🎮
