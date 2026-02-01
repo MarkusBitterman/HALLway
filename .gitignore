@@ -5,6 +5,7 @@ result-*
 # Ignore install logs
 *.log
 install-history.log
+build-history.log
 
 # Ignore automatically generated direnv output
 .direnv

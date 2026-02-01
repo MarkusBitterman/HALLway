@@ -1,0 +1,43 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": false,
+      "**/.direnv": true,
+      "**/result": true,
+      "**/result-*": true
+    },
+    "files.watcherExclude": {
+      "**/.direnv/**": true,
+      "**/result/**": true,
+      "**/result-*/**": true
+    },
+    "terminal.integrated.scrollback": 10000,
+    "files.associations": {
+      "*.nix": "nix",
+      "flake.lock": "json"
+    },
+    "nix.enableLanguageServer": true,
+    "nix.serverPath": "nixd",
+    "[nix]": {
+      "editor.defaultFormatter": "brettm12345.nixfmt-vscode",
+      "editor.formatOnSave": true,
+      "editor.tabSize": 2
+    },
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": false
+  },
+  "extensions": {
+    "recommendations": [
+      "jnoortheen.nix-ide",
+      "brettm12345.nixfmt-vscode",
+      "editorconfig.editorconfig",
+      "github.copilot",
+      "mkhl.direnv"
+    ]
+  }
+}

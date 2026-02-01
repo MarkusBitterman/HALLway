@@ -4,21 +4,27 @@
 # ║  https://github.com/markusbittermang/hallway                              ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 #
-# A NixOS module for role-based package assignment, inspired by Home Manager.
+# A NixOS module for SYSTEM-LEVEL package assignment.
 #
-# Philosophy:
-#   Users are defined by what they DO (roles), not just what they CAN ACCESS.
-#   Package groups represent capabilities, and users inherit packages from
-#   their assigned groups.
+# Philosophy (Updated):
+#   - System packages (roles.users) → Essentials + Steam (library requirements)
+#   - Home Manager → Everything else (dotfiles, DE apps, user programs)
+#
+# Why Steam is system-level:
+#   Steam requires FHS environment + 32-bit libraries that are better managed
+#   at the system level. Most other apps belong in Home Manager for per-user
+#   dotfile control.
 #
 # Usage:
 #   roles.users.bittermang = {
 #     description = "Matthew Hall";
 #     uid = 1000;
-#     groups = [ "developers" "gaming" "desktop" ];
+#     groups = [ "system-core" "gaming-system" ];  # System essentials only
 #     extraGroups = [ "wheel" "audio" "video" ];
-#     extraPackages = [ pkgs.blender ];
 #   };
+#
+#   Then in home/bittermang.nix (Home Manager):
+#     home.packages = with pkgs; [ firefox vscode obs-studio ... ];
 #
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -28,252 +34,74 @@ let
   cfg = config.roles;
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # PACKAGE GROUP DEFINITIONS
+  # SYSTEM-LEVEL PACKAGE GROUPS (Essentials + Steam)
   # ═══════════════════════════════════════════════════════════════════════════
 
   defaultPackageGroups = {
 
     # ─────────────────────────────────────────────────────────────────────────
-    # SYSTEM & DEVELOPMENT
+    # SYSTEM CORE (CLI tools, system services)
     # ─────────────────────────────────────────────────────────────────────────
 
-    developers = with pkgs; [
+    system-core = with pkgs; [
+      # Essential CLI tools
       git
-      gh                    # GitHub CLI
-      neovim
-      vscode                # VS Code (configured via Home Manager)
-      gnumake
-      gcc
-      python3
-      rustup
-      nodejs
-      jq                    # JSON processor
-      ripgrep               # Fast grep
-      fd                    # Fast find
-      tree
-      age
-      gnupg
-    ];
-
-    sysadmin = with pkgs; [
-      htop
-      btop
-      iotop
-      ncdu                  # Disk usage analyzer
-      duf                   # Disk usage (modern df)
-      lsof
-      strace
-      tcpdump
-      nmap
       curl
       wget
       rsync
+      tree
+      htop
       tmux
-      android-tools         # adb, fastboot
+
+      # Encryption/security
+      age
+      gnupg
+
+      # Compression
+      gzip
+      bzip2
+      xz
+      unzip
+      zip
+    ];
+
+    system-dev = with pkgs; [
+      # Development essentials (compilers, build tools)
+      gnumake
+      gcc
+      pkg-config
+
+      # Language runtimes (system-wide for build deps)
+      python3
+      nodejs
+    ];
+
+    system-admin = with pkgs; [
+      # System monitoring
+      iotop
+      lsof
+      strace
+
+      # Networking
+      tcpdump
+      nmap
+
+      # Disk utils
+      ncdu
+      duf
+
+      # Android
+      android-tools
     ];
 
     # ─────────────────────────────────────────────────────────────────────────
-    # GAMING
+    # GAMING (Steam + dependencies - MUST be system-level)
     # ─────────────────────────────────────────────────────────────────────────
 
-    gaming = with pkgs; [
-      steam
-      steamcmd
-      steam-tui
-      minigalaxy            # GOG games
-      itch                  # itch.io client
-      heroic                # Epic/GOG/Amazon launcher
-      gamemode
-      mangohud
-      retroarch
-      winetricks
-      protontricks
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # IMAGES
-    # ─────────────────────────────────────────────────────────────────────────
-
-    images-viewing = with pkgs; [
-      loupe                 # GNOME image viewer
-      gthumb                # Image browser
-    ];
-
-    images-editing = with pkgs; [
-      gimp
-      inkscape
-      krita
-      darktable
-      imagemagick
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # MUSIC & AUDIO
-    # ─────────────────────────────────────────────────────────────────────────
-
-    music-listening = with pkgs; [
-      spotify
-      rhythmbox
-      playerctl
-    ];
-
-    music-production = with pkgs; [
-      ardour
-      lmms
-      surge-XT
-      vital
-      calf
-      lsp-plugins
-      qsynth
-    ];
-
-    music-mixing = with pkgs; [
-      carla
-      easyeffects
-      helvum
-      qpwgraph
-    ];
-
-    music-management = with pkgs; [
-      picard #MusicBrainz
-      easytag
-      soundconverter
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # VIDEO
-    # ─────────────────────────────────────────────────────────────────────────
-
-    video-viewing = with pkgs; [
-      mpv
-      vlc
-      celluloid
-    ];
-
-    video-production = with pkgs; [
-      obs-studio
-      obs-studio-plugins.wlrobs
-      obs-studio-plugins.obs-pipewire-audio-capture
-    ];
-
-    video-editing = with pkgs; [
-      kdePackages.kdenlive
-      shotcut
-      handbrake
-      ffmpeg
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # WEB & COMMUNICATION
-    # ─────────────────────────────────────────────────────────────────────────
-
-    web = with pkgs; [
-      firefox
-      chromium
-    ];
-
-    communication = with pkgs; [
-      discord
-      element-desktop
-      signal-desktop
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # OFFICE & PRODUCTIVITY
-    # ─────────────────────────────────────────────────────────────────────────
-
-    office = with pkgs; [
-      onlyoffice-desktopeditors
-      obsidian
-      zathura
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # DESKTOP ENVIRONMENT
-    # ─────────────────────────────────────────────────────────────────────────
-
-    desktop = with pkgs; [
-      kitty
-      pcmanfm
-      rofi
-      waybar
-      dunst
-      hyprpaper
-      pavucontrol
-      polkit_gnome
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # GNOME APPS (Fine-grained control)
-    # ─────────────────────────────────────────────────────────────────────────
-
-    gnome-core = with pkgs.gnome; [
-      gnome-shell
-      gnome-control-center
-      gnome-tweaks
-      nautilus
-      gnome-terminal
-      gnome-system-monitor
-    ];
-
-    gnome-utils = with pkgs.gnome; [
-      gnome-calculator
-      gnome-clocks
-      gnome-weather
-      gnome-maps
-      gnome-calendar
-      gnome-contacts
-    ];
-
-    gnome-media = with pkgs.gnome; [
-      totem              # Video player
-      cheese             # Webcam
-      snapshot           # Camera
-    ];
-
-    gnome-productivity = with pkgs.gnome; [
-      gnome-text-editor
-      evince             # Document viewer
-      file-roller        # Archive manager
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # KDE PLASMA APPS (Fine-grained control)
-    # ─────────────────────────────────────────────────────────────────────────
-
-    plasma-core = with pkgs.kdePackages; [
-      plasma-workspace
-      plasma-systemmonitor
-      konsole
-      dolphin
-      kate
-      okular
-    ];
-
-    plasma-utils = with pkgs.kdePackages; [
-      kcalc
-      kclock
-      kweather
-      korganizer
-      kaddressbook
-    ];
-
-    plasma-media = with pkgs.kdePackages; [
-      elisa              # Music player
-      kamera             # Camera
-    ];
-
-    plasma-productivity = with pkgs.kdePackages; [
-      kwrite
-      ark                # Archive manager
-      spectacle          # Screenshots
-      gwenview           # Image viewer
-    ];
-
-    plasma-network = with pkgs.kdePackages; [
-      kdeconnect
-      krfb               # Desktop sharing
-      krdc               # Remote desktop client
+    gaming-system = with pkgs; [
+      steam                 # FHS env + 32-bit libs
+      gamemode              # System service
+      mangohud              # Library injection
     ];
   };
 

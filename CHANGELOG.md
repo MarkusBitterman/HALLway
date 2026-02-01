@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Mix-and-match DE apps without full environment bloat
 - **shell.nix**: Development environment for git, gh, nixd, nixfmt, agenix
 - **Install Logging**: Versioned `install-history.log` with timestamps
-- **README Documentation**: 
+- **README Documentation**:
   - Three-line philosophy: `groups` (software), `extraGroups` (hardware), `extraPackages` (personal)
   - Usage examples with and without Home Manager
   - Methods for excluding unwanted apps

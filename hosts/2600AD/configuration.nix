@@ -151,28 +151,18 @@
       "gamemode"
     ];
 
+    # System-level packages ONLY (essentials + Steam)
+    # Everything else goes in home/bittermang.nix via Home Manager
     groups = [
-      "developers"
-      "sysadmin"
-      "desktop"
-      "gaming"
-      "images-viewing"
-      "images-editing"
-      "music-listening"
-      "music-production"
-      "music-mixing"
-      "music-management"
-      "video-viewing"
-      "video-production"
-      "video-editing"
-      "web"
-      "communication"
-      "office"
+      "system-core"      # CLI essentials
+      "system-dev"       # Build tools
+      "system-admin"     # System monitoring
+      "gaming-system"    # Steam + gamemode
     ];
 
+    # One-off system packages not in groups
     extraPackages = with pkgs; [
-      unityhub
-      blender
+      # Nothing here - use Home Manager for user apps
     ];
   };
 
@@ -185,13 +175,10 @@
 
     extraGroups = [ "audio" "video" ];
 
+    # Guest gets system essentials + Steam only
     groups = [
-      "desktop"
-      "web"
-      "images-viewing"
-      "video-viewing"
-      "music-listening"
-      "gaming"
+      "system-core"
+      "gaming-system"
     ];
   };
 
