@@ -61,9 +61,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
 ## Project Documentation
 
 - [HALLway Project Bible](HALLway%20Project%20Bible.md) — Comprehensive project vision and details
+- [Architecture & File Structure](docs/ARCHITECTURE.md) — Repository organization and how components work together
 - [Contributing Guide](CONTRIBUTING.md) — How to contribute to HALLway
 - [Committing Guide](COMMITTING.md) — How to commit changes to the repository
 - [Development Tools](docs/dev-tools.md) — Tools and workflows for development
+- [VS Code Tasks](docs/VSCODE_TASKS.md) — Pre-configured tasks for installation and development
 - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) — Solutions to common issues
 
 ### Host Documentation
