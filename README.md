@@ -1,5 +1,7 @@
 # HALLway
 
+> **📖 New to HALLway?** See the [Documentation Map](docs/DOCUMENTATION_MAP.md) to find what you need.
+
 ## Table of Contents
 - [Overview](#overview)
 - [Getting Started](#getting-started)
@@ -59,6 +61,8 @@ See [VS Code Tasks Documentation](docs/VSCODE_TASKS.md) for complete task refere
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
 
 ## Project Documentation
+
+> **🗺️ Can't find what you need?** Check the [Documentation Map](docs/DOCUMENTATION_MAP.md) for a complete guide.
 
 - [HALLway Project Bible](HALLway%20Project%20Bible.md) — Comprehensive project vision and details
 - [Architecture & File Structure](docs/ARCHITECTURE.md) — Repository organization and how components work together
