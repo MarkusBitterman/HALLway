@@ -21,6 +21,7 @@ Not "privacy theater." Not paranoia. Just _practical_ **peace of mind**.
 ### Prerequisites
 
 - [Nix](https://nixos.org/) with flakes enabled
+- HALLway targets **NixOS unstable** (currently tracking 25.11) for latest package availability
 
 ### Quick Start
 

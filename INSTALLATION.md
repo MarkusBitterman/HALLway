@@ -1,8 +1,11 @@
 # HALLway Installation Guide
 
-This guide covers installing HALLway on any supported hardware. For host-specific guides with exact commands, see:
+> **📘 Note**: This is a **generic template** for installing HALLway. Device names, labels, and specific commands vary by hardware.
+>
+> **👉 For step-by-step instructions with exact commands**, see the host-specific guide for your hardware:
+> - **2600AD** (Atari VCS 800): [`hosts/2600AD/INSTALLATION.md`](hosts/2600AD/INSTALLATION.md)
 
-- **2600AD** (Atari VCS 800): [`hosts/2600AD/INSTALLATION.md`](hosts/2600AD/INSTALLATION.md)
+This guide covers the general process for installing HALLway on any supported hardware.
 
 ---
 
@@ -54,12 +57,15 @@ You'll need:
 
 ### 3. Create LUKS + ZFS
 
-```bash
-# Create LUKS container on root device
-sudo cryptsetup luksFormat --type luks2 /dev/<root-device>
-sudo cryptsetup open /dev/<root-device> cryptroot
+> **Note**: This example uses generic labels (`CRYPT_ROOT`, `cryptroot`). Host-specific guides may use
+> themed naming (e.g., 2600AD uses `CARTRIDGE`, `cartridge_crypt` based on Atari 2600 references).
 
-# Create ZFS pool
+```bash
+# Create LUKS container on root device (with label for easy identification)
+sudo cryptsetup luksFormat --type luks2 --label CRYPT_ROOT /dev/<root-device>
+sudo cryptsetup open /dev/disk/by-label/CRYPT_ROOT cryptroot
+
+# Create ZFS pool (compression: lz4 is a good balance of speed/ratio)
 sudo zpool create -f \
   -o ashift=12 \
   -o autotrim=on \
