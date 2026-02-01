@@ -203,6 +203,19 @@ Remove USB when prompted.
 3. Enter LUKS passphrase for STELLA (swap)
 4. NixOS boots with HALLway configuration
 
+### What's Next After Installation?
+
+Your HALLway system is now ready! Here are your next steps:
+
+1. **Verify System**: Check ZFS pool status with `sudo zpool status`
+2. **Update System**: See [Post-Install Configuration](#post-install-tpm2-auto-unlock-optional) below
+3. **Customize**: Edit `/etc/nixos/hosts/2600AD/configuration.nix` to modify package groups and settings
+4. **Rebuild**: Apply changes with `sudo nixos-rebuild switch --flake /etc/nixos#2600AD`
+5. **Learn More**: 
+   - [Role-Based User Management](../../README.md#user-management-with-role-based-packages)
+   - [Development Tools](../../docs/dev-tools.md)
+   - [Contributing Guide](../../CONTRIBUTING.md)
+
 ---
 
 ## Post-Install: TPM2 Auto-Unlock (Optional)

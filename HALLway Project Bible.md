@@ -229,3 +229,15 @@ Long-term mass-market rollout starts with one humble storefront that uses floors
 That flow turns retail into **education → empowerment → ownership**.
 
 It’s not just selling devices — it’s teaching people how to be the admin of their own life again. 🔐🏠👛
+---
+
+## Ready to Get Started? 🚀
+
+Interested in HALLway? Here's where to go next:
+
+- **Try HALLway**: See the [README.md](README.md) for installation and quick start
+- **Understand the System**: Check out [CONTRIBUTING.md](CONTRIBUTING.md) for development details
+- **Install on Hardware**: Follow [hosts/2600AD/INSTALLATION.md](hosts/2600AD/INSTALLATION.md) for the Atari VCS 800
+- **Join the Project**: Read [CONTRIBUTING.md](CONTRIBUTING.md) to contribute
+
+The hallway is real. Let's build it together. 🤙🏻💢💯
