@@ -1,0 +1,12 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Build HALLway System (2600AD)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "nix build .#nixosConfigurations.2600AD.config.system.build.toplevel",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **VS Code Integration**: Comprehensive tasks, launch configs, and settings
+  - Build System task (Ctrl+Shift+B) - One-click NixOS build
+  - Check Install Progress task - Monitor `install-history.log`
+  - List Available Packages task - Query role groups via `nix eval`
+  - Git workflow tasks (status, stage all)
+  - Enhanced `.vscode/settings.json` with file exclusions
+- **GNOME & Plasma App Groups**: Fine-grained DE package control
+  - `gnome-core`, `gnome-utils`, `gnome-media`, `gnome-productivity`
+  - `plasma-core`, `plasma-utils`, `plasma-media`, `plasma-productivity`, `plasma-network`
+  - Mix-and-match DE apps without full environment bloat
+- **shell.nix**: Development environment for git, gh, nixd, nixfmt, agenix
+- **Install Logging**: Versioned `install-history.log` with timestamps
+- **README Documentation**: 
+  - Three-line philosophy: `groups` (software), `extraGroups` (hardware), `extraPackages` (personal)
+  - Usage examples with and without Home Manager
+  - Methods for excluding unwanted apps
+
+### Changed
+- **Kernel**: `linuxPackages_zen` → `linuxPackages` (stable 6.12.67) for ZFS compatibility
+- **Package Management**: VSCode moved to `developers` group (system-installed, Home Manager configures)
+- **`.gitignore`**: Added `*.log` and `install-history.log` exclusions
+
+### Fixed
+- **ZFS Kernel Compatibility**: Resolved broken package error with 6.18.x kernels
+- **VSCode Conflict**: Removed Home Manager package installation to avoid buildEnv collision
+- **LUKS Device Mappings**: Corrected `cryptswap`→`stella`, `cryptroot`→`cartridge_crypt`
+- **Boot Partition Label**: Changed `BOOT`→`COMBAT` to match actual eMMC label
+- **Package Renames**: Updated `rofi-wayland`→`rofi`, `musicbrainz-picard`→`picard`, etc.
+- **Hardware Config**: Removed deprecated `amdvlk` driver (RADV is default)
+- **XDG Portals**: Added `environment.pathsToLink` for Home Manager portal support
+
+### Security
+- **agenix Module**: Temporarily disabled for initial install (to be re-enabled post-boot)
+
+---
+
 ## [0.0.1] - 2026-01-31 (Codename: 2600AD)
 
 ### 🎮 Initial Release

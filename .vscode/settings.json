@@ -9,9 +9,35 @@
   "nix.serverSettings": {
     "nixd": {
       "formatting": {
-        "command": ["nixfmt"]
+        "command": [
+          "nixfmt"
+        ]
       }
     }
+  },
+  // Task shortcuts
+  "task.autoDetect": "on",
+  "task.quickOpen.detail": true,
+  "task.quickOpen.showAll": true,
+  // Terminal settings
+  "terminal.integrated.scrollback": 10000,
+  // File associations
+  "files.associations": {
+    "*.nix": "nix",
+    "flake.lock": "json"
+  },
+  // Search exclusions
+  "search.exclude": {
+    "**/result": true,
+    "**/result-*": true,
+    "**/.direnv": true,
+    "**/install-history.log": true
+  },
+  // File watching exclusions (performance)
+  "files.watcherExclude": {
+    "**/result": true,
+    "**/result-*": true,
+    "**/.direnv": true,
+    "**/install-history.log": true
   }
 }
-

@@ -31,7 +31,7 @@
     # For TPM2 auto-unlock, add:
     # crypttabExtraOpts = [ "tpm2-device=auto" ];
   };
-  
+
   # Boot partition on eMMC (FAT32, labeled COMBAT = Atari pack-in game)
   fileSystems."/boot" = {
     device = "/dev/disk/by-label/COMBAT";
@@ -39,7 +39,7 @@
     options = [ "nofail" "noatime" ];
     neededForBoot = true;
   };
-  
+
   # ZFS filesystem definitions (pool named "cartridge")
   fileSystems."/" = {
     device = "cartridge/root";
@@ -53,10 +53,10 @@
     device = "cartridge/nix";
     fsType = "zfs";
   };
-  
+
   # Encrypted swap on eMMC partition 2
   swapDevices = [
-    { 
+    {
       device = "/dev/mapper/stella";
       # randomEncryption.enable = true; # Alternative: re-encrypt on each boot
       # ^ this would disable hibernation; keeping it crypted with TPM2 lets us hibernate

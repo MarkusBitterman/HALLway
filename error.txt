@@ -1,0 +1,18 @@
+-[x]  error: 'rofi-wayland' has been merged into 'rofi'
+-[x]  error: undefined variable 'musicbrainz-picard'
+       at /mnt/2600AD/nix/store/5zwckj81s2yilp63bi54a9yjyl5y9yi9-source/modules/userRoles.nix:137:7:
+-[x]  error: undefined variable 'kdenlive'
+       at /mnt/2600AD/nix/store/a4q3fy0n1v3ch4g9gpfnadgrhns5k7j5-source/modules/userRoles.nix:159:7:
+-[x]  error: 'onlyoffice-bin' has been renamed to/replaced by 'onlyoffice-desktopeditors'
+       error:
+-[ ]  Failed assertions:
+       - bittermang profile: xdg.portal: since you installed Home Manager via its NixOS module and
+       'home-manager.useUserPackages' is enabled, you need to add
+
+       environment.pathsToLink = [ `/share/applications` `/share/xdg-desktop-portal` ];
+
+       to your NixOS configuration so that the portal definitions and DE
+       provided configurations get linked.
+
+       - The option definition /nix/store/9l8hcvm3a0jc4l1k2i6rjrl22jj8bhpq-source/hosts/2600AD/hardware-configuration.nix' no longer has any effect; please remove it.
+       'amdvlk' has been removed. The replacement driver RADV, part of Mesa, is enabled by default.

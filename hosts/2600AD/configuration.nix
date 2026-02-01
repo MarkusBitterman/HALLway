@@ -17,7 +17,7 @@
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelPackages = pkgs.linuxPackages_zen;
+  boot.kernelPackages = pkgs.linuxPackages;  # Stable kernel (guaranteed ZFS support)
   boot.resumeDevice = "/dev/mapper/stella";  # Encrypted swap for hibernation
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -40,13 +40,13 @@
 
   networking.hostId = "ad42069f";  # Required for ZFS
   networking.hostName = "2600AD";
-  
+
   systemd.network.enable = true;
   systemd.network.networks."10-lan" = {
     matchConfig.Name = "en*";
     networkConfig.DHCP = "yes";
   };
-  
+
   networking.firewall.enable = true;
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -71,16 +71,15 @@
   # ═══════════════════════════════════════════════════════════════════════════
 
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
-  
+
   # XDG portal paths for Home Manager
   environment.pathsToLink = [
     "/share/applications"
     "/share/xdg-desktop-portal"
   ];
-  
+
   environment.systemPackages = with pkgs; [
     nano
-    agenix
   ];
 
   fonts.packages = with pkgs; [
@@ -143,15 +142,15 @@
   roles.users.bittermang = {
     description = "Matthew Hall";
     uid = 1000;
-    
-    extraGroups = [ 
+
+    extraGroups = [
       "wheel"
-      "audio" 
-      "video" 
+      "audio"
+      "video"
       "input"
       "gamemode"
     ];
-    
+
     groups = [
       "developers"
       "sysadmin"
@@ -170,7 +169,7 @@
       "communication"
       "office"
     ];
-    
+
     extraPackages = with pkgs; [
       unityhub
       blender
@@ -183,9 +182,9 @@
     shell = pkgs.bash;
     isGuest = true;
     guestTmpfsSize = "2G";
-    
+
     extraGroups = [ "audio" "video" ];
-    
+
     groups = [
       "desktop"
       "web"

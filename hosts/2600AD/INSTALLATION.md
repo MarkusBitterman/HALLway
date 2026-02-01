@@ -1,7 +1,7 @@
 # 2600AD: Installation Guide
 
-**Target Hardware**: Atari VCS 800 with upgraded 1TB SSD  
-**Install From**: NixOS Graphical Installer USB  
+**Target Hardware**: Atari VCS 800 with upgraded 1TB SSD
+**Install From**: NixOS Graphical Installer USB
 **Strategy**: USB-based installation with ZFS on LUKS
 
 ---

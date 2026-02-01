@@ -2,6 +2,10 @@
 result
 result-*
 
+# Ignore install logs
+*.log
+install-history.log
+
 # Ignore automatically generated direnv output
 .direnv
 

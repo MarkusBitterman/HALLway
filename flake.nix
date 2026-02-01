@@ -10,13 +10,13 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    
+
     # Home Manager (for user environment configuration)
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    
+
     # agenix for secrets management
     agenix = {
       url = "github:ryantm/agenix";
@@ -33,7 +33,7 @@
         roles = ./modules/userRoles.nix;
         default = ./modules/default.nix;
       };
-      
+
     in
     {
       # ═══════════════════════════════════════════════════════════════════════
@@ -45,7 +45,7 @@
       # Machine Configurations (HALLway Hosts)
       # ═══════════════════════════════════════════════════════════════════════
       nixosConfigurations = {
-        
+
         # ─────────────────────────────────────────────────────────────────────
         # 2600AD - Atari VCS 800 Gaming/Media Workstation
         # First HALLway implementation (v0.0.1)
@@ -55,10 +55,10 @@
           modules = [
             # HALLway modules
             hallwayModules.roles
-            
+
             # Host-specific configuration
             ./hosts/2600AD/configuration.nix
-            
+
             # Home Manager
             home-manager.nixosModules.home-manager
             {
@@ -66,15 +66,15 @@
               home-manager.useUserPackages = true;
               home-manager.users.bittermang = import ./hosts/2600AD/home/bittermang.nix;
             }
-            
-            # agenix for secrets
-            agenix.nixosModules.default
-            ./hosts/2600AD/secrets.nix
+
+            # agenix for secrets (commented out for initial install)
+            # agenix.nixosModules.default
+            # ./hosts/2600AD/secrets.nix
           ];
         };
       };
     }
-    
+
     # ═══════════════════════════════════════════════════════════════════════
     # Development Shell (merged with flake-utils)
     # ═══════════════════════════════════════════════════════════════════════

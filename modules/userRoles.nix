@@ -26,21 +26,22 @@
 
 let
   cfg = config.roles;
-  
+
   # ═══════════════════════════════════════════════════════════════════════════
   # PACKAGE GROUP DEFINITIONS
   # ═══════════════════════════════════════════════════════════════════════════
-  
+
   defaultPackageGroups = {
-    
+
     # ─────────────────────────────────────────────────────────────────────────
     # SYSTEM & DEVELOPMENT
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     developers = with pkgs; [
       git
       gh                    # GitHub CLI
       neovim
+      vscode                # VS Code (configured via Home Manager)
       gnumake
       gcc
       python3
@@ -74,7 +75,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
     # GAMING
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     gaming = with pkgs; [
       steam
       steamcmd
@@ -92,7 +93,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
     # IMAGES
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     images-viewing = with pkgs; [
       loupe                 # GNOME image viewer
       gthumb                # Image browser
@@ -109,7 +110,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
     # MUSIC & AUDIO
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     music-listening = with pkgs; [
       spotify
       rhythmbox
@@ -142,7 +143,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
     # VIDEO
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     video-viewing = with pkgs; [
       mpv
       vlc
@@ -165,7 +166,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
     # WEB & COMMUNICATION
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     web = with pkgs; [
       firefox
       chromium
@@ -180,7 +181,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
     # OFFICE & PRODUCTIVITY
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     office = with pkgs; [
       onlyoffice-desktopeditors
       obsidian
@@ -190,7 +191,7 @@ let
     # ─────────────────────────────────────────────────────────────────────────
     # DESKTOP ENVIRONMENT
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     desktop = with pkgs; [
       kitty
       pcmanfm
@@ -201,6 +202,79 @@ let
       pavucontrol
       polkit_gnome
     ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # GNOME APPS (Fine-grained control)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    gnome-core = with pkgs.gnome; [
+      gnome-shell
+      gnome-control-center
+      gnome-tweaks
+      nautilus
+      gnome-terminal
+      gnome-system-monitor
+    ];
+
+    gnome-utils = with pkgs.gnome; [
+      gnome-calculator
+      gnome-clocks
+      gnome-weather
+      gnome-maps
+      gnome-calendar
+      gnome-contacts
+    ];
+
+    gnome-media = with pkgs.gnome; [
+      totem              # Video player
+      cheese             # Webcam
+      snapshot           # Camera
+    ];
+
+    gnome-productivity = with pkgs.gnome; [
+      gnome-text-editor
+      evince             # Document viewer
+      file-roller        # Archive manager
+    ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # KDE PLASMA APPS (Fine-grained control)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    plasma-core = with pkgs.kdePackages; [
+      plasma-workspace
+      plasma-systemmonitor
+      konsole
+      dolphin
+      kate
+      okular
+    ];
+
+    plasma-utils = with pkgs.kdePackages; [
+      kcalc
+      kclock
+      kweather
+      korganizer
+      kaddressbook
+    ];
+
+    plasma-media = with pkgs.kdePackages; [
+      elisa              # Music player
+      kamera             # Camera
+    ];
+
+    plasma-productivity = with pkgs.kdePackages; [
+      kwrite
+      ark                # Archive manager
+      spectacle          # Screenshots
+      gwenview           # Image viewer
+    ];
+
+    plasma-network = with pkgs.kdePackages; [
+      kdeconnect
+      krfb               # Desktop sharing
+      krdc               # Remote desktop client
+    ];
   };
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -208,7 +282,7 @@ let
   # ═══════════════════════════════════════════════════════════════════════════
 
   # Resolve packages for a list of group names
-  packagesForGroups = groups: 
+  packagesForGroups = groups:
     lib.unique (lib.flatten (map (g: cfg.packageGroups.${g} or []) groups));
 
   # User submodule type definition
@@ -286,7 +360,7 @@ in
   # ═══════════════════════════════════════════════════════════════════════════
 
   options.roles = {
-    
+
     packageGroups = lib.mkOption {
       type = lib.types.attrsOf (lib.types.listOf lib.types.package);
       default = defaultPackageGroups;
@@ -343,11 +417,11 @@ in
   # ═══════════════════════════════════════════════════════════════════════════
 
   config = lib.mkIf (cfg.users != {}) {
-    
+
     # ─────────────────────────────────────────────────────────────────────────
     # USER ACCOUNTS
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     users.users = lib.mapAttrs (name: userCfg: {
       isNormalUser = true;
       description = userCfg.description;
@@ -361,17 +435,17 @@ in
     # ─────────────────────────────────────────────────────────────────────────
     # SYSTEM GROUPS
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     # Create gamemode group if any user has gaming
-    users.groups.gamemode = lib.mkIf (lib.any 
-      (u: lib.elem "gaming" u.groups) 
+    users.groups.gamemode = lib.mkIf (lib.any
+      (u: lib.elem "gaming" u.groups)
       (lib.attrValues cfg.users)
     ) {};
 
     # ─────────────────────────────────────────────────────────────────────────
     # GUEST USER TMPFS
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     fileSystems = lib.mkMerge (lib.mapAttrsToList (name: userCfg:
       lib.optionalAttrs userCfg.isGuest {
         "/home/${name}" = {
@@ -390,7 +464,7 @@ in
     # ─────────────────────────────────────────────────────────────────────────
     # GUEST SKELETON SETUP
     # ─────────────────────────────────────────────────────────────────────────
-    
+
     system.activationScripts = lib.mkMerge (lib.mapAttrsToList (name: userCfg:
       lib.optionalAttrs userCfg.isGuest {
         "guestSkeleton-${name}" = lib.stringAfter [ "users" ] ''
@@ -400,12 +474,12 @@ in
           mkdir -p /home/${name}/Pictures
           mkdir -p /home/${name}/Videos
           mkdir -p /home/${name}/Music
-          
+
           # Copy skeleton files if available
           if [ -d /etc/skel ]; then
             cp -rn /etc/skel/. /home/${name}/ 2>/dev/null || true
           fi
-          
+
           # Fix ownership
           chown -R ${name}:users /home/${name}
         '';
