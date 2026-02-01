@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Documentation Improvements**:
+  - Comprehensive troubleshooting guide (`docs/TROUBLESHOOTING.md`) consolidating all known issues
+  - VS Code tasks documentation (`docs/VSCODE_TASKS.md`) with complete task reference and workflows
+  - Architecture and file structure guide (`docs/ARCHITECTURE.md`) explaining repository organization
+  - "Ready to Get Started" navigation section in Project Bible
+  - "What's Next After Installation" guide in 2600AD installation docs
+  - Cross-references and backlinks between all major documentation files
 - **VS Code Integration**: Comprehensive tasks, launch configs, and settings
   - Build System task (Ctrl+Shift+B) - One-click NixOS build
   - Check Install Progress task - Monitor `install-history.log`
@@ -28,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Methods for excluding unwanted apps
 
 ### Changed
+- **Documentation Structure**: 
+  - Standardized LUKS device naming across all docs (CARTRIDGE/COMBAT/STELLA for 2600AD)
+  - Clarified generic INSTALLATION.md as a template with host-specific references
+  - Improved navigation with cross-references between documents
+  - Enhanced README with clear documentation hierarchy
 - **Kernel**: `linuxPackages_zen` → `linuxPackages` (stable 6.12.67) for ZFS compatibility
 - **Package Management**: VSCode moved to `developers` group (system-installed, Home Manager configures)
 - **`.gitignore`**: Added `*.log` and `install-history.log` exclusions
