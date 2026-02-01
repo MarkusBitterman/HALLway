@@ -460,32 +460,28 @@ roles.lib.availableGroups                           # List of group names
 
 | Group | Description | Key Packages |
 |-------|-------------|--------------|
-| `developers` | Development tools | git, gh, neovim, gcc, python3, rustup, nodejs, ripgrep, fd |
-| `sysadmin` | System administration | htop, btop, ncdu, duf, nmap, rsync, tmux, android-tools |
-| `gaming` | Gaming packages | steam, steamcmd, steam-tui, minigalaxy, itch, heroic, mangohud, retroarch |
-| `images-viewing` | Image viewers | loupe, gthumb |
-| `images-editing` | Image editing | gimp, inkscape, krita, darktable, imagemagick |
-| `music-listening` | Music players | spotify, rhythmbox, playerctl |
-| `music-production` | DAWs & synths | ardour, lmms, surge-XT, vital, calf, lsp-plugins |
-| `music-mixing` | Audio mixing | carla, easyeffects, helvum, qpwgraph |
-| `music-management` | Music library | musicbrainz-picard, easytag, soundconverter |
-| `video-viewing` | Video players | mpv, vlc, celluloid |
-| `video-production` | Video creation | obs-studio (with wlrobs, pipewire plugins) |
-| `video-editing` | Video editing | kdenlive, shotcut, handbrake, ffmpeg |
-| `web` | Web browsers | firefox, chromium |
-| `communication` | Chat/messaging | discord, element-desktop, signal-desktop |
-| `office` | Office apps | onlyoffice-bin, obsidian, zathura |
-| `desktop` | Desktop utilities | kitty, pcmanfm, rofi-wayland, waybar, dunst, hyprpaper, pavucontrol |
+| `core` | CLI essentials | git, curl, wget, htop, tmux, gnupg, compression tools |
+| `developers` | Development tools | neovim, vscode, gh, gcc, python3, rustup, nodejs, ripgrep, fd |
+| `sysadmin` | System administration | iotop, tcpdump, nmap, ncdu, duf, android-tools |
+| `desktop` | Hyprland/Wayland | kitty, pcmanfm, rofi, waybar, dunst, hyprpaper, pavucontrol |
+| `gaming` | Gaming packages | steam, steamcmd, minigalaxy, itch, heroic, mangohud, retroarch |
+| `viewers` | Media consumption | mpv, vlc, spotify, loupe, gthumb, zathura |
+| `editors` | Image/audio editing | gimp, inkscape, krita, darktable, picard, easytag |
+| `producers` | A/V production ⚠️ | obs-studio, kdenlive, handbrake, ffmpeg, ardour, lmms |
+| `gamedev` | Game development | unityhub, blender |
+| `communication` | Web, chat, office | firefox, chromium, discord, signal, obsidian, onlyoffice |
+
+> ⚠️ **Note**: The `producers` group pulls ffmpeg and requires source builds if not cached. Disable during initial install.
 
 ### Current Users
 
-**bittermang** (uid 1000): Primary user with full access to all package groups. Uses Home Manager for additional configuration (Hyprland, VS Code, SSH, Git).
+**bittermang** (uid 1000): Primary user with development and media viewing capabilities. Uses Home Manager for additional configuration (Hyprland, SSH, Git).
 
 **guest** (uid 1001): Minimal user for clean-room sessions with viewing-only packages. Features:
 - tmpfs home directory (`/home/guest`) - wiped on each reboot
 - No persistent storage
 - Automatic skeleton setup on boot
-- Groups: `desktop`, `web`, `images-viewing`, `video-viewing`, `music-listening`, `gaming`
+- Groups: `core`, `desktop`, `viewers`
 
 ### Adding New Users
 

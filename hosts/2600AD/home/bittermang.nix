@@ -30,7 +30,7 @@
       # Custom monitor resolution for older non-SmartTV (1368x768@59.85Hz)
       monitor=HDMI-A-1,1368x768@59.85,0x0,1
 
-      # Startup applications (packages installed via home.packages)
+      # Startup applications (packages installed via roles.users in configuration.nix)
       exec-once = dunst &
       exec-once = /run/current-system/sw/libexec/polkit-gnome-authentication-agent-1 &
       exec-once = blueman-applet &
@@ -61,7 +61,7 @@
   # ═══════════════════════════════════════════════════════════════════════════
 
   # VS Code extensions and settings
-  # NOTE: VSCode binary installed via home.packages above
+  # NOTE: VSCode binary installed via roles.users.bittermang.groups in configuration.nix
   # Home Manager extension management disabled to avoid conflicts
   # Install extensions manually via `code --install-extension` or VS Code UI
 

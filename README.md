@@ -80,7 +80,7 @@ HALLway uses a **role-based package system** where users inherit packages from a
 
 User configuration works on three simple lines:
 
-1. **`groups`** — Assigns **software** to you (package groups like `developers`, `gaming`, `gnome-core`)
+1. **`groups`** — Assigns **software** to you (package groups like `developers`, `gaming`, `desktop`)
 2. **`extraGroups`** — Assigns **hardware** to you (Unix permissions: `audio`, `video`, `wheel`)
 3. **`extraPackages`** — Tailors your **specific environment needs** (one-off packages not in groups)
 
@@ -97,7 +97,7 @@ This keeps configuration simple, explicit, and avoids DE/app bloat by design.
 
 ### Core Concepts
 
-- **Package Groups**: Collections of related packages (e.g., `developers`, `gaming`, `gnome-core`)
+- **Package Groups**: Collections of related packages (e.g., `developers`, `gaming`, `desktop`)
 - **User Roles**: Users assigned to groups inherit all packages from those groups
 - **Per-User Packages**: Assigned at system level via `users.users.<name>.packages`
 - **Home Manager Integration**: Optional per-user configuration (dotfiles, services, settings)
@@ -105,30 +105,25 @@ This keeps configuration simple, explicit, and avoids DE/app bloat by design.
 
 ### Available Package Groups
 
-#### System & Development
-- `developers` — Git, editors, compilers, language toolchains
-- `sysadmin` — Monitoring, networking, debugging tools
+#### Essentials
+- `core` — CLI tools everyone gets (git, curl, htop, gnupg, compression tools)
+- `developers` — Programming tools (neovim, vscode, gh, rustup, python, nodejs)
+- `sysadmin` — System admin (iotop, tcpdump, nmap, ncdu)
 
-#### Desktop Environments
-- `desktop` — Hyprland/Wayland essentials (kitty, rofi, waybar, dunst)
-- `gnome-core` — GNOME Shell, Nautilus, Control Center, Terminal
-- `gnome-utils` — Calculator, Clocks, Weather, Maps, Calendar
-- `gnome-media` — Totem, Cheese, Snapshot
-- `gnome-productivity` — Text Editor, Evince, File Roller
-- `plasma-core` — Plasma Workspace, Dolphin, Konsole, Kate
-- `plasma-utils` — Kcalc, Kclock, Kweather, Korganizer
-- `plasma-media` — Elisa, Kamera
-- `plasma-productivity` — Ark, Spectacle, Gwenview
-- `plasma-network` — KDE Connect, Krfb, Krdc
+#### Desktop Environment
+- `desktop` — Hyprland/Wayland essentials (kitty, rofi, waybar, dunst, pcmanfm)
 
-#### Media & Productivity
+#### Media (Lightweight → Heavy)
+- `viewers` — Media consumption (mpv, vlc, spotify, loupe, zathura) — *lightweight*
+- `editors` — Image/audio editing (gimp, inkscape, krita, picard) — *medium*
+- `producers` — A/V production (obs, kdenlive, handbrake, ffmpeg, ardour) — *⚠️ heavy builds*
+
+#### Gaming & Creative
 - `gaming` — Steam, Heroic, RetroArch, GameMode, MangoHUD
-- `music-*` — `listening`, `production`, `mixing`, `management`
-- `video-*` — `viewing`, `production`, `editing`
-- `images-*` — `viewing`, `editing`
-- `web` — Firefox, Chromium
-- `communication` — Discord, Element, Signal
-- `office` — OnlyOffice, Obsidian, Zathura
+- `gamedev` — Game development (Unity Hub, Blender)
+
+#### Communication
+- `communication` — Web, chat, office (firefox, chromium, discord, signal, obsidian)
 
 ### Basic Usage (System-Level Only)
 
@@ -146,22 +141,21 @@ Define users in your host's `configuration.nix`:
 
     # Package groups (what gets installed)
     groups = [
+      "core"
       "developers"
       "desktop"
-      "gnome-core"
-      "gnome-utils"
+      "viewers"
     ];
 
     # Additional packages not in any group
     extraPackages = with pkgs; [
       blender
-      unityhub
     ];
   };
 }
 ```
 
-**Result**: Alice gets all packages from `developers`, `desktop`, `gnome-core`, `gnome-utils`, plus Blender and Unity Hub.
+**Result**: Alice gets all packages from `core`, `developers`, `desktop`, and `viewers`, plus Blender.
 
 ### With Home Manager Integration
 
@@ -175,10 +169,11 @@ HALLway separates **what** is installed (system) from **how** it's configured (u
     uid = 1001;
     extraGroups = [ "wheel" "audio" "video" "gamemode" ];
     groups = [
+      "core"
       "gaming"
       "desktop"
-      "plasma-core"
-      "video-editing"
+      "viewers"
+      "producers"  # ⚠️ Heavy: includes ffmpeg, kdenlive
     ];
   };
 }
@@ -221,8 +216,9 @@ Only assign groups you actually want:
 ```nix
 roles.users.minimalist = {
   groups = [
-    "desktop"        # Just the essentials
-    # Deliberately NOT including gnome-* or plasma-*
+    "core"           # CLI basics
+    "desktop"        # Just the Hyprland essentials
+    # Deliberately NOT including heavy groups like producers, gamedev
   ];
 };
 ```
@@ -236,19 +232,18 @@ Override or extend default groups in your host config:
   roles.packageGroups = {
     # Use default groups
     inherit (config.roles.packageGroups)
-      developers sysadmin gaming desktop;
+      core developers sysadmin gaming desktop;
 
-    # Define custom lightweight group
-    my-minimal-gnome = with pkgs.gnome; [
-      nautilus
-      gnome-terminal
-      gnome-calculator
-      # Exclude Maps, Weather, Contacts, etc.
+    # Define custom lightweight media group
+    my-light-media = with pkgs; [
+      mpv vlc         # Video
+      loupe           # Images
+      # Exclude spotify, rhythmbox, etc.
     ];
   };
 
   roles.users.charlie = {
-    groups = [ "desktop" "my-minimal-gnome" ];
+    groups = [ "core" "desktop" "my-light-media" ];
   };
 }
 ```
@@ -260,13 +255,13 @@ Use `lib.filter` to exclude specific packages:
 ```nix
 {
   roles.users.picky = {
-    groups = [ "gnome-core" ];
+    groups = [ "viewers" ];
     extraPackages =
       let
-        gnomePackages = config.roles.lib.packagesForGroups [ "gnome-core" ];
-        unwanted = with pkgs.gnome; [ gnome-maps gnome-weather ];
+        viewerPackages = config.roles.lib.packagesForGroups [ "viewers" ];
+        unwanted = with pkgs; [ spotify rhythmbox ];  # No music apps
       in
-        lib.filter (pkg: !(lib.elem pkg unwanted)) gnomePackages;
+        lib.filter (pkg: !(lib.elem pkg unwanted)) viewerPackages;
   };
 }
 ```
@@ -283,7 +278,7 @@ Guest accounts with tmpfs homes that reset on reboot:
     guestTmpfsSize = "2G";
 
     extraGroups = [ "audio" "video" ];
-    groups = [ "desktop" "web" ];
+    groups = [ "core" "desktop" "viewers" ];
   };
 }
 ```
@@ -297,9 +292,9 @@ Guest accounts with tmpfs homes that reset on reboot:
 
 **Optimization Strategies**:
 
-1. **Use granular groups** — Mix `gnome-core` + `plasma-productivity` instead of installing both full DEs
-2. **Per-host package groups** — Define different groups for different machines
-3. **Profile-based installs** — Future: Use NixOS profiles per-user (advanced)
+1. **Start light, add as needed** — Begin with `core`, `desktop`, `viewers`, add `producers` later
+2. **Avoid heavy groups during install** — `producers`, `gamedev` pull large dependencies (ffmpeg)
+3. **Per-host package groups** — Define different groups for different machines
 
 For a single-user system, bloat is minimal. For multi-user systems with diverse needs, careful group assignment keeps the closure size manageable.
 
