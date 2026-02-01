@@ -1,10 +1,14 @@
 {
   "version": "2.0.0",
   "tasks": [
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🧪 VALIDATION - Pre-install checks with low disk usage
+    // ═══════════════════════════════════════════════════════════════════════
     {
-      "label": "Nix Flake Check",
+      "label": "✅ Verify",
+      "detail": "Validates flake syntax and evaluates modules - minimal disk usage",
       "type": "shell",
-      "command": "nix flake check",
+      "command": "mkdir -p logs && LOGFILE=\"logs/validation-$(date +%Y%m%d-%H%M%S).log\" && script -q -e -c \"nix-shell --run 'nix flake check --show-trace'\" \"$LOGFILE\" && ln -sf \"$LOGFILE\" validation.log",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -13,27 +17,32 @@
       "presentation": {
         "echo": true,
         "reveal": "always",
-        "focus": false,
+        "focus": true,
         "panel": "shared"
       }
     },
     {
-      "label": "Nix Format",
+      "label": "🧑‍🔬 Test All",
+      "detail": "Runs flake check + system eval + home-manager eval",
       "type": "shell",
-      "command": "nix fmt",
-      "group": "build",
+      "command": "mkdir -p logs && LOGFILE=\"logs/validation-$(date +%Y%m%d-%H%M%S).log\" && script -q -e -c \"nix-shell --run 'echo \\\"=== Flake Check ===\\\" && nix flake check --show-trace && echo && echo \\\"=== Eval System ===\\\" && nix eval .#nixosConfigurations.2600AD.config.system.build.toplevel.drvPath --show-trace && echo && echo \\\"=== Eval Home Manager ===\\\" && nix eval .#nixosConfigurations.2600AD.config.home-manager.users.bittermang.home.packages --show-trace && echo \\\"✓ All validations passed\\\"'\" \"$LOGFILE\" && ln -sf \"$LOGFILE\" validation.log",
+      "group": "test",
       "problemMatcher": [],
       "presentation": {
         "echo": true,
-        "reveal": "silent",
-        "focus": false,
+        "reveal": "always",
+        "focus": true,
         "panel": "shared"
       }
     },
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🚀 INSTALL - Builds directly to target ZFS (903GB free)
+    // ═══════════════════════════════════════════════════════════════════════
     {
-      "label": "Build System (with logging)",
+      "label": "🚀 Install",
+      "detail": "Installs to /mnt/2600AD - builds to ZFS store, bypasses tmpfs limit",
       "type": "shell",
-      "command": "echo \"=== Build Attempt $(date +%Y%m%d-%H%M%S) ===\" | tee -a build-history.log && nix build .#nixosConfigurations.2600AD.config.system.build.toplevel 2>&1 | tee -a build-history.log",
+      "command": "mkdir -p logs && LOGFILE=\"logs/install-$(date +%Y%m%d-%H%M%S).log\" && script -q -e -c \"nix-shell --run 'sudo nixos-install --root /mnt/2600AD --flake .#2600AD --no-root-passwd --show-trace'\" \"$LOGFILE\" && ln -sf \"$LOGFILE\" install-history.log",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -43,13 +52,17 @@
         "echo": true,
         "reveal": "always",
         "focus": true,
-        "panel": "shared"
+        "panel": "dedicated"
       }
     },
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🔨 BUILD - Build to target ZFS store
+    // ═══════════════════════════════════════════════════════════════════════
     {
-      "label": "Build System",
+      "label": "🛠️ Build ZFS",
+      "detail": "Builds directly to ZFS target - bypasses tmpfs limit",
       "type": "shell",
-      "command": "nix build .#nixosConfigurations.2600AD.config.system.build.toplevel",
+      "command": "mkdir -p logs && LOGFILE=\"logs/build-$(date +%Y%m%d-%H%M%S).log\" && script -q -e -c \"nix-shell --run 'nix build --store /mnt/2600AD .#nixosConfigurations.2600AD.config.system.build.toplevel --show-trace'\" \"$LOGFILE\" && ln -sf \"$LOGFILE\" build-history.log",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
@@ -59,59 +72,27 @@
         "panel": "shared"
       }
     },
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🔧 DAILY - Formatting, Cleanup
+    // ═══════════════════════════════════════════════════════════════════════
     {
-      "label": "Build and Show Result",
+      "label": "✨ Format",
       "type": "shell",
-      "command": "nix build .#nixosConfigurations.2600AD.config.system.build.toplevel && readlink result",
+      "command": "nix-shell --run 'nix fmt'",
       "group": "build",
       "problemMatcher": [],
       "presentation": {
         "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Check Install Progress",
-      "type": "shell",
-      "command": "tail -50 install-history.log | grep -E '(error:|===|copying path|building)'",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
+        "reveal": "silent",
         "focus": false,
         "panel": "shared"
       }
     },
     {
-      "label": "Check Build Progress",
+      "label": "🗑️ Clean",
+      "detail": "Remove build results and logs",
       "type": "shell",
-      "command": "tail -50 build-history.log | grep -E '(error:|===|copying path|building)'",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Git Status",
-      "type": "shell",
-      "command": "git status",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Stage All Changes",
-      "type": "shell",
-      "command": "git add -A",
+      "command": "rm -rf result result-* logs && echo '✓ Cleaned results and logs'",
       "problemMatcher": [],
       "presentation": {
         "echo": true,
@@ -120,10 +101,42 @@
         "panel": "shared"
       }
     },
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🔄 FLAKE/REBUILD - Updates and post-install
+    // ═══════════════════════════════════════════════════════════════════════
     {
-      "label": "Show Flake Info",
+      "label": "🔄 Update All",
       "type": "shell",
-      "command": "nix flake show",
+      "command": "nix-shell --run 'nix flake update'",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "⚡ Switch",
+      "detail": "Post-install: rebuild and switch to new config",
+      "type": "shell",
+      "command": "nix-shell --run 'sudo nixos-rebuild switch --flake .#2600AD'",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      }
+    },
+    // ═══════════════════════════════════════════════════════════════════════
+    // 🗑️ MAINTENANCE - GC, Disk
+    // ═══════════════════════════════════════════════════════════════════════
+    {
+      "label": "🖴 Disk Space",
+      "detail": "Shows tmpfs, ZFS target, and swap status",
+      "type": "shell",
+      "command": "echo '=== Disk Space ===' && df -h /nix/.rw-store /mnt/2600AD /mnt/2600AD/nix 2>/dev/null || df -h && echo '' && echo '=== Swap Status ===' && swapon --show && echo '' && echo '=== Memory ===' && free -h",
       "problemMatcher": [],
       "presentation": {
         "echo": true,
@@ -133,33 +146,10 @@
       }
     },
     {
-      "label": "List Available Package Groups",
+      "label": "🔥🗑️ GC Now",
+      "detail": "Frees tmpfs space - run before builds if space is low",
       "type": "shell",
-      "command": "nix eval .#nixosConfigurations.2600AD.config.roles.lib.availableGroups --json | jq -r '.[]' | sort",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Clean Build Results",
-      "type": "shell",
-      "command": "rm -rf result result-*",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "silent",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Flake Update",
-      "type": "shell",
-      "command": "nix flake update",
+      "command": "sudo nix-collect-garbage -d && df -h /nix/.rw-store",
       "problemMatcher": [],
       "presentation": {
         "echo": true,
@@ -167,169 +157,6 @@
         "focus": true,
         "panel": "shared"
       }
-    },
-    {
-      "label": "Flake Update (specific input)",
-      "type": "shell",
-      "command": "nix flake lock --update-input ${input:flakeInput}",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "NixOS Rebuild (switch)",
-      "type": "shell",
-      "command": "sudo nixos-rebuild switch --flake .#2600AD",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "NixOS Rebuild (boot)",
-      "type": "shell",
-      "command": "sudo nixos-rebuild boot --flake .#2600AD",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "NixOS Rebuild (test)",
-      "type": "shell",
-      "command": "sudo nixos-rebuild test --flake .#2600AD",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "NixOS Rebuild (dry-run)",
-      "type": "shell",
-      "command": "sudo nixos-rebuild dry-run --flake .#2600AD",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Compare Flake Lock Changes",
-      "type": "shell",
-      "command": "git diff flake.lock",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Show System Generations",
-      "type": "shell",
-      "command": "sudo nix-env --list-generations --profile /nix/var/nix/profiles/system",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Garbage Collect (dry-run)",
-      "type": "shell",
-      "command": "nix-collect-garbage --dry-run",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Garbage Collect (delete old)",
-      "type": "shell",
-      "command": "sudo nix-collect-garbage --delete-older-than 30d",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Optimize Nix Store",
-      "type": "shell",
-      "command": "sudo nix-store --optimise",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Check Disk Usage (Nix Store)",
-      "type": "shell",
-      "command": "du -sh /nix/store",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "Search Nix Packages",
-      "type": "shell",
-      "command": "nix search nixpkgs ${input:packageSearch}",
-      "problemMatcher": [],
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "shared"
-      }
-    }
-  ],
-  "inputs": [
-    {
-      "id": "flakeInput",
-      "type": "pickString",
-      "description": "Which flake input to update?",
-      "options": [
-        "nixpkgs",
-        "home-manager",
-        "agenix"
-      ],
-      "default": "nixpkgs"
-    },
-    {
-      "id": "packageSearch",
-      "type": "promptString",
-      "description": "Package name to search for:",
-      "default": ""
     }
   ]
 }

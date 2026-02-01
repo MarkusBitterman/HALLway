@@ -36,7 +36,7 @@ pkgs.mkShell {
 
     # Secrets management
     age                     # Encryption tool
-    agenix                  # NixOS secrets via age
+    # agenix requires flake inputs, not available in shell.nix
 
     # Documentation
     mdbook                  # For future documentation builds
@@ -48,11 +48,15 @@ pkgs.mkShell {
     echo "Available commands:"
     echo "  nix flake check         - Validate flake"
     echo "  nix fmt                 - Format .nix files"
+    echo "  nix build .#2600AD...   - Build system configuration"
     echo "  git / gh                - Version control"
     echo "  agenix -e <file>        - Edit encrypted secrets"
     echo ""
     echo "For installation, see INSTALLATION.md"
     echo "For contributing, see CONTRIBUTING.md"
     echo ""
+
+    # Enable experimental features for this shell session
+    export NIX_CONFIG="experimental-features = nix-command flakes"
   '';
 }

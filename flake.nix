@@ -65,6 +65,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
               home-manager.users.bittermang = import ./hosts/2600AD/home/bittermang.nix;
+              home-manager.users.guest = import ./hosts/2600AD/home/guest.nix;
             }
 
             # agenix for secrets (commented out for initial install)

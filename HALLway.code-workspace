@@ -24,7 +24,7 @@
     "nix.enableLanguageServer": true,
     "nix.serverPath": "nixd",
     "[nix]": {
-      "editor.defaultFormatter": "brettm12345.nixfmt-vscode",
+      "editor.defaultFormatter": "jnoortheen.nix-ide",
       "editor.formatOnSave": true,
       "editor.tabSize": 2
     },
@@ -34,7 +34,6 @@
   "extensions": {
     "recommendations": [
       "jnoortheen.nix-ide",
-      "brettm12345.nixfmt-vscode",
       "editorconfig.editorconfig",
       "github.copilot",
       "mkhl.direnv"

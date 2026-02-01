@@ -1,8 +1,8 @@
 # 2600AD: Installation Guide
 
-**Target Hardware**: Atari VCS 800 with upgraded 1TB SSD
-**Install From**: NixOS Graphical Installer USB
-**Strategy**: USB-based installation with ZFS on LUKS
+**Target Hardware**: Atari VCS 800 with upgraded 1TB NVMe SSD
+**Install From**: NixOS Graphical Installer USB (25.11+)
+**Filesystem**: ZFS on LUKS2 with separate eMMC boot
 
 ---
 
@@ -150,6 +150,16 @@ sudo git clone https://github.com/MarkusBitterman/HALLway.git .
 
 ## Step 6: Install NixOS
 
+### Option A: VS Code (Recommended)
+
+If you have VS Code open with the HALLway workspace:
+
+1. **Validate first**: Click `🧪 Validate` in status bar (or `Ctrl+Shift+P` → "Run Test Task")
+2. **Install**: Click `🚀 Install` in status bar (or `Ctrl+Shift+B`)
+3. **Monitor**: Logs are saved to `logs/install-<timestamp>.log`
+
+### Option B: Command Line
+
 ```bash
 sudo nixos-install \
   --root /mnt/2600AD \
@@ -159,7 +169,12 @@ sudo nixos-install \
 # When prompted: Set password for bittermang user
 ```
 
-**If errors occur**, check `error.txt` in the repo for common fixes.
+> **Note**: The installer's tmpfs has limited space (~3GB). If you see
+> "No space left on device", run `sudo nix-collect-garbage -d` and retry.
+> The `nixos-install` command builds to the target ZFS store (903GB),
+> so space issues during install are rare.
+
+**If errors occur**, check `logs/` directory or run `📋 View Install Errors Only` task.
 
 ---
 

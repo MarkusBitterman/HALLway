@@ -151,16 +151,24 @@
       "gamemode"
     ];
 
-    # System-level packages ONLY (essentials + Steam)
-    # Everything else goes in home/bittermang.nix via Home Manager
+    # Package groups - what bittermang DOES
     groups = [
-      "system-core"      # CLI essentials
-      "system-dev"       # Build tools
-      "system-admin"     # System monitoring
-      "gaming-system"    # Steam + gamemode
+      "core"           # CLI essentials
+      "developers"     # Programming tools (vscode, neovim, etc.)
+      "desktop"        # Hyprland/Wayland environment
+      "viewers"        # Media viewers (mpv, vlc, loupe, spotify)
+      "communication"  # Web, chat, office
+      # ───────────────────────────────────────────────────────────────────────
+      # DISABLED FOR INITIAL INSTALL (ffmpeg builds from source, takes hours)
+      # Uncomment after first successful boot:
+      # "gaming"       # Steam + gaming tools
+      # "editors"      # GIMP, Inkscape, Krita
+      # "producers"    # OBS, Kdenlive, Handbrake (pulls ffmpeg)
+      # "gamedev"      # Unity, Blender
+      # "sysadmin"     # iotop, tcpdump, nmap
     ];
 
-    # One-off system packages not in groups
+    # One-off packages not in any group
     extraPackages = with pkgs; [
       # Nothing here - use Home Manager for user apps
     ];
@@ -175,10 +183,11 @@
 
     extraGroups = [ "audio" "video" ];
 
-    # Guest gets system essentials + Steam only
+    # Guest gets desktop + viewers only (tmpfs home wiped on reboot)
     groups = [
-      "system-core"
-      "gaming-system"
+      "core"           # CLI basics
+      "desktop"        # Hyprland environment
+      "viewers"        # Media playback (mpv, vlc, spotify)
     ];
   };
 

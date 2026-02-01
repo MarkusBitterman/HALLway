@@ -19,8 +19,51 @@
   "task.autoDetect": "on",
   "task.quickOpen.detail": true,
   "task.quickOpen.showAll": true,
+  // ═══════════════════════════════════════════════════════════════════════
+  // Task Buttons - Status bar buttons for common tasks
+  // ═══════════════════════════════════════════════════════════════════════
+  "VssTaskBar.showCounter": false,
+  "VsCodeTaskButtons.showCounter": false,
+  "VsCodeTaskButtons.tasks": [
+    {
+      "label": "🧪✅ Check",
+      "task": "✅ Verify",
+      "tooltip": "Validate flake syntax"
+    },
+    {
+      "label": "🚀📦 Install",
+      "task": "🚀 Install",
+      "tooltip": "Install NixOS to ZFS"
+    },
+    {
+      "label": "🔧✨ Fmt",
+      "task": "✨ Format",
+      "tooltip": "Format .nix files"
+    },
+    {
+      "label": "💾🖴 Disk",
+      "task": "🖴 Disk Space",
+      "tooltip": "Check disk/swap/RAM"
+    },
+    {
+      "label": "🧹🔥 GC",
+      "task": "🔥🗑️ GC Now",
+      "tooltip": "Garbage collect now"
+    },
+    {
+      "label": "📁🗑️ Clean",
+      "task": "🗑️ Clean",
+      "tooltip": "Clean results & archive logs"
+    }
+  ],
   // Terminal settings
   "terminal.integrated.scrollback": 10000,
+  // ═══════════════════════════════════════════════════════════════════════
+  // GitHub Extensions
+  // ═══════════════════════════════════════════════════════════════════════
+  "githubPullRequests.showPullRequestNumberInTree": true,
+  "githubPullRequests.fileListLayout": "tree",
+  "github-actions.workflows.pinned.workflows": [],
   // File associations
   "files.associations": {
     "*.nix": "nix",
@@ -31,13 +74,15 @@
     "**/result": true,
     "**/result-*": true,
     "**/.direnv": true,
-    "**/install-history.log": true
+    "**/install-history.log": true,
+    "**/logs": true
   },
   // File watching exclusions (performance)
   "files.watcherExclude": {
     "**/result": true,
     "**/result-*": true,
     "**/.direnv": true,
-    "**/install-history.log": true
+    "**/install-history.log": true,
+    "**/logs": true
   }
 }

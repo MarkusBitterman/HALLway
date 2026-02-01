@@ -2,10 +2,12 @@
 result
 result-*
 
-# Ignore install logs
+# Ignore logs (timestamped logs in logs/, symlinks in root)
+logs/
 *.log
 install-history.log
 build-history.log
+validation.log
 
 # Ignore automatically generated direnv output
 .direnv

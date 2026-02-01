@@ -4,14 +4,13 @@
 # ║  https://github.com/markusbittermang/hallway                              ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 #
-# This file configures the USER ENVIRONMENT via Home Manager.
+# This file CONFIGURES programs via Home Manager (dotfiles, settings).
+# Package INSTALLATION happens via roles.users.bittermang.groups in:
+#   hosts/2600AD/configuration.nix
 #
 # Separation of concerns:
-#   - roles.users.bittermang.groups (system) → CLI essentials + Steam
-#   - This file (Home Manager)               → ALL user apps + dotfiles
-#
-# Why: Home Manager gives us dotfile control and per-user configuration.
-# Exception: Steam stays system-level due to FHS env + 32-bit lib requirements.
+#   - roles.users.bittermang.groups → Package installation (userRoles.nix)
+#   - This file (Home Manager)      → Program configuration (dotfiles)
 #
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -19,98 +18,6 @@
 
 {
   home.stateVersion = "25.11";
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # USER PACKAGES (Everything except Steam)
-  # ═══════════════════════════════════════════════════════════════════════════
-
-  home.packages = with pkgs; [
-    # Development
-    gh                        # GitHub CLI
-    neovim
-    vscode
-    rustup
-    jq
-    ripgrep
-    fd
-    btop
-
-    # Gaming (non-Steam)
-    steamcmd
-    steam-tui
-    minigalaxy                # GOG
-    itch
-    heroic                    # Epic/GOG/Amazon
-    retroarch
-    winetricks
-    protontricks
-
-    # Desktop/Wayland
-    kitty
-    pcmanfm
-    rofi
-    waybar
-    dunst
-    hyprpaper
-    pavucontrol
-    polkit_gnome
-
-    # Images
-    loupe                     # GNOME viewer
-    gthumb
-    gimp
-    inkscape
-    krita
-    darktable
-    imagemagick
-
-    # Music
-    spotify
-    rhythmbox
-    playerctl
-    ardour
-    lmms
-    surge-XT
-    vital
-    calf
-    lsp-plugins
-    qsynth
-    carla
-    easyeffects
-    helvum
-    qpwgraph
-    picard                    # MusicBrainz
-    easytag
-    soundconverter
-
-    # Video
-    mpv
-    vlc
-    celluloid
-    obs-studio
-    obs-studio-plugins.wlrobs
-    obs-studio-plugins.obs-pipewire-audio-capture
-    kdePackages.kdenlive
-    shotcut
-    handbrake
-    ffmpeg
-
-    # Web & Communication
-    firefox
-    chromium
-    discord
-    element-desktop
-    signal-desktop
-
-    # Office & Productivity
-    onlyoffice-desktopeditors
-    obsidian
-    zathura
-
-    # Game Development
-    unityhub
-    blender
-  ];
 
   # ═══════════════════════════════════════════════════════════════════════════
   # DESKTOP ENVIRONMENT CONFIGURATION
@@ -178,7 +85,14 @@
   # };  # SSH configuration
   programs.ssh = {
     enable = true;
+    enableDefaultConfig = false; # Silence deprecation warning
     matchBlocks = {
+      # Explicit defaults (previously implicit)
+      "*" = {
+        extraOptions = {
+          AddKeysToAgent = "yes";
+        };
+      };
       "github.com" = {
         hostname = "github.com";
         user = "git";
@@ -197,11 +111,12 @@
   # Git configuration
   programs.git = {
     enable = true;
-    userName = "Matthew Hall";
-    userEmail = "bittermang@duck.com";
-    signing = {
-      key = null;  # Set after GPG setup
-      signByDefault = false;
+    settings = {
+      user = {
+        name = "Matthew Hall";
+        email = "bittermang@duck.com";
+      };
+      commit.gpgSign = false; # Enable after GPG setup
     };
   };
 
@@ -215,21 +130,4 @@
     enable = true;
     # Add starship customizations here
   };
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # HOME MANAGER MANAGED PACKAGES
-  # Only packages that REQUIRE Home Manager configuration go here.
-  # Everything else should be in roles.users.bittermang.groups
-  # ═══════════════════════════════════════════════════════════════════════════
-
-  home.packages = with pkgs; [
-    # VS Code needs this wrapper for extensions
-    (vscode-with-extensions.override {
-      vscode = pkgs.vscode;
-      vscodeExtensions = config.programs.vscode.extensions;
-    })
-
-    # XDG portal (required by Home Manager for portal config)
-    xdg-desktop-portal-hyprland
-  ];
 }

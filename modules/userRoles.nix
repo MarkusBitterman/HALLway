@@ -4,27 +4,32 @@
 # ║  https://github.com/markusbittermang/hallway                              ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 #
-# A NixOS module for SYSTEM-LEVEL package assignment.
+# A NixOS module for role-based package assignment.
 #
-# Philosophy (Updated):
-#   - System packages (roles.users) → Essentials + Steam (library requirements)
-#   - Home Manager → Everything else (dotfiles, DE apps, user programs)
-#
-# Why Steam is system-level:
-#   Steam requires FHS environment + 32-bit libraries that are better managed
-#   at the system level. Most other apps belong in Home Manager for per-user
-#   dotfile control.
+# Philosophy:
+#   Users are defined by what they DO (roles), not just what they can ACCESS.
+#   Packages are installed via roles.users.<name>.groups.
+#   Home Manager configures those programs (dotfiles, settings), NOT installation.
 #
 # Usage:
 #   roles.users.bittermang = {
 #     description = "Matthew Hall";
 #     uid = 1000;
-#     groups = [ "system-core" "gaming-system" ];  # System essentials only
+#     groups = [ "developers" "desktop" "viewers" "communication" ];
 #     extraGroups = [ "wheel" "audio" "video" ];
 #   };
 #
-#   Then in home/bittermang.nix (Home Manager):
-#     home.packages = with pkgs; [ firefox vscode obs-studio ... ];
+# Available groups:
+#   core          - CLI essentials (git, curl, htop, etc.)
+#   developers    - Programming tools (vscode, neovim, rustup, etc.)
+#   desktop       - Hyprland/Wayland (kitty, rofi, waybar, etc.)
+#   gaming        - Steam + gaming tools
+#   viewers       - Media viewers (mpv, vlc, spotify, loupe)
+#   editors       - Image editors (gimp, inkscape, krita)
+#   producers     - A/V production (obs, kdenlive, ffmpeg) ⚠️ HEAVY
+#   gamedev       - Game development (unity, blender)
+#   communication - Web, chat, office (firefox, discord, obsidian)
+#   sysadmin      - System admin tools (iotop, nmap, tcpdump)
 #
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -34,74 +39,183 @@ let
   cfg = config.roles;
 
   # ═══════════════════════════════════════════════════════════════════════════
-  # SYSTEM-LEVEL PACKAGE GROUPS (Essentials + Steam)
+  # PACKAGE GROUPS - What users DO determines what they GET
   # ═══════════════════════════════════════════════════════════════════════════
 
   defaultPackageGroups = {
 
     # ─────────────────────────────────────────────────────────────────────────
-    # SYSTEM CORE (CLI tools, system services)
+    # CORE - Everyone gets these
     # ─────────────────────────────────────────────────────────────────────────
 
-    system-core = with pkgs; [
-      # Essential CLI tools
-      git
-      curl
-      wget
-      rsync
-      tree
-      htop
-      tmux
-
-      # Encryption/security
-      age
-      gnupg
-
-      # Compression
-      gzip
-      bzip2
-      xz
-      unzip
-      zip
+    core = with pkgs; [
+      git curl wget rsync tree htop tmux
+      age gnupg                           # Encryption
+      gzip bzip2 xz unzip zip             # Compression
     ];
 
-    system-dev = with pkgs; [
-      # Development essentials (compilers, build tools)
-      gnumake
-      gcc
-      pkg-config
+    # ─────────────────────────────────────────────────────────────────────────
+    # DEVELOPERS - Programming and dev tools
+    # ─────────────────────────────────────────────────────────────────────────
 
-      # Language runtimes (system-wide for build deps)
-      python3
-      nodejs
+    developers = with pkgs; [
+      # Editors
+      neovim
+      vscode
+
+      # CLI dev tools
+      gh                                  # GitHub CLI
+      jq
+      ripgrep
+      fd
+      btop
+
+      # Build essentials
+      gnumake gcc pkg-config
+      python3 nodejs
+
+      # Rust
+      rustup
     ];
 
-    system-admin = with pkgs; [
-      # System monitoring
-      iotop
-      lsof
-      strace
+    # ─────────────────────────────────────────────────────────────────────────
+    # DESKTOP - Wayland/Hyprland environment
+    # ─────────────────────────────────────────────────────────────────────────
 
-      # Networking
-      tcpdump
-      nmap
+    desktop = with pkgs; [
+      # Terminal & launcher
+      kitty
+      rofi
 
-      # Disk utils
-      ncdu
-      duf
+      # File manager
+      pcmanfm
 
-      # Android
+      # Status bar & notifications
+      waybar
+      dunst
+
+      # Wallpaper
+      hyprpaper
+
+      # Audio control
+      pavucontrol
+      playerctl
+
+      # Authentication
+      polkit_gnome
+
+      # Portal
+      xdg-desktop-portal-hyprland
+    ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # GAMING - Steam + tools
+    # ─────────────────────────────────────────────────────────────────────────
+
+    gaming = with pkgs; [
+      steam                               # FHS env + 32-bit libs
+      steamcmd
+      steam-tui
+      gamemode
+      mangohud
+      winetricks
+      protontricks
+
+      # Other stores
+      minigalaxy                          # GOG
+      itch
+      heroic                              # Epic/GOG/Amazon
+      retroarch
+    ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # VIEWERS - Media consumption (lightweight)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    viewers = with pkgs; [
+      # Image viewers
+      loupe gthumb
+      imagemagick                         # CLI image tools
+
+      # Video players
+      mpv vlc celluloid
+
+      # Music players
+      spotify
+      rhythmbox
+      playerctl
+
+      # Documents
+      zathura                             # PDF viewer
+    ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # EDITORS - Image/document editing (medium weight)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    editors = with pkgs; [
+      gimp inkscape krita darktable
+
+      # Music tagging
+      picard easytag soundconverter
+    ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PRODUCERS - Video/audio production (HEAVY - ffmpeg, kdenlive, etc.)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    producers = with pkgs; [
+      # Video production (these pull ffmpeg)
+      obs-studio
+      obs-studio-plugins.wlrobs
+      obs-studio-plugins.obs-pipewire-audio-capture
+      kdePackages.kdenlive
+      shotcut
+      handbrake
+      ffmpeg
+
+      # Music production
+      ardour lmms
+      surge-XT vital calf lsp-plugins
+      qsynth carla
+      easyeffects helvum qpwgraph
+    ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # GAMEDEV - Game development tools
+    # ─────────────────────────────────────────────────────────────────────────
+
+    gamedev = with pkgs; [
+      unityhub
+      blender
+    ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # COMMUNICATION - Web, chat, office
+    # ─────────────────────────────────────────────────────────────────────────
+
+    communication = with pkgs; [
+      firefox
+      chromium
+      discord
+      element-desktop
+      signal-desktop
+
+      # Office
+      onlyoffice-desktopeditors
+      obsidian
+      zathura
+    ];
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SYSADMIN - System administration tools
+    # ─────────────────────────────────────────────────────────────────────────
+
+    sysadmin = with pkgs; [
+      iotop lsof strace
+      tcpdump nmap
+      ncdu duf
       android-tools
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # GAMING (Steam + dependencies - MUST be system-level)
-    # ─────────────────────────────────────────────────────────────────────────
-
-    gaming-system = with pkgs; [
-      steam                 # FHS env + 32-bit libs
-      gamemode              # System service
-      mangohud              # Library injection
     ];
   };
 

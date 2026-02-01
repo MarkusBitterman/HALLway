@@ -12,15 +12,32 @@ HALLway uses a **flake-based NixOS installation** with:
 - **LUKS encryption** for full disk encryption
 - **ZFS** for the root filesystem (with datasets for `/`, `/home`, `/nix`)
 - **Separate boot partition** (FAT32 for EFI)
-- **Encrypted swap** for hibernation support
+- **Encrypted swap** (optional, for hibernation support)
 
 ## Prerequisites
 
-- NixOS installer USB (graphical recommended for ZFS support)
+- **NixOS Graphical Installer USB** (includes ZFS kernel modules)
 - Target hardware with:
-  - Boot device (can be separate from root, e.g., eMMC or USB)
+  - Boot device (can be separate from root, e.g., eMMC)
   - Root storage device (SSD recommended)
-- Network access (to clone from GitHub) or offline copy of HALLway
+- Network access (to clone from GitHub)
+
+---
+
+## Installation Overview
+
+1. **Boot** from NixOS Graphical Installer USB
+2. **Partition** your disks (EFI boot, encrypted root, optional swap)
+3. **Create** LUKS containers and ZFS pool with datasets
+4. **Mount** filesystems to `/mnt/<hostname>`
+5. **Clone** HALLway flake to `/mnt/<hostname>/etc/nixos`
+6. **Run** `nixos-install --root /mnt/<hostname> --flake .#<hostname>`
+7. **Reboot** into your new system
+
+> **Note**: The installer runs from a RAM-based tmpfs with limited space (~3GB).
+> The `nixos-install` command builds directly to your target ZFS store,
+> bypassing this limitation. Do NOT run `nix build` for validation - use
+> `nix flake check` instead (minimal disk usage).
 
 ---
 
@@ -101,9 +118,13 @@ nixosConfigurations."<your-hostname>" = nixpkgs.lib.nixosSystem {
 ```bash
 sudo nixos-install \
   --root /mnt/<hostname> \
-  --flake /mnt/<hostname>/etc/nixos#<your-hostname> \
+  --flake /mnt/<hostname>/etc/nixos#<hostname> \
   --no-root-password
 ```
+
+> **Tip**: If using VS Code on the installer, there are pre-configured tasks:
+> - `🧪 Validate` - Run `nix flake check` before installing
+> - `🚀 Install` - Run the install with logging to `logs/`
 
 ### 8. Reboot
 
@@ -148,3 +169,36 @@ sudo systemd-cryptenroll --tpm2-device=auto /dev/<luks-device>
 Then enable in `hardware-configuration.nix`:
 ```nix
 boot.initrd.luks.devices."<name>".crypttabExtraOpts = [ "tpm2-device=auto" ];
+```
+
+---
+
+## Troubleshooting
+
+### "No space left on device" during install
+
+The NixOS installer uses a ~3GB RAM-based tmpfs for `/nix/.rw-store`. This fills up quickly.
+
+**Solutions:**
+1. **Use `nixos-install` directly** - it builds to the target store, not tmpfs
+2. **Run garbage collection**: `sudo nix-collect-garbage -d`
+3. **Add swap** from a spare USB drive for overflow:
+   ```bash
+   sudo mkswap /dev/sdX1
+   sudo swapon /dev/sdX1
+   ```
+4. **Avoid running `nix build`** - use `nix flake check` for validation instead
+
+### "experimental feature 'flakes' is disabled"
+
+The installer may not have flakes enabled by default. Use `nix-shell`:
+```bash
+cd /mnt/<hostname>/etc/nixos
+nix-shell  # Enters shell with flakes enabled
+nix flake check
+```
+
+Or set the environment variable:
+```bash
+export NIX_CONFIG="experimental-features = nix-command flakes"
+```
