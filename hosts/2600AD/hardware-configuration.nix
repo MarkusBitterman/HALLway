@@ -36,7 +36,7 @@
   fileSystems."/boot" = {
     device = "/dev/disk/by-label/COMBAT";
     fsType = "vfat";
-    options = [ "nofail" "noatime" "fmask=0022" "dmask=0022" ];
+    options = [ "nofail" "noatime" "fmask=0077" "dmask=0077" ];
     neededForBoot = true;
   };
 
