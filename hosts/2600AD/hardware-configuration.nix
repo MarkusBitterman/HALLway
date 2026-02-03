@@ -19,7 +19,7 @@
   # TPM2 auto-unlock can be enrolled after install via systemd-cryptenroll
 
   # Encrypted swap on eMMC (STELLA = Atari 2600 chip name)
-  boot.initrd.luks.devices."stella" = {
+  boot.initrd.luks.devices."stella_crypt" = {
     device = "/dev/disk/by-label/STELLA";
     # For TPM2 auto-unlock, add:
     # crypttabExtraOpts = [ "tpm2-device=auto" ];
@@ -36,7 +36,7 @@
   fileSystems."/boot" = {
     device = "/dev/disk/by-label/COMBAT";
     fsType = "vfat";
-    options = [ "nofail" "noatime" ];
+    options = [ "nofail" "noatime" "fmask=0022" "dmask=0022" ];
     neededForBoot = true;
   };
 
@@ -53,11 +53,15 @@
     device = "cartridge/nix";
     fsType = "zfs";
   };
+  fileSystems."/var" = {
+    device = "cartridge/var";
+    fsType = "zfs";
+  };
 
   # Encrypted swap on eMMC partition 2
   swapDevices = [
     {
-      device = "/dev/mapper/stella";
+      device = "/dev/mapper/stella_crypt";
       # randomEncryption.enable = true; # Alternative: re-encrypt on each boot
       # ^ this would disable hibernation; keeping it crypted with TPM2 lets us hibernate
     }
