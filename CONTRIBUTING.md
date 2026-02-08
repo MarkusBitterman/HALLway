@@ -4,10 +4,19 @@ Thank you for your interest in contributing to HALLway! This guide will help you
 
 ## Table of Contents
 
+- [Understanding HALLway](#understanding-hallway)
 - [Dev Environment Quickstart](#dev-environment-quickstart)
 - [Working with Copilot](#working-with-copilot)
 - [Code Style and Formatting](#code-style-and-formatting)
 - [Pull Request Process](#pull-request-process)
+
+## Understanding HALLway
+
+Before contributing, familiarize yourself with HALLway's architecture:
+
+- **[HALLway Project Bible](HALLway%20Project%20Bible.md)** - Vision and philosophy
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - How the repository is organized and components work together
+- **[README.md](README.md)** - User management and package groups
 
 ## Dev Environment Quickstart
 

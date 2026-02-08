@@ -1,5 +1,7 @@
 # HALLway
 
+> **📖 New to HALLway?** See the [Documentation Map](docs/DOCUMENTATION_MAP.md) to find what you need.
+
 ## Table of Contents
 - [Overview](#overview)
 - [Getting Started](#getting-started)
@@ -21,6 +23,7 @@ Not "privacy theater." Not paranoia. Just _practical_ **peace of mind**.
 ### Prerequisites
 
 - [Nix](https://nixos.org/) with flakes enabled
+- HALLway targets **NixOS unstable** (currently tracking 25.11) for latest package availability
 
 ### Quick Start
 
@@ -44,7 +47,7 @@ nix build .#nixosConfigurations.2600AD.config.system.build.toplevel
 
 ### VS Code Integration
 
-HALLway includes comprehensive VS Code integration:
+HALLway includes comprehensive VS Code integration with pre-configured tasks:
 
 **Quick Tasks** (Ctrl+Shift+P → "Tasks: Run Task"):
 - **Build System** (Ctrl+Shift+B) - Build NixOS configuration
@@ -53,16 +56,21 @@ HALLway includes comprehensive VS Code integration:
 - **Check Install Progress** - Monitor installation logs
 - **List Available Packages** - View all role groups
 
-See [`.vscode/tasks.json`](.vscode/tasks.json) for all available tasks.
+See [VS Code Tasks Documentation](docs/VSCODE_TASKS.md) for complete task reference.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup instructions.
 
 ## Project Documentation
 
+> **🗺️ Can't find what you need?** Check the [Documentation Map](docs/DOCUMENTATION_MAP.md) for a complete guide.
+
 - [HALLway Project Bible](HALLway%20Project%20Bible.md) — Comprehensive project vision and details
+- [Architecture & File Structure](docs/ARCHITECTURE.md) — Repository organization and how components work together
 - [Contributing Guide](CONTRIBUTING.md) — How to contribute to HALLway
 - [Committing Guide](COMMITTING.md) — How to commit changes to the repository
 - [Development Tools](docs/dev-tools.md) — Tools and workflows for development
+- [VS Code Tasks](docs/VSCODE_TASKS.md) — Pre-configured tasks for installation and development
+- [Troubleshooting Guide](docs/TROUBLESHOOTING.md) — Solutions to common issues
 
 ### Host Documentation
 

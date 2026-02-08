@@ -238,10 +238,10 @@ This section documents the complete process for creating a fresh NixOS installat
 
 ### Disk Layout
 - **eMMC** (`/dev/mmcblk0`) - ~32GB internal storage
-  1. `mmcblk0p1`: `/boot` partition (~2GB) - FAT32, labeled "BOOT"
-  2. `mmcblk0p2`: Encrypted swap (~30GB) - LUKS labeled "CRYPT_SWAP", inner volume labeled "SWAP"
+  1. `mmcblk0p1`: `/boot` partition (~2GB) - FAT32, labeled "COMBAT" (Atari 2600 pack-in game)
+  2. `mmcblk0p2`: Encrypted swap (~30GB) - LUKS labeled "STELLA" (Atari 2600 CPU chip), mapper: "stella"
 - **SSD** (`/dev/sda`) - 1TB SATA M.2
-  1. Entire disk - LUKS labeled "CRYPT_ROOT", contains ZFS pool "cartridge"
+  1. Entire disk - LUKS labeled "CARTRIDGE" (Atari 2600 game cartridge), mapper: "cartridge_crypt", contains ZFS pool "cartridge"
 
 ### Prerequisites
 - NixOS installation USB media (see USB creation steps above)
@@ -279,32 +279,32 @@ sgdisk -p /dev/mmcblk0
 
 ### Step 3: Format boot partition and set up encrypted swap
 ```bash
-# Format the EFI boot partition with label BOOT
-mkfs.fat -F 32 -n BOOT /dev/mmcblk0p1
+# Format the EFI boot partition with label COMBAT (Atari 2600 pack-in game)
+mkfs.fat -F 32 -n COMBAT /dev/mmcblk0p1
 
-# Create LUKS encrypted swap partition with label CRYPT_SWAP
-cryptsetup luksFormat --type luks2 --label CRYPT_SWAP /dev/mmcblk0p2
+# Create LUKS encrypted swap partition with label STELLA (Atari 2600 CPU chip)
+cryptsetup luksFormat --type luks2 --label STELLA /dev/mmcblk0p2
 
 # Open encrypted swap using label and format inner volume
-cryptsetup open /dev/disk/by-label/CRYPT_SWAP cryptswap
-mkswap -L SWAP /dev/mapper/cryptswap
+cryptsetup open /dev/disk/by-label/STELLA stella
+mkswap -L SWAP /dev/mapper/stella
 ```
 
 ### Step 4: Create LUKS container and ZFS pool on SSD
 
 ```bash
-# Create LUKS encrypted container on the entire SSD with label CRYPT_ROOT
+# Create LUKS encrypted container on the entire SSD with label CARTRIDGE (Atari 2600 game cartridge)
 # You will be prompted to set a passphrase - REMEMBER THIS!
-cryptsetup luksFormat --type luks2 --label CRYPT_ROOT /dev/sda
+cryptsetup luksFormat --type luks2 --label CARTRIDGE /dev/sda
 
-# Open the encrypted container using label
-cryptsetup open /dev/disk/by-label/CRYPT_ROOT cryptroot
+# Open the encrypted container using label (mapper name: cartridge_crypt)
+cryptsetup open /dev/disk/by-label/CARTRIDGE cartridge_crypt
 
 # Create ZFS pool named "cartridge" on the encrypted device
 # -O mountpoint=none: Don't auto-mount, we'll use legacy mounts for NixOS
 # -O atime=off: Improves performance
-# -O compression=zstd: Enable compression
-zpool create -f -O mountpoint=none -O atime=off -O compression=zstd -O xattr=sa -O acltype=posixacl cartridge /dev/mapper/cryptroot
+# -O compression=lz4: Enable compression (lz4 is fast; zstd for better compression)
+zpool create -f -O mountpoint=none -O atime=off -O compression=lz4 -O xattr=sa -O acltype=posixacl cartridge /dev/mapper/cartridge_crypt
 
 # Create ZFS datasets with optimized settings
 zfs create -o mountpoint=legacy cartridge/root
@@ -328,24 +328,24 @@ mount -t zfs cartridge/home /mnt/home
 mount -t zfs cartridge/nix /mnt/nix
 
 # Mount the boot partition using label
-mount /dev/disk/by-label/BOOT /mnt/boot
+mount /dev/disk/by-label/COMBAT /mnt/boot
 
 # Activate encrypted swap
-swapon /dev/mapper/cryptswap
+swapon /dev/mapper/stella
 ```
 
 ### Step 6: TPM2 enrollment
 Enroll the LUKS keys with TPM2 for automatic unlocking:
 ```bash
 # Enroll TPM2 for the SSD (root filesystem) using label
-systemd-cryptenroll --tpm2-device=auto /dev/disk/by-label/CRYPT_ROOT
+systemd-cryptenroll --tpm2-device=auto /dev/disk/by-label/CARTRIDGE
 
 # Enroll TPM2 for the swap partition using label
-systemd-cryptenroll --tpm2-device=auto /dev/disk/by-label/CRYPT_SWAP
+systemd-cryptenroll --tpm2-device=auto /dev/disk/by-label/STELLA
 
 # Verify enrollment on both devices
-systemd-cryptenroll /dev/disk/by-label/CRYPT_ROOT
-systemd-cryptenroll /dev/disk/by-label/CRYPT_SWAP
+systemd-cryptenroll /dev/disk/by-label/CARTRIDGE
+systemd-cryptenroll /dev/disk/by-label/STELLA
 ```
 
 ### Step 7: Set up configuration with flakes
@@ -515,7 +515,7 @@ Or in the module file (`users.nix`), add to `defaultPackageGroups`.
 
 ### If ZFS import fails during boot:
 1. Boot from USB installer
-2. Decrypt the LUKS container: `cryptsetup open /dev/disk/by-label/CRYPT_ROOT cryptroot`
+2. Decrypt the LUKS container: `cryptsetup open /dev/disk/by-label/CARTRIDGE cartridge_crypt`
 3. Import the pool manually: `zpool import -f cartridge`
 4. Check pool status: `zpool status`
 5. Mount and `nixos-enter` to fix configuration
@@ -523,12 +523,12 @@ Or in the module file (`users.nix`), add to `defaultPackageGroups`.
 ### If TPM2 unlock fails:
 1. Boot will prompt for LUKS passphrase
 2. After boot, re-enroll TPM2:
-   - For SSD: `sudo systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto /dev/disk/by-label/CRYPT_ROOT`
-   - For swap: `sudo systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto /dev/disk/by-label/CRYPT_SWAP`
+   - For SSD: `sudo systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto /dev/disk/by-label/CARTRIDGE`
+   - For swap: `sudo systemd-cryptenroll --wipe-slot=tpm2 --tpm2-device=auto /dev/disk/by-label/STELLA`
 
 ### If hibernation doesn't work:
 1. Verify swap is active: `swapon --show`
-2. Check resume device in configuration matches `/dev/mapper/cryptswap`
+2. Check resume device in configuration matches `/dev/mapper/stella`
 3. Test with `systemctl hibernate`
 
 ## Documentation Verification Summary
