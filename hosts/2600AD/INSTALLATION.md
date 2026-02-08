@@ -205,6 +205,57 @@ Remove USB when prompted.
 
 ---
 
+## Verify Hardware & Kernel Modules
+
+After first boot, verify that your hardware was detected and drivers loaded correctly:
+
+### Check Swap Activation
+
+```bash
+# Verify encrypted swap is active
+swapon --show
+
+# Expected output: /dev/dm-1 (STELLA) should be listed with ~27GB
+# If missing, check kernel logs: journalctl -b | grep -i stella
+```
+
+### Verify Audio Hardware
+
+The Atari VCS 800 uses AMD Ryzen R1606G APU with HDMI audio via HDA codec. Verify modules loaded:
+
+```bash
+# Check kernel modules are loaded
+lsmod | grep -E "snd_hda|snd_acp|snd_sof"
+
+# Expected: snd_hda_codec_hdmi, snd_acp_pci, snd_sof_amd_* should appear
+```
+
+**Note**: ALSA tools (`aplay`, `pactl`) may not be in default PATH. If you need them for manual testing, they are in the `sysadmin` or `producers` package groups.
+
+### Check GPU & Display
+
+```bash
+# Verify AMD GPU driver loaded
+lsmod | grep amdgpu
+
+# If display is working, amdgpu is loaded and console output is visible
+```
+
+### Check Kernel Errors at Boot
+
+If hardware isn't detected properly, check boot logs for failures:
+
+```bash
+# Look for module loading errors
+journalctl -b | grep -iE "failed|error|module" | head -20
+```
+
+**Known Issues**:
+- AMD GPU microcode warnings during boot (non-critical): `psp gfx command LOAD_IP_FW failed` — firmware may have limitations on R1606G APU but system still works
+- eMMC reported as SD card slot by BIOS is normal for Atari VCS 800 hardware design
+
+---
+
 ## Post-Install: TPM2 Auto-Unlock (Optional)
 
 Enroll TPM2 to avoid typing passphrases on every boot:

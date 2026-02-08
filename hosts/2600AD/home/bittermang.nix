@@ -130,4 +130,10 @@
     enable = true;
     # Add starship customizations here
   };
+
+  # Direnv - automatic Nix environment loading
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
 }

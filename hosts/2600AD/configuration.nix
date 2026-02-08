@@ -18,7 +18,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   boot.kernelPackages = pkgs.linuxPackages;  # Stable kernel (guaranteed ZFS support)
-  boot.resumeDevice = "/dev/mapper/stella";  # Encrypted swap for hibernation
+  boot.zfs.allowHibernation = true;
+  boot.zfs.forceImportRoot = false;
+  boot.resumeDevice = "/dev/mapper/stella_crypt";  # Encrypted swap for hibernation
 
   # ═══════════════════════════════════════════════════════════════════════════
   # ZFS
@@ -40,6 +42,7 @@
 
   networking.hostId = "ad42069f";  # Required for ZFS
   networking.hostName = "2600AD";
+  networking.useNetworkd = true;
 
   systemd.network.enable = true;
   systemd.network.networks."10-lan" = {
@@ -65,6 +68,14 @@
 
   time.timeZone = "America/Chicago";
   i18n.defaultLocale = "en_US.UTF-8";
+
+  # ___________________________________________________________________________
+  # DISPLAY MANAGER (troubleshooting with Gnome)
+  # ___________________________________________________________________________
+  services = {
+    desktopManager.gnome.enable = true;
+    displayManager.gdm.enable = true;
+  };
 
   # ═══════════════════════════════════════════════════════════════════════════
   # ENVIRONMENT
@@ -158,14 +169,11 @@
       "desktop"        # Hyprland/Wayland environment
       "viewers"        # Media viewers (mpv, vlc, loupe, spotify)
       "communication"  # Web, chat, office
-      # ───────────────────────────────────────────────────────────────────────
-      # DISABLED FOR INITIAL INSTALL (ffmpeg builds from source, takes hours)
-      # Uncomment after first successful boot:
-      # "gaming"       # Steam + gaming tools
-      # "editors"      # GIMP, Inkscape, Krita
-      # "producers"    # OBS, Kdenlive, Handbrake (pulls ffmpeg)
-      # "gamedev"      # Unity, Blender
-      # "sysadmin"     # iotop, tcpdump, nmap
+      "gaming"       # Steam + gaming tools
+      "editors"      # GIMP, Inkscape, Krita
+      "producers"    # OBS, Ardour (kdenlive/handbrake/ffmpeg temporarily disabled - GCC 15)
+      "gamedev"      # Unity, Blender
+      "sysadmin"     # iotop, tcpdump, nmap
     ];
 
     # One-off packages not in any group

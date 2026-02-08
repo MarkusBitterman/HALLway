@@ -62,6 +62,7 @@
   swapDevices = [
     {
       device = "/dev/mapper/stella_crypt";
+      priority = 100;
       # randomEncryption.enable = true; # Alternative: re-encrypt on each boot
       # ^ this would disable hibernation; keeping it crypted with TPM2 lets us hibernate
     }
@@ -69,19 +70,24 @@
 
   # Kernel modules for boot and hardware support
   boot.initrd.availableKernelModules = [
-    "xhci_pci" "ahci" "nvme" "usbhid" "sd_mod" "sr_mod"
+    "xhci_pci" "nvme" "usb_storage" "usbhid" "sdhci_acpi" "sd_mod" "ccp" "sr_mod"
   ];
   boot.initrd.kernelModules = [
     "amdgpu"  # Load AMD GPU support early to enable console
+    "ahci" # SATA3 controller, M.2 drive
+    "snd_hda_intel"
+    "snd_acp_pci"
+    "snd_hda_codec"
+    "snd_hda_codec_hdmi"
   ];
   boot.kernelModules = [
     "kvm_amd"  # Hardware virtualization support
     "i2c_piix4" # AMD SMBus / sensors
+    "i2c_amd_mp2_pci" #Non-VGA unclassified device: Advanced Micro Devices, Inc. [AMD] Raven/Raven2/Renoir Non-Sensor Fusion Hub KMDF driver
   ];
   boot.extraModulePackages = [ ];
-
+  boot.kernelParams = [ "vm.swappiness=100"];
   # Platform and DHCP settings (from original hardware-configuration.nix pattern)
-  networking.useDHCP = lib.mkDefault true;
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   # CPU microcode (AMD)
@@ -97,13 +103,4 @@
   # PCIe ASPM for power saving (optional)
   powerManagement.cpuFreqGovernor = lib.mkDefault "ondemand";
   services.udev.packages = [ pkgs.hwdata ];
-
-  # Temporary working fallback if ZFS import fails:
-  # fileSystems."/mnt/cryptroot" = {
-  #   device = "/dev/mapper/cryptroot";
-  #   fsType = "ext4";
-  #   options = [ "nofail" ];
-  # };
-
-  # Note: actual module names may vary; this is a starting point.
 }

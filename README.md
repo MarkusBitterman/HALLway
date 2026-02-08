@@ -47,11 +47,15 @@ nix build .#nixosConfigurations.2600AD.config.system.build.toplevel
 HALLway includes comprehensive VS Code integration:
 
 **Quick Tasks** (Ctrl+Shift+P → "Tasks: Run Task"):
-- **Build System** (Ctrl+Shift+B) - Build NixOS configuration
-- **Nix Flake Check** - Validate flake syntax
-- **Nix Format** - Format all .nix files
-- **Check Install Progress** - Monitor installation logs
-- **List Available Packages** - View all role groups
+- **✅ Verify** (Ctrl+Shift+T) — Validate flake syntax with `nix flake check`
+- **🧑‍🔬 Test All** — Flake check + system eval + home-manager eval
+- **🛠️ Build** — Build system closure without activating
+- **⚡ Switch** (Ctrl+Shift+B) — `nixos-rebuild switch` to activate changes
+- **✨ Format** — Format all `.nix` files with `nixfmt-rfc-style`
+- **🔄 Update** — Update all flake inputs
+- **🖴 Disk Space** — ZFS pool, nix store, and memory status
+- **🗑️ GC** — Garbage collect old generations and unused store paths
+- **🗑️ Clean** — Remove build results and logs
 
 See [`.vscode/tasks.json`](.vscode/tasks.json) for all available tasks.
 
@@ -116,7 +120,7 @@ This keeps configuration simple, explicit, and avoids DE/app bloat by design.
 #### Media (Lightweight → Heavy)
 - `viewers` — Media consumption (mpv, vlc, spotify, loupe, zathura) — *lightweight*
 - `editors` — Image/audio editing (gimp, inkscape, krita, picard) — *medium*
-- `producers` — A/V production (obs, kdenlive, handbrake, ffmpeg, ardour) — *⚠️ heavy builds*
+- `producers` — A/V production (obs, ardour) — *⚠️ heavy builds* — ⚠️ `handbrake`, `kdenlive`, `ffmpeg` temporarily disabled (GCC 15 build failure on nixpkgs-unstable)
 
 #### Gaming & Creative
 - `gaming` — Steam, Heroic, RetroArch, GameMode, MangoHUD

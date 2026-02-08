@@ -17,11 +17,18 @@ HALLway is a NixOS-based operating system focused on **local-first computing** w
 ### Module System (`modules/`)
 - `userRoles.nix`: Role-based user management module defining package groups (e.g., `developers`, `gaming`, `desktop`)
 - **Philosophy**: Users defined by what they DO (roles), not just what they can ACCESS
+- **Guest User Support**: `isGuest = true` creates ephemeral tmpfs home (wiped on reboot), configurable size via `guestTmpfsSize`
 - Usage example:
   ```nix
   roles.users.bittermang = {
     groups = [ "developers" "gaming" "desktop" ];
     extraPackages = [ pkgs.blender ];
+  };
+
+  roles.users.guest = {
+    isGuest = true;
+    guestTmpfsSize = "2G";  # Ephemeral home, wiped on reboot
+    groups = [ "desktop" "viewers" ];
   };
   ```
 
@@ -51,12 +58,31 @@ nix fmt                  # Format all .nix files (nixfmt-rfc-style, RFC 166)
 nix build .#nixosConfigurations.2600AD.config.system.build.toplevel  # Build system
 ```
 
-### VS Code Tasks
-- **Nix Flake Check** (Ctrl+Shift+P → Run Task) - validates flake, runs by default
-- **Nix Format** - formats with `nixfmt-rfc-style`
+### VS Code Tasks (Ctrl+Shift+P → "Tasks: Run Task")
+
+**Validation**:
+- `✅ Verify` (default test task) - `nix flake check` with trace
+- `🧑‍🔬 Test All` - flake check + system eval + home-manager eval
+
+**Build & Deploy**:
+- `⚡ Switch` (default build task) - `nixos-rebuild switch` to activate changes
+- `🛠️ Build` - build system closure without activating (dry-run)
+
+**Daily**:
+- `✨ Format` - format all .nix files with `nixfmt-rfc-style`
+- `🔄 Update` - update all flake inputs
+
+**Maintenance**:
+- `🖴 Disk Space` - ZFS pool, nix store, and memory status
+- `🗑️ GC` - garbage collect old generations and unused store paths
+- `🗑️ Clean` - remove build results and logs
 
 ### Testing Changes
 ```bash
+# During development (from dev shell):
+nix flake check          # Quick validation
+nix build .#nixosConfigurations.2600AD.config.system.build.toplevel
+
 # On the 2600AD host, rebuild and switch:
 sudo nixos-rebuild switch --flake .#2600AD
 ```
@@ -148,8 +174,9 @@ From `CONTRIBUTING.md`:
 
 **Key Files**:
 - `flake.nix` - Entry point, defines all outputs
-- `modules/userRoles.nix` - Role-based package groups (416 lines, read for full context)
+- `modules/userRoles.nix` - Role-based package groups (435 lines, read for full context)
 - `hosts/2600AD/configuration.nix` - First reference host
+- `.vscode/tasks.json` - All VS Code tasks (9 tasks for validation, build, maintenance)
 - `CONTRIBUTING.md` - Development workflows
 - `HALLway Project Bible.md` - Vision and philosophy
 

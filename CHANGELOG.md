@@ -10,39 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **VS Code Integration**: Comprehensive tasks, launch configs, and settings
-  - Build System task (Ctrl+Shift+B) - One-click NixOS build
-  - Check Install Progress task - Monitor `install-history.log`
-  - List Available Packages task - Query role groups via `nix eval`
-  - Git workflow tasks (status, stage all)
-  - Enhanced `.vscode/settings.json` with file exclusions
-- **GNOME & Plasma App Groups**: Fine-grained DE package control
-  - `gnome-core`, `gnome-utils`, `gnome-media`, `gnome-productivity`
-  - `plasma-core`, `plasma-utils`, `plasma-media`, `plasma-productivity`, `plasma-network`
-  - Mix-and-match DE apps without full environment bloat
-- **shell.nix**: Development environment for git, gh, nixd, nixfmt, agenix
-- **Install Logging**: Versioned `install-history.log` with timestamps
-- **README Documentation**:
-  - Three-line philosophy: `groups` (software), `extraGroups` (hardware), `extraPackages` (personal)
-  - Usage examples with and without Home Manager
-  - Methods for excluding unwanted apps
+- **ZFS Hibernation Support**: `boot.zfs.allowHibernation = true` with `forceImportRoot = false` for safe hibernate-to-swap
+- **GNOME/GDM Display Manager**: Added as alternative display manager alongside Hyprland
+- **systemd-networkd**: Switched to `networking.useNetworkd = true` for modern network management
+- **Direnv Integration**: `programs.direnv` with `nix-direnv` in Home Manager for automatic flake shell activation
+- **Hardware Kernel Modules**: Added AHCI, audio (`snd_hda_intel`, `snd_acp_pci`, `snd_hda_codec`, `snd_hda_codec_hdmi`), I2C (`i2c_amd_mp2_pci`), USB storage, SD card, and CCP modules
+- **Swap Tuning**: `vm.swappiness = 100` kernel parameter and swap priority 100 for aggressive hibernation support
+- **Hardware Verification Guide**: Post-install verification steps in `hosts/2600AD/INSTALLATION.md` (swap, audio, GPU, kernel errors)
+- **New Packages**: `desktop-file-utils` (core), `pciutils` (developers), `dosbox` (gaming), `gparted-full` (sysadmin), `direnv`/`nix-direnv`/`nixd`/`nixfmt` (developers)
+- **Colored Task Logging**: VS Code tasks use `script -qec` to preserve ANSI color in terminal while writing timestamped logs to `logs/`
 
 ### Changed
-- **Kernel**: `linuxPackages_zen` → `linuxPackages` (stable 6.12.67) for ZFS compatibility
-- **Package Management**: VSCode moved to `developers` group (system-installed, Home Manager configures)
-- **`.gitignore`**: Added `*.log` and `install-history.log` exclusions
+- **VS Code Tasks Modernized**: Removed installer-era tasks (`🚀 Install`, `🛠️ Build ZFS`, `🔥🗑️ GC Now`); promoted `⚡ Switch` to default build, added `🛠️ Build` for standard `nix build`. All commands now use direct nix calls (no `nix-shell --run` wrappers)
+- **All Role Groups Enabled**: `gaming`, `editors`, `producers`, `gamedev`, `sysadmin` groups now active for bittermang
+- **Copilot Instructions**: Updated `.github/copilot-instructions.md` with guest user docs, full VS Code task listing, corrected references
+- **Boot Resume Device**: Fixed `resumeDevice` path from `stella` to `stella_crypt` (correct dm-crypt mapping)
+- **Hardware Config Cleanup**: Removed deprecated fallback ext4 mount config and `networking.useDHCP` override
 
-### Fixed
-- **ZFS Kernel Compatibility**: Resolved broken package error with 6.18.x kernels
-- **VSCode Conflict**: Removed Home Manager package installation to avoid buildEnv collision
-- **LUKS Device Mappings**: Corrected `cryptswap`→`stella`, `cryptroot`→`cartridge_crypt`
-- **Boot Partition Label**: Changed `BOOT`→`COMBAT` to match actual eMMC label
-- **Package Renames**: Updated `rofi-wayland`→`rofi`, `musicbrainz-picard`→`picard`, etc.
-- **Hardware Config**: Removed deprecated `amdvlk` driver (RADV is default)
-- **XDG Portals**: Added `environment.pathsToLink` for Home Manager portal support
-
-### Security
-- **agenix Module**: Temporarily disabled for initial install (to be re-enabled post-boot)
+### Workarounds
+- **ffmpeg-full Build Failure (GCC 15)**: Temporarily commented out `handbrake`, `kdePackages.kdenlive`, and `ffmpeg` from `producers` group — custom vendored ffmpeg in these packages fails to compile with GCC 15 on nixpkgs-unstable (NixOS/nixpkgs#484121, #486277). Standard `ffmpeg` (non-full) builds fine; will re-enable when fix propagates from trunk
 
 ---
 

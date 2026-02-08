@@ -52,6 +52,7 @@ let
       git curl wget rsync tree htop tmux
       age gnupg                           # Encryption
       gzip bzip2 xz unzip zip             # Compression
+      desktop-file-utils #
     ];
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -69,6 +70,7 @@ let
       ripgrep
       fd
       btop
+      pciutils                            # lspci, etc.
 
       # Build essentials
       gnumake gcc pkg-config
@@ -76,11 +78,19 @@ let
 
       # Rust
       rustup
+
+      # Nix development
+      direnv
+      nix-direnv nixd nixfmt
     ];
 
     # ─────────────────────────────────────────────────────────────────────────
-    # DESKTOP - Wayland/Hyprland environment
+    # Game Development - Unity/Blender etc
     # ─────────────────────────────────────────────────────────────────────────
+    gamedev = with pkgs; [
+      unityhub
+      blender
+    ];
 
     desktop = with pkgs; [
       # Terminal & launcher
@@ -126,6 +136,7 @@ let
       itch
       heroic                              # Epic/GOG/Amazon
       retroarch
+      dosbox
     ];
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -169,25 +180,15 @@ let
       obs-studio
       obs-studio-plugins.wlrobs
       obs-studio-plugins.obs-pipewire-audio-capture
-      kdePackages.kdenlive
-      shotcut
-      handbrake
-      ffmpeg
+      # kdePackages.kdenlive # commented out because of recurring ffmpeg on unstable build problem
+      # handbrake  # BUG: pulls ffmpeg-full which fails to build (vlc.c compile error in nixpkgs-unstable)
+      # ffmpeg
 
       # Music production
       ardour lmms
       surge-XT vital calf lsp-plugins
       qsynth carla
       easyeffects helvum qpwgraph
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # GAMEDEV - Game development tools
-    # ─────────────────────────────────────────────────────────────────────────
-
-    gamedev = with pkgs; [
-      unityhub
-      blender
     ];
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -216,6 +217,7 @@ let
       tcpdump nmap
       ncdu duf
       android-tools
+      gparted-full
     ];
   };
 
