@@ -86,8 +86,22 @@
     "i2c_amd_mp2_pci" #Non-VGA unclassified device: Advanced Micro Devices, Inc. [AMD] Raven/Raven2/Renoir Non-Sensor Fusion Hub KMDF driver
   ];
   boot.extraModulePackages = [ ];
-  boot.kernelParams = [ "vm.swappiness=100"];
-  # Platform and DHCP settings (from original hardware-configuration.nix pattern)
+  boot.kernelParams = [
+    "vm.swappiness=70"
+    "vm.page-cluster=0"
+    "vm.dirty_background_ratio=5"
+    "vm.dirty_ratio=10"
+    "vm.watermark_scale_factor=20"
+    "vm.vfs_cache_pressure=125"
+    "vm.overcommit_memory=2"
+    "vm.overcommit_ratio=80"
+
+    "zswap.enabled=1"
+    "zswap.compressor=zstd"
+    "zswap.max_pool_percent=15"
+    "zswap.accept_threshold_percent=80"
+  ];
+
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
 
   # CPU microcode (AMD)

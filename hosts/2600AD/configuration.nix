@@ -15,12 +15,36 @@
   # BOOT
   # ═══════════════════════════════════════════════════════════════════════════
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelPackages = pkgs.linuxPackages;  # Stable kernel (guaranteed ZFS support)
-  boot.zfs.allowHibernation = true;
-  boot.zfs.forceImportRoot = false;
-  boot.resumeDevice = "/dev/mapper/stella_crypt";  # Encrypted swap for hibernation
+  boot = {
+    loader = {
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+    };
+
+    kernelPackages = pkgs.linuxPackages;  # Stable kernel (guaranteed ZFS support)
+
+    zfs = {
+      allowHibernation = true;
+      forceImportRoot = false;
+    };
+
+    resumeDevice = "/dev/mapper/stella_crypt";  # Encrypted swap for hibernation
+
+    plymouth = {
+      enable = true;
+      theme = "bgrt";
+    };
+
+    consoleLogLevel = 3;
+    initrd.verbose = false;
+    kernelParams = [
+      "quiet"
+      "udev.log_level=3"
+      "systemd.show_status=auto"
+    ];
+    loader.timeout = 0;
+  };
+
 
   # ═══════════════════════════════════════════════════════════════════════════
   # ZFS
@@ -91,6 +115,8 @@
 
   environment.systemPackages = with pkgs; [
     nano
+    tela-icon-theme
+    oreo-cursors-plus
   ];
 
   fonts.packages = with pkgs; [

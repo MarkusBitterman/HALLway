@@ -137,6 +137,8 @@ let
       heroic                              # Epic/GOG/Amazon
       retroarch
       dosbox
+      limo
+      wine-wayland
     ];
 
     # ─────────────────────────────────────────────────────────────────────────
