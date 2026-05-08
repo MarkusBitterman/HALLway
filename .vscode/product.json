@@ -1,0 +1,163 @@
+{
+  "nameShort": "HALLway",
+  "nameLong": "HALLway Code",
+  "applicationName": "hallway",
+  "dataFolderName": ".hallway",
+  "sharedDataFolderName": ".hallway-shared",
+  "win32MutexName": "hallwaycode",
+  "licenseName": "MIT",
+  "licenseUrl": "https://github.com/MarkusBitterman/HALLway/blob/main/LICENSE",
+  "serverLicenseUrl": "https://github.com/MarkusBitterman/HALLway/blob/main/LICENSE",
+  "serverGreeting": [],
+  "serverLicense": [],
+  "serverLicensePrompt": "",
+  "serverApplicationName": "hallway-server",
+  "serverDataFolderName": ".hallway-server",
+  "tunnelApplicationName": "hallway-tunnel",
+  "win32DirName": "HALLway Code",
+  "win32NameVersion": "HALLway Code",
+  "win32RegValueName": "HALLwayCode",
+  "win32x64AppId": "{{d15f3984-6ada-57f3-a5db-8930f003725a}",
+  "win32arm64AppId": "{{3c43d553-6200-53d3-8caa-9c1cdfd2c57a}",
+  "win32x64UserAppId": "{{c6132cd0-96ec-52bd-b0e7-0f9bafb0ce30}",
+  "win32arm64UserAppId": "{{24cfdd23-bf07-5a76-8a6a-31e686a62de9}",
+  "win32AppUserModelId": "HALLway.Code",
+  "win32ShellNameShort": "H&ALLway",
+  "win32TunnelServiceMutex": "hallwaycode-tunnelservice",
+  "win32TunnelMutex": "hallwaycode-tunnel",
+  "darwinBundleIdentifier": "space.hallpass.hallway",
+  "darwinProfileUUID": "b7b40558-6fd0-5d59-876d-ae150326c4e6",
+  "darwinProfilePayloadUUID": "a5ef1f50-7b6f-5066-b885-4120c2a32e8a",
+  "linuxIconName": "hallway",
+  "licenseFileName": "LICENSE",
+  "reportIssueUrl": "https://github.com/MarkusBitterman/HALLway/issues/new",
+  "nodejsRepository": "https://nodejs.org",
+  "urlProtocol": "hallway",
+  "agentsTelemetryAppName": "hallway-agents",
+  "webviewContentExternalBaseUrlTemplate": "https://{{uuid}}.vscode-cdn.net/insider/ef65ac1ba57f57f2a3961bfe94aa20481caca4c6/out/vs/workbench/contrib/webview/browser/pre/",
+  "builtInExtensions": [
+    {
+      "name": "ms-vscode.js-debug-companion",
+      "version": "1.1.3",
+      "sha256": "7380a890787452f14b2db7835dfa94de538caf358ebc263f9d46dd68ac52de93",
+      "repo": "https://github.com/microsoft/vscode-js-debug-companion",
+      "metadata": {
+        "id": "99cb0b7f-7354-4278-b8da-6cc79972169d",
+        "publisherId": {
+          "publisherId": "5f5636e7-69ed-4afe-b5d6-8d231fb3d3ee",
+          "publisherName": "ms-vscode",
+          "displayName": "Microsoft",
+          "flags": "verified"
+        },
+        "publisherDisplayName": "Microsoft"
+      }
+    },
+    {
+      "name": "ms-vscode.js-debug",
+      "version": "1.117.0",
+      "sha256": "854eeb8a785b1f41ba2bd02d7ccd4fdbe10021b61473293973c7e96d036c7fb8",
+      "repo": "https://github.com/microsoft/vscode-js-debug",
+      "metadata": {
+        "id": "25629058-ddac-4e17-abba-74678e126c5d",
+        "publisherId": {
+          "publisherId": "5f5636e7-69ed-4afe-b5d6-8d231fb3d3ee",
+          "publisherName": "ms-vscode",
+          "displayName": "Microsoft",
+          "flags": "verified"
+        },
+        "publisherDisplayName": "Microsoft"
+      }
+    },
+    {
+      "name": "ms-vscode.vscode-js-profile-table",
+      "version": "1.0.10",
+      "sha256": "7361748ddf9fd09d8a2ed1f2a2d7376a2cf9aae708692820b799708385c38e08",
+      "repo": "https://github.com/microsoft/vscode-js-profile-visualizer",
+      "metadata": {
+        "id": "7e52b41b-71ad-457b-ab7e-0620f1fc4feb",
+        "publisherId": {
+          "publisherId": "5f5636e7-69ed-4afe-b5d6-8d231fb3d3ee",
+          "publisherName": "ms-vscode",
+          "displayName": "Microsoft",
+          "flags": "verified"
+        },
+        "publisherDisplayName": "Microsoft"
+      }
+    }
+  ],
+  "onboardingKeymaps": [
+    {
+      "id": "vscode",
+      "label": "VS Code",
+      "description": "Default keyboard mapping"
+    },
+    {
+      "id": "sublime",
+      "label": "Sublime Text",
+      "extensionId": "ms-vscode.sublime-keybindings",
+      "description": "Keyboard mapping from Sublime Text"
+    },
+    {
+      "id": "intellij",
+      "label": "IntelliJ / JetBrains",
+      "extensionId": "k--kato.intellij-idea-keybindings",
+      "description": "Keyboard mapping from IntelliJ IDEA"
+    },
+    {
+      "id": "vim",
+      "label": "Vim",
+      "extensionId": "vscodevim.vim",
+      "description": "Vim modal editing"
+    },
+    {
+      "id": "eclipse",
+      "label": "Eclipse",
+      "extensionId": "alphabotsec.vscode-eclipse-keybindings",
+      "description": "Keyboard mapping from Eclipse"
+    },
+    {
+      "id": "notepadpp",
+      "label": "Notepad++",
+      "extensionId": "ms-vscode.notepadplusplus-keybindings",
+      "description": "Keyboard mapping from Notepad++"
+    }
+  ],
+  "onboardingThemes": [
+    {
+      "id": "dark-2026",
+      "label": "Dark 2026",
+      "themeId": "Dark 2026",
+      "type": "dark"
+    },
+    {
+      "id": "hc-dark",
+      "label": "Dark High Contrast",
+      "themeId": "Default High Contrast",
+      "type": "hcDark"
+    },
+    {
+      "id": "solarized-dark",
+      "label": "Solarized Dark",
+      "themeId": "Solarized Dark",
+      "type": "dark"
+    },
+    {
+      "id": "light-2026",
+      "label": "Light 2026",
+      "themeId": "Light 2026",
+      "type": "light"
+    },
+    {
+      "id": "hc-light",
+      "label": "Light High Contrast",
+      "themeId": "Default High Contrast Light",
+      "type": "hcLight"
+    },
+    {
+      "id": "solarized-light",
+      "label": "Solarized Light",
+      "themeId": "Solarized Light",
+      "type": "light"
+    }
+  ]
+}
