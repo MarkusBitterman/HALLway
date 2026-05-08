@@ -42,14 +42,15 @@ Get a Vultr API key with DNS write permission from the Vultr control panel.
 
 ```bash
 nix develop
+
+# Pipe approach — no editor needed when content is known:
+echo "VULTR_API_KEY=your-vultr-api-key-here" \
+  | age -R ~/.ssh/id_hallpass.pub \
+  -o hosts/HALLpass.space/secrets/acme-vultr-api-key.age
+
+# Or editor approach (opens $EDITOR, paste the line above, save and close):
 rm -f hosts/HALLpass.space/secrets/acme-vultr-api-key.age
 agenix -e hosts/HALLpass.space/secrets/acme-vultr-api-key.age -i ~/.ssh/id_hallpass
-```
-
-Paste this as the file content, then save and close:
-
-```
-VULTR_API_KEY=your-vultr-api-key-here
 ```
 
 ### 3. Create remaining secrets (if not already done)
