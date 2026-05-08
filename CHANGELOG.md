@@ -2,129 +2,96 @@
 
 All notable changes to the HALLway project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
 ## [Unreleased]
 
 ### Added
-- **ZFS Hibernation Support**: `boot.zfs.allowHibernation = true` with `forceImportRoot = false` for safe hibernate-to-swap
-- **GNOME/GDM Display Manager**: Added as alternative display manager alongside Hyprland
-- **systemd-networkd**: Switched to `networking.useNetworkd = true` for modern network management
-- **Direnv Integration**: `programs.direnv` with `nix-direnv` in Home Manager for automatic flake shell activation
-- **Hardware Kernel Modules**: Added AHCI, audio (`snd_hda_intel`, `snd_acp_pci`, `snd_hda_codec`, `snd_hda_codec_hdmi`), I2C (`i2c_amd_mp2_pci`), USB storage, SD card, and CCP modules
-- **Swap Tuning**: `vm.swappiness = 100` kernel parameter and swap priority 100 for aggressive hibernation support
-- **Hardware Verification Guide**: Post-install verification steps in `hosts/2600AD/INSTALLATION.md` (swap, audio, GPU, kernel errors)
-- **New Packages**: `desktop-file-utils` (core), `pciutils` (developers), `dosbox` (gaming), `gparted-full` (sysadmin), `direnv`/`nix-direnv`/`nixd`/`nixfmt` (developers)
-- **Colored Task Logging**: VS Code tasks use `script -qec` to preserve ANSI color in terminal while writing timestamped logs to `logs/`
+
+- **HALLpass.space host**: Second HALLway host — minimal VPS acting as WireGuard hub, Syncthing introducer/relay/discovery, nginx edge, and Mercurial server
+- **Mercurial hosting** (`hg.hallpass.space`): `hgweb` systemd service serving repos from `/srv/hg/repos/**`; nginx reverse proxy with ACME TLS
+- **Static web** (`hallpass.space`): nginx vhost serving `/srv/hallspace/_public/`; ACME TLS via Let's Encrypt
+- **iwd WiFi management** (2600AD): Replaced NetworkManager with `networking.wireless.iwd`; systemd-networkd now manages both ethernet and WiFi; `iwgtk` tray app launched at Hyprland startup
+- **`wifi-home` agenix secret** (2600AD): WiFi credentials deployed as an iwd PSK file at `/var/lib/iwd/<SSID>.psk`
+- **Hyprland session registration** (2600AD): `programs.hyprland.enable = true` in system config — installs the `.desktop` session file so GDM shows Hyprland as a session option
+- **CLAUDE.md**: Project context file for Claude Code AI assistant
 
 ### Changed
-- **VS Code Tasks Modernized**: Removed installer-era tasks (`🚀 Install`, `🛠️ Build ZFS`, `🔥🗑️ GC Now`); promoted `⚡ Switch` to default build, added `🛠️ Build` for standard `nix build`. All commands now use direct nix calls (no `nix-shell --run` wrappers)
-- **All Role Groups Enabled**: `gaming`, `editors`, `producers`, `gamedev`, `sysadmin` groups now active for bittermang
-- **Copilot Instructions**: Updated `.github/copilot-instructions.md` with guest user docs, full VS Code task listing, corrected references
-- **Boot Resume Device**: Fixed `resumeDevice` path from `stella` to `stella_crypt` (correct dm-crypt mapping)
-- **Hardware Config Cleanup**: Removed deprecated fallback ext4 mount config and `networking.useDHCP` override
 
-### Workarounds
-- **ffmpeg-full Build Failure (GCC 15)**: Temporarily commented out `handbrake`, `kdePackages.kdenlive`, and `ffmpeg` from `producers` group — custom vendored ffmpeg in these packages fails to compile with GCC 15 on nixpkgs-unstable (NixOS/nixpkgs#484121, #486277). Standard `ffmpeg` (non-full) builds fine; will re-enable when fix propagates from trunk
+- **Networking (2600AD)**: `networking.networkmanager.enable = false` explicitly set; GNOME no longer enables NetworkManager implicitly; systemd-networkd `20-wifi` entry added with `RequiredForOnline = "no"` so a missing WiFi connection does not stall boot
+- **GDM Wayland** (2600AD): `services.displayManager.gdm.wayland = true` — required for Wayland sessions to appear in the GDM session picker
+- **Hyprland Home Manager** (2600AD): Added `package = pkgs.hyprland` to pin HM to the same package as the system module; removed redundant `xdg-desktop-portal-hyprland` from `home.packages` and the `xdg.portal` block (both owned by the NixOS module)
+- **HALLpass.space system packages**: Added `mercurial`, `age`, `ssh-to-age` for on-server operations
+- **HALLpass.space header**: Added HALLway ASCII box art file header to `configuration.nix`
+- **AI tooling**: Migrated from GitHub Copilot to Claude Code
+
+### Infrastructure
+
+- `systemd.tmpfiles.rules` creates `/srv/hallspace/_public/` and `/srv/hg/repos/` on HALLpass.space activation
+- `recommendedProxySettings = true` added to nginx on HALLpass.space for proper reverse proxy headers
 
 ---
 
 ## [0.0.1] - 2026-01-31 (Codename: 2600AD)
 
-### 🎮 Initial Release
-
-The first HALLway implementation, targeting the Atari VCS 800 as a gaming/media workstation.
+First HALLway implementation, targeting the Atari VCS 800 as a gaming/media workstation.
 
 ### Added
 
 #### Core Infrastructure
-- **Flake-based NixOS configuration** for reproducible builds
-- **HALLway exported as NixOS module** (`nixosModules.roles`) for other flakes to import
-- **ZFS on LUKS** with TPM2 auto-unlock for secure, modern storage
-- **Zen kernel** optimized for gaming workloads
-- **systemd-networkd** for network management
-- **PipeWire** audio with full Bluetooth support
+- Flake-based NixOS configuration for reproducible builds
+- ZFS on LUKS with TPM2 auto-unlock option
+- Stable kernel (`pkgs.linuxPackages`) pinned for guaranteed ZFS module compatibility
+- systemd-networkd for network management
+- PipeWire audio with Bluetooth support
+- zram swap with hibernation support (`boot.zfs.allowHibernation = true`)
+- GNOME/GDM as display manager (Hyprland targeted for daily use)
+- agenix secrets management (SSH keys, WireGuard keys, GPG key, GitHub token, Syncthing GUI password)
+- Home Manager for user environment and dotfile management
 
-#### Role-Based User Management (`userRoles.nix`)
-- Custom NixOS module with `options`/`config` pattern
-- **17 package groups** organized by function:
-  - System: `developers`, `sysadmin`
-  - Gaming: `gaming`
-  - Images: `images-viewing`, `images-editing`
-  - Music: `music-listening`, `music-production`, `music-mixing`, `music-management`
-  - Video: `video-viewing`, `video-production`, `video-editing`
-  - Productivity: `web`, `communication`, `office`
-  - Desktop: `desktop`
-- **Declarative user definitions** via `roles.users.<name>`
-- **Guest user support** with tmpfs home directory (clean room)
-- **Helper functions** exposed via `roles.lib`
-
-#### Home Manager Integration
-- **Clean separation of concerns**:
-  - `roles.users` → Package installation
-  - Home Manager → Program configuration (dotfiles, settings)
-- **Works with or without Home Manager**
-- No package duplication between systems
+#### User Configuration
+- `bittermang` (uid 1000): primary user; packages and config in `home/bittermang.nix`
+- `guest` (uid 1001): ephemeral clean-room session with tmpfs `/home/guest` wiped on reboot
+- Guest packages defined directly on `users.users.guest.packages` (HM persistence pointless for tmpfs home)
 
 #### Desktop Environment
-- **Hyprland compositor** configured for 1368x768@59.85Hz
-- **Waybar**, **rofi-wayland**, **dunst** integration
-- **Polkit** authentication agent
+- Hyprland compositor config in Home Manager (keybindings, monitor resolution, startup apps)
+- Waybar, rofi, dunst, hyprpaper, kitty, pavucontrol, polkit-gnome
+- WireGuard client (`wg-hallspace`) connected to HALLpass.space hub at `10.44.0.2/24`
+- Syncthing client with HALLpass.space as introducer (pending key population)
 
-#### Secrets Management
-- **agenix integration** for SSH keys, GPG keys, tokens
-- Separation of agenix rules file vs NixOS module
+#### 2600AD-Specific Hardware
+- Atari VCS 800 disk layout: eMMC (`mmcblk0`) for boot + swap, SSD (`sda`) for LUKS/ZFS root
+- ZFS pool `cartridge` with datasets: `root`, `home`, `nix`
+- AMD GPU (RADV), gamescope + Steam with Proton/proton-ge-bin
+- `nix-ld` with Wine/Proton library set for non-NixOS ELF binaries
 
-#### Hardware Support
-- **AMD GPU** with AMDVLK drivers and ROCm
-- Early KMS for console graphics
-- Atari VCS 800 specific hardware configuration
-
-#### Documentation
-- Comprehensive installation guide (10-step process)
-- Disk layout documentation (eMMC + SSD)
-- TPM2 enrollment instructions
-- Troubleshooting guide
-
-### Users
-- **bittermang** (uid 1000): Primary user, full access to all groups
-- **guest** (uid 1001): Ephemeral clean-room session
+### Workarounds
+- **ffmpeg-full (GCC 15)**: `handbrake`, `kdePackages.kdenlive`, `ffmpeg` commented out — custom vendored ffmpeg in these packages fails to compile with GCC 15 on nixpkgs-unstable (NixOS/nixpkgs#484121, #486277). Standard ffmpeg builds fine; will re-enable when fix propagates.
 
 ---
 
 ## Roadmap
 
-### [0.0.2] - Planned
-- [ ] Modularize hardware configuration for multi-machine support
-- [ ] Add `roles.presets` for common user archetypes (gamer, developer, artist)
-- [ ] Implement `roles.services` for per-user service management
-- [ ] Add system backup/restore via ZFS snapshots
+### [0.0.2] — HALLpass.space live
+- [ ] First deploy of HALLpass.space (VPS provision, agenix rekey, WireGuard keys, Syncthing IDs)
+- [ ] All placeholder values replaced (`HALLPASS_WG_PUBLIC_KEY`, `DESKTOP_WG_PUBLIC_KEY`, Syncthing device IDs)
+- [ ] HALLway migrated from Git to Mercurial; primary repo at `hg.hallpass.space`
+- [ ] GitHub becomes a read-only mirror
 
-### [0.1.0] - Future
-- [ ] Abstract HALLway into a standalone flake input
-- [ ] Support for multiple machines with shared configuration
-- [ ] Web UI for role/user management
-- [ ] Integration with Home Manager for seamless user environments
-
----
-
-## Philosophy
-
-HALLway is built on these principles:
-
-1. **Declarative over Imperative**: Everything is defined in code
-2. **Roles over Permissions**: Users are defined by what they *do*, not just what they *can access*
-3. **Reproducible by Default**: Any HALLway system can be rebuilt identically
-4. **Clean Room Ready**: Guest sessions leave no trace
-5. **Self-Documenting**: The configuration *is* the documentation
+### [0.1.0] — Multi-device HALLway
+- [ ] Phone on WireGuard overlay + Syncthing sync via HALLpass.space
+- [ ] `2600AD.hallpass.space` DNS resolving over WireGuard
+- [ ] Hyprland as sole desktop (GNOME removed)
+- [ ] ZFS snapshot-based system backup
 
 ---
 
 ## Links
 
-- **GitHub**: [github.com/markusbittermang/hallway](https://github.com/markusbittermang/hallway)
+- **Mercurial** (planned): `hg.hallpass.space`
+- **GitHub** (mirror): [github.com/markusbittermang/hallway](https://github.com/markusbittermang/hallway)
 - **NixOS**: [nixos.org](https://nixos.org)
 - **Home Manager**: [github.com/nix-community/home-manager](https://github.com/nix-community/home-manager)

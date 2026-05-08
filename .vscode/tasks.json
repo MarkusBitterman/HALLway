@@ -74,7 +74,7 @@
     // ═══════════════════════════════════════════════════════════════════════
     {
       "label": "✨ Format",
-      "detail": "Format all .nix files (nixfmt-rfc-style)",
+      "detail": "Format all .nix files (nixfmt)",
       "type": "shell",
       "command": "nix fmt",
       "group": "build",
@@ -100,7 +100,23 @@
       }
     },
     // ═══════════════════════════════════════════════════════════════════════
-    // 🗑️ MAINTENANCE
+    // � SECRETS
+    // ═══════════════════════════════════════════════════════════════════════
+    {
+      "label": "🔑 Secrets",
+      "detail": "Show encryption status of all .age secret files",
+      "type": "shell",
+      "command": "echo '════════════════════════════════════' && echo '  HALLway Secrets Status' && echo '════════════════════════════════════' && for host in 2600AD HALLpass.space; do echo '' && echo \"  ▸ $host\"; for f in hosts/$host/secrets/*.age; do [ -f \"$f\" ] || continue; if head -1 \"$f\" 2>/dev/null | grep -q '^age-encryption'; then echo \"    ✓  $(basename $f)\"; else echo \"    ✗  $(basename $f)  ← run: agenix -e $f\"; fi; done; done && echo '' && echo '════════════════════════════════════' && echo '  See docs/secrets.md for full workflow'",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared"
+      }
+    },
+    // ═══════════════════════════════════════════════════════════════════════
+    // �🗑️ MAINTENANCE
     // ═══════════════════════════════════════════════════════════════════════
     {
       "label": "🖴 Disk Space",

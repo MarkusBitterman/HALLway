@@ -106,11 +106,38 @@ Register your host in `flake.nix`:
 nixosConfigurations."<your-hostname>" = nixpkgs.lib.nixosSystem {
   system = "x86_64-linux";
   modules = [
-    hallwayModules.roles
     ./hosts/<your-hostname>/configuration.nix
     # ... home-manager, agenix, etc.
   ];
 };
+```
+
+### 6.5 Configure agenix secrets before first switch
+
+From the repo root on the target system:
+
+```bash
+# Enter tool shell (agenix command available here)
+nix-shell
+
+# Edit/create encrypted secrets for 2600AD
+agenix -e hosts/2600AD/secrets/ssh_key_github.age
+agenix -e hosts/2600AD/secrets/ssh_key_hobbs.age
+agenix -e hosts/2600AD/secrets/github_token.age
+agenix -e hosts/2600AD/secrets/gpg_key.age
+agenix -e hosts/2600AD/secrets/wg-2600ad-privatekey.age
+agenix -e hosts/2600AD/secrets/syncthing-gui-pass.age
+
+# Edit/create encrypted secrets for HALLpass.space
+agenix -e hosts/HALLpass.space/secrets/ssh_key_github.age
+agenix -e hosts/HALLpass.space/secrets/wg-hallpass-privatekey.age
+agenix -e hosts/HALLpass.space/secrets/syncthing-gui-pass.age
+```
+
+If you need an age recipient from an SSH public key:
+
+```bash
+ssh-to-age < ~/.ssh/id_ed25519.pub
 ```
 
 ### 7. Install
@@ -143,6 +170,7 @@ For detailed, hardware-specific installation instructions:
 | Host | Hardware | Guide |
 |------|----------|-------|
 | 2600AD | Atari VCS 800 | [`hosts/2600AD/INSTALLATION.md`](hosts/2600AD/INSTALLATION.md) |
+| HALLpass.space | Minimal VPS | [`hosts/HALLpass.space/INSTALLATION.md`](hosts/HALLpass.space/INSTALLATION.md) |
 
 ---
 

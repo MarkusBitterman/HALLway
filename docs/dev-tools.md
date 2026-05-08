@@ -9,6 +9,7 @@ HALLway uses Nix flakes for reproducible development environments.
 ### Why Nix?
 
 > Nix gives us the boring superpower that makes everything else possible:
+>
 > - **Reproducible builds** (no "works on my machine" ghost stories) 👻
 > - **Declarative configs** (systems are described, not accidentally assembled) 🧾
 > - Easy to audit "what changed" between builds 🔎
@@ -19,11 +20,14 @@ HALLway uses Nix flakes for reproducible development environments.
 
 | Tool | Purpose |
 |------|---------|
-| `git` | Version control |
+| `git` | Version control (Mercurial migration planned) |
 | `nixd` | Nix language server for editor integration |
-| `nixfmt` | Nix code formatter (nixfmt-rfc-style, RFC 166 style) |
+| `nixfmt` | Nix code formatter (RFC 166 style) |
 | `direnv` | Automatic environment activation |
 | `nix-direnv` | Fast direnv integration for Nix |
+| `agenix` | Encrypted secrets management (ryantm/agenix via `nix run`) |
+| `age` | Age encryption primitives |
+| `ssh-to-age` | Convert SSH ed25519 public keys to age recipient format |
 
 ### Common Commands
 
@@ -49,13 +53,13 @@ Recommended extensions are listed in [.vscode/extensions.json](../.vscode/extens
 
 - **Nix IDE** (`jnoortheen.nix-ide`) - Nix language support
 - **EditorConfig** (`editorconfig.editorconfig`) - Consistent formatting
-- **GitHub Copilot** (`github.copilot`) - AI assistance
-- **GitHub Copilot Chat** (`github.copilot-chat`) - AI chat interface
+- **Claude Code** - AI assistance (replaces GitHub Copilot)
 - **direnv** (`mkhl.direnv`) - Automatic dev shell activation
 
 ### Other Editors
 
 Any editor that supports:
+
 - EditorConfig (for consistent formatting)
 - LSP (for Nix language server integration)
 
@@ -63,31 +67,24 @@ Should work well with this project.
 
 ## AI-Assisted Development
 
-### GitHub Copilot
+### Claude Code
 
-We use Copilot as a **power tool, not an authority**:
+HALLway uses **Claude Code** (Anthropic) as the AI development assistant. Use it as a **power tool, not an authority**:
 
-- ✅ Use for drafting, exploration, and acceleration
-- ✅ Always review and test suggestions
-- 🚫 Never include secrets or credentials in prompts
-- 🚫 Don't blindly accept suggestions
+- ✅ Use for drafting configs, exploring options, understanding unfamiliar NixOS patterns
+- ✅ Always run `nix flake check` after AI-suggested changes
+- ✅ Review all changes — especially cryptographic code, network config, and agenix secrets
+- 🚫 Never include secrets, passphrases, or private keys in prompts
+- 🚫 Don't blindly accept suggestions for security-sensitive config
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md#working-with-copilot) for detailed guidelines.
-
-### MCP (Model Context Protocol)
-
-If you're using MCP-compatible tools:
-
-1. **Context matters** - Provide relevant context to your AI tools
-2. **Verify outputs** - All AI-generated code must be human-reviewed
-3. **Security first** - Never expose secrets through AI tooling
-4. **Document learnings** - If an AI tool helps you discover something useful, consider documenting it
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines.
 
 ## Continuous Integration
 
 *(Coming soon)*
 
 Future CI will include:
+
 - Nix flake checks
 - Formatting verification
 - Security scanning
@@ -97,7 +94,8 @@ Future CI will include:
 ### Formatting
 
 All code is automatically formatted:
-- **Nix**: `nixfmt` (nixfmt-rfc-style, RFC 166 style)
+
+- **Nix**: `nixfmt` (RFC 166 style)
 - **General**: EditorConfig settings
 
 Run `nix fmt` before committing.

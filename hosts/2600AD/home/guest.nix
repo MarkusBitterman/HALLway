@@ -1,25 +1,25 @@
-# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ╔════════════════╗
 # ║  HALLway v0.0.1 (2600AD)                                                  ║
 # ║  home/guest.nix - Guest User Environment Configuration                    ║
 # ║  https://github.com/markusbittermang/hallway                              ║
-# ╚═══════════════════════════════════════════════════════════════════════════╝
+# ╚════════════════╝
 #
 # Guest user with ephemeral home directory (tmpfs, wiped on reboot).
 # "Clean room" on login, "garbage collection" on logout.
 #
-# Packages come from roles.users.guest.groups in configuration.nix.
-# This file only configures the desktop environment.
+# Packages come from host-level `users.users.guest.packages` in configuration.nix.
+# This file configures the guest desktop environment.
 #
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════
 
-{ config, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   home.stateVersion = "25.11";
 
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
   # HYPRLAND - Minimal guest desktop
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
 
   wayland.windowManager.hyprland = {
     enable = true;
@@ -50,9 +50,9 @@
     extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
   };
 
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
   # SHELL - Basic bash (no zsh customization for guests)
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
 
   programs.bash = {
     enable = true;

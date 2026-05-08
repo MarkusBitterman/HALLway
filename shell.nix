@@ -1,8 +1,8 @@
-# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ╔════════════════╗
 # ║  HALLway                                                                  ║
 # ║  shell.nix - Development Shell (alternative to `nix develop`)            ║
 # ║  https://github.com/markusbitterman/hallway                              ║
-# ╚═══════════════════════════════════════════════════════════════════════════╝
+# ╚════════════════╝
 #
 # Usage:
 #   nix-shell           # Enter dev shell with tools
@@ -11,14 +11,17 @@
 # Tools provided:
 #   - git, gh (GitHub CLI)
 #   - nixd (Nix LSP), nixfmt (formatter)
-#   - agenix (secrets management)
+#   - age, ssh-to-age (secrets management)
+#   - agenix command wrapper (official ryantm/agenix)
 #
 # For installation/deployment:
 #   - git, gh for cloning and pushing
 #   - nixos-install reads this repo's flake.nix
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════
 
-{ pkgs ? import <nixpkgs> {} }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
 pkgs.mkShell {
   name = "hallway-dev";
@@ -26,20 +29,20 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     # Version control
     git
-    gh                      # GitHub CLI (for cloning, PRs, issues)
+    gh # GitHub CLI (for cloning, PRs, issues)
 
     # Nix development
-    nixd                    # Nix LSP server
-    nixfmt-rfc-style        # Code formatter
-    nix-tree                # Visualize dependency tree
-    nix-diff                # Compare derivations
+    nixd # Nix LSP server
+    nixfmt # Code formatter
+    nix-tree # Visualize dependency tree
+    nix-diff # Compare derivations
 
     # Secrets management
-    age                     # Encryption tool
-    # agenix requires flake inputs, not available in shell.nix
+    age # Encryption tool
+    ssh-to-age # Convert SSH public keys to age recipients
 
     # Documentation
-    mdbook                  # For future documentation builds
+    mdbook # For future documentation builds
   ];
 
   shellHook = ''
@@ -50,7 +53,8 @@ pkgs.mkShell {
     echo "  nix fmt                 - Format .nix files"
     echo "  nix build .#2600AD...   - Build system configuration"
     echo "  git / gh                - Version control"
-    echo "  agenix -e <file>        - Edit encrypted secrets"
+    echo "  agenix -e <file.age>    - Edit encrypted secrets"
+    echo "  ssh-to-age < key.pub    - Convert SSH pubkey to age recipient"
     echo ""
     echo "For installation, see INSTALLATION.md"
     echo "For contributing, see CONTRIBUTING.md"
@@ -58,5 +62,23 @@ pkgs.mkShell {
 
     # Enable experimental features for this shell session
     export NIX_CONFIG="experimental-features = nix-command flakes"
+
+    # Tell agenix-cli where to find the encryption rules file.
+    # This means `agenix -e hosts/<host>/secrets/<name>.age` Just Works
+    # without needing to specify -r or set RULES manually.
+    export RULES="$PWD/secrets.nix"
+
+    # Prefer VS Code for editor-driven tools (agenix, git commit, etc.).
+    # --wait keeps the command blocked until the file is closed.
+    if command -v code >/dev/null 2>&1; then
+      export EDITOR="code --wait"
+      export VISUAL="code --wait"
+    fi
+
+    # Use official agenix implementation (ryantm/agenix).
+    # This avoids the incompatible `agenix-cli` behavior on nix-shell.
+    agenix() {
+      nix run github:ryantm/agenix -- "$@"
+    }
   '';
 }

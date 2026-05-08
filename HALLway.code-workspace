@@ -1,42 +1,60 @@
 {
-  "folders": [
-    {
-      "path": "."
-    }
-  ],
-  "settings": {
-    "files.exclude": {
-      "**/.git": false,
-      "**/.direnv": true,
-      "**/result": true,
-      "**/result-*": true
-    },
-    "files.watcherExclude": {
-      "**/.direnv/**": true,
-      "**/result/**": true,
-      "**/result-*/**": true
-    },
-    "terminal.integrated.scrollback": 10000,
-    "files.associations": {
-      "*.nix": "nix",
-      "flake.lock": "json"
-    },
-    "nix.enableLanguageServer": true,
-    "nix.serverPath": "nixd",
-    "[nix]": {
-      "editor.defaultFormatter": "jnoortheen.nix-ide",
-      "editor.formatOnSave": true,
-      "editor.tabSize": 2
-    },
-    "editor.formatOnSave": true,
-    "editor.formatOnPaste": false
-  },
-  "extensions": {
-    "recommendations": [
-      "jnoortheen.nix-ide",
-      "editorconfig.editorconfig",
-      "github.copilot",
-      "mkhl.direnv"
-    ]
-  }
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"**/.git": false,
+			"**/.direnv": true,
+			"**/result": true,
+			"**/result-*": true
+		},
+		"files.watcherExclude": {
+			"**/.direnv/**": true,
+			"**/result/**": true,
+			"**/result-*/**": true
+		},
+		"terminal.integrated.scrollback": 10000,
+		"files.associations": {
+			"*.nix": "nix",
+			"flake.lock": "json"
+		},
+		"nix.enableLanguageServer": true,
+		"nix.serverPath": "nixd",
+		"[nix]": {
+			"editor.defaultFormatter": "jnoortheen.nix-ide",
+			"editor.formatOnSave": true,
+			"editor.tabSize": 2
+		},
+		"editor.formatOnSave": true,
+		"editor.formatOnPaste": false,
+		"mcp": {
+			"servers": {
+				"microsoft/markitdown": {
+					"type": "stdio",
+					"command": "uvx",
+					"args": [
+						"markitdown-mcp==0.0.1a4"
+					],
+					"gallery": "https://api.mcp.github.com",
+					"version": "1.0.0"
+				},
+        "github": {
+          "type": "http",
+          "url": "https://api.githubcopilot.com/mcp/"
+        }
+			},
+			"inputs": []
+		}
+	},
+	"extensions": {
+		"recommendations": [
+			"jnoortheen.nix-ide",
+			"editorconfig.editorconfig",
+			"github.copilot",
+			"mkhl.direnv"
+		]
+	}
 }

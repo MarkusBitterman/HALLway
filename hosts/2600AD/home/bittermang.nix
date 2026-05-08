@@ -1,41 +1,248 @@
-# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ╔════════════════╗
 # ║  HALLway v0.0.1 (2600AD)                                                  ║
 # ║  home/bittermang.nix - User Environment Configuration                     ║
 # ║  https://github.com/markusbittermang/hallway                              ║
-# ╚═══════════════════════════════════════════════════════════════════════════╝
+# ╚════════════════╝
 #
-# This file CONFIGURES programs via Home Manager (dotfiles, settings).
-# Package INSTALLATION happens via roles.users.bittermang.groups in:
-#   hosts/2600AD/configuration.nix
+# This file manages BOTH package installation AND configuration via Home Manager.
+# Access control is enforced via host security policy in configuration.nix
+#
+# Package installation:
+#   - home.packages → All user applications (organized by category)
 #
 # Separation of concerns:
-#   - roles.users.bittermang.groups → Package installation (userRoles.nix)
-#   - This file (Home Manager)      → Program configuration (dotfiles)
+#   - This file (Home Manager) → Package installation + configuration
+#   - host configuration        → security/access policy (AppArmor/SELinux)
 #
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════
 
-{ config, pkgs, ... }:
+{ osConfig, pkgs, ... }:
 
 {
   home.stateVersion = "25.11";
 
-  # ═══════════════════════════════════════════════════════════════════════════
+  # Runtime paths to decrypted agenix secrets (NixOS module).
+  # These resolve under /run/agenix/<name> at activation time.
+  home.sessionVariables = {
+    GITHUB_TOKEN_FILE = osConfig.age.secrets."github_token".path;
+    GPG_PRIVATE_KEY_FILE = osConfig.age.secrets."gpg_key".path;
+  };
+
+  # ════════════════
+  # PACKAGE INSTALLATION
+  # ════════════════
+
+  home.packages = with pkgs; [
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # CORE - System utilities (universally accessible, no AppArmor enforcement)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    git
+    curl
+    wget
+    rsync
+    tree
+    btop
+    tmux
+    age
+    gnupg # Encryption
+    gzip
+    bzip2
+    xz
+    unzip
+    zip # Compression
+    desktop-file-utils # Desktop integration
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # DEVELOPERS - Programming and dev tools
+    # ─────────────────────────────────────────────────────────────────────────
+
+    # Editors
+    neovim
+    vscodium-fhs
+    claude-code
+
+    # CLI dev tools
+    gh # GitHub CLI
+    mercurial
+    jq
+    ripgrep
+    fd
+    btop
+    pciutils # lspci, etc.
+    imagemagick
+
+    # Build essentials
+    gnumake
+    gcc
+    pkg-config
+    python3
+    uv
+    nodejs
+
+    # Rust
+    rustup
+
+    # Nix development
+    direnv
+    nix-direnv
+    nixd
+    nixfmt
+
+    # HTML/Web
+    html5validator
+    djlint
+    sqlite
+
+    # Java
+    # jre # jdk #handled now by jetbrains, above?
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # DESKTOP - Hyprland/Wayland environment
+    # ─────────────────────────────────────────────────────────────────────────
+
+    kitty # Terminal
+    rofi # Launcher
+    pcmanfm # File manager
+    waybar # Status bar
+    dunst # Notifications
+    hyprpaper # Wallpaper
+    pavucontrol # Audio control
+    playerctl # Media control
+    polkit_gnome # Authentication agent
+    iwgtk # WiFi manager (iwd frontend, Wayland tray)
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # GAMING - Gaming tools (Steam installed system-wide)
+    # ─────────────────────────────────────────────────────────────────────────
+
+    # Note: Steam, gamemode, and related system packages in configuration.nix
+    steamcmd
+    steam-tui
+    mangohud
+    protontricks
+    minigalaxy # GOG
+    itch # Itch.io
+    # heroic                              # Epic/GOG/Amazon
+    cemu # Wii U emulator
+    dosbox # DOS
+    limo # Alternative launcher
+    wineWowPackages.staging # Wine staging (32/64bit, preferred for gaming)
+    winetricks # Wine configuration
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # VIEWERS - Media consumption
+    # ─────────────────────────────────────────────────────────────────────────
+
+    loupe
+    gthumb # Image viewers
+    mpv
+    vlc
+    celluloid # Video players
+    spotify
+    rhythmbox # Music players
+    zathura # PDF viewer
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # EDITORS - Image/document editing
+    # ─────────────────────────────────────────────────────────────────────────
+
+    gimp
+    inkscape
+    krita
+    darktable
+    picard
+    easytag
+    soundconverter # Audio tagging
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PRODUCERS - Video/audio production
+    # ─────────────────────────────────────────────────────────────────────────
+
+    obs-studio
+    obs-studio-plugins.wlrobs
+    obs-studio-plugins.obs-pipewire-audio-capture
+    # kdePackages.kdenlive             # Temporarily disabled - ffmpeg build issues
+    # handbrake                        # Temporarily disabled - ffmpeg build issues
+    # ffmpeg                           # Temporarily disabled - GCC 15 build issues
+
+    # Music production
+    ardour
+    lmms
+    surge-XT
+    vital
+    calf
+    lsp-plugins
+    qsynth
+    carla
+    easyeffects
+    helvum
+    qpwgraph
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # GAMEDEV - Game development
+    # ─────────────────────────────────────────────────────────────────────────
+
+    unityhub
+    blender
+    pince
+    scanmem # Memory editing
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # COMMUNICATION - Web, chat, office
+    # ─────────────────────────────────────────────────────────────────────────
+
+    firefox
+    chromium
+    discord
+    element-desktop
+    signal-desktop
+    thunderbird
+    geary
+    onlyoffice-desktopeditors
+    libreoffice-fresh
+    obsidian
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # SYSADMIN - System administration tools
+    # ─────────────────────────────────────────────────────────────────────────
+
+    iotop
+    lsof
+    strace
+    tcpdump
+    nmap
+    ncdu
+    duf
+    android-tools
+    scrcpy
+    gparted-full
+    stress-ng
+    cava
+  ];
+
+  # ════════════════
   # DESKTOP ENVIRONMENT CONFIGURATION
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
 
   # Hyprland compositor
+  # package must match the system-level programs.hyprland package to avoid
+  # two different Hyprland versions fighting over the socket.
   wayland.windowManager.hyprland = {
     enable = true;
+    package = pkgs.hyprland;
     extraConfig = ''
       # Custom monitor resolution for older non-SmartTV (1368x768@59.85Hz)
       monitor=HDMI-A-1,1368x768@59.85,0x0,1
 
-      # Startup applications (packages installed via roles.users in configuration.nix)
+      # Startup applications (packages installed via Home Manager)
       exec-once = dunst &
       exec-once = /run/current-system/sw/libexec/polkit-gnome-authentication-agent-1 &
       exec-once = blueman-applet &
       exec-once = waybar &
       exec-once = hyprpaper &
+      exec-once = iwgtk --tray &
 
       # Keybindings
       bind = SUPER, Return, exec, kitty
@@ -50,18 +257,12 @@
     '';
   };
 
-  # XDG portals for Wayland
-  xdg.portal = {
-    enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
-  };
-
-  # ═══════════════════════════════════════════════════════════════════════════
-  # PROGRAM CONFIGURATION (not installation - that's roles.users)
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
+  # PROGRAM CONFIGURATION
+  # ════════════════
 
   # VS Code extensions and settings
-  # NOTE: VSCode binary installed via roles.users.bittermang.groups in configuration.nix
+  # NOTE: VSCode binary installed via home.packages
   # Home Manager extension management disabled to avoid conflicts
   # Install extensions manually via `code --install-extension` or VS Code UI
 
@@ -96,13 +297,19 @@
       "github.com" = {
         hostname = "github.com";
         user = "git";
-        identityFile = "~/.ssh/id_github";
+        identityFile = osConfig.age.secrets."ssh_key_github".path;
         identitiesOnly = true;
       };
       "hobbs" = {
         hostname = "144.202.50.58";
         user = "matt";
-        identityFile = "~/.ssh/id_hobbs";
+        identityFile = osConfig.age.secrets."ssh_key_hobbs".path;
+        identitiesOnly = true;
+      };
+      "hallpass" = {
+        hostname = "136.244.101.171";
+        user = "matt";
+        identityFile = osConfig.age.secrets."ssh_key_hallpass".path;
         identitiesOnly = true;
       };
     };

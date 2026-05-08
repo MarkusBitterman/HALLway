@@ -30,22 +30,26 @@ validation.log
 .DS_Store
 Thumbs.db
 
-# ═══════════════════════════════════════════════════════════════════════════
+# AI skills from extensions
+.agents/skills/
+
+# ════════════════
 # ROOT-LEVEL HOST CONFIGS (obsolete - use hosts/<hostname>/ instead)
-# ═══════════════════════════════════════════════════════════════════════════
+# ════════════════
 
 /configuration.nix
 /hardware-configuration.nix
-/secrets.nix
+# Per-host secrets module (NixOS declarations) — NOT the root agenix rules file
+hosts/*/secrets.nix
 /home/
 
 # Local environment overrides
 .env
 .env.local
 
-# ═══════════════════════════════════════════════════════════════════════════
+# ════════════════
 # SECRETS - CRITICAL: Never commit plaintext secrets
-# ═══════════════════════════════════════════════════════════════════════════
+# ════════════════
 
 # Encrypted secrets (.age files) - these are intentionally tracked
 # *.age

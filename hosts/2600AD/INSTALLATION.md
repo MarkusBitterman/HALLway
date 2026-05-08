@@ -146,6 +146,29 @@ cd /mnt/2600AD/etc/nixos
 sudo git clone https://github.com/MarkusBitterman/HALLway.git .
 ```
 
+### Step 5.5: Create agenix secrets
+
+```bash
+cd /mnt/2600AD/etc/nixos
+
+# shell.nix now provides agenix-cli, age, and ssh-to-age
+nix-shell
+
+# Edit/create encrypted secrets required by hosts/2600AD/secrets.nix
+agenix -e hosts/2600AD/secrets/ssh_key_github.age
+agenix -e hosts/2600AD/secrets/ssh_key_hobbs.age
+agenix -e hosts/2600AD/secrets/github_token.age
+agenix -e hosts/2600AD/secrets/gpg_key.age
+agenix -e hosts/2600AD/secrets/wg-2600ad-privatekey.age
+agenix -e hosts/2600AD/secrets/syncthing-gui-pass.age
+```
+
+If you need to convert an SSH public key into an age recipient:
+
+```bash
+ssh-to-age < ~/.ssh/id_ed25519.pub
+```
+
 ---
 
 ## Step 6: Install NixOS

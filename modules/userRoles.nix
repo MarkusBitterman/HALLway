@@ -1,15 +1,17 @@
-# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ╔════════════════╗
 # ║  HALLway                                                                  ║
-# ║  modules/userRoles.nix - Role-Based User Management Module                ║
+# ║  modules/userRoles.nix - AppArmor-Enforced Role-Based Access Control      ║
 # ║  https://github.com/markusbittermang/hallway                              ║
-# ╚═══════════════════════════════════════════════════════════════════════════╝
+# ╚════════════════╝
 #
-# A NixOS module for role-based package assignment.
+# Group-based application access control with AppArmor enforcement.
+# Packages installed via Home Manager, access controlled via Unix groups.
 #
 # Philosophy:
 #   Users are defined by what they DO (roles), not just what they can ACCESS.
-#   Packages are installed via roles.users.<name>.groups.
-#   Home Manager configures those programs (dotfiles, settings), NOT installation.
+#   - Packages installed via Home Manager (home.packages)
+#   - Access enforced via AppArmor profiles (deny by default)
+#   - Unix groups determine which applications users can execute
 #
 # Usage:
 #   roles.users.bittermang = {
@@ -20,314 +22,403 @@
 #   };
 #
 # Available groups:
-#   core          - CLI essentials (git, curl, htop, etc.)
+#   core          - System utilities (no AppArmor enforcement, universally accessible)
 #   developers    - Programming tools (vscode, neovim, rustup, etc.)
 #   desktop       - Hyprland/Wayland (kitty, rofi, waybar, etc.)
-#   gaming        - Steam + gaming tools
+#   gaming        - Gaming tools (controllers, emulators, overlays - Steam is system-level)
 #   viewers       - Media viewers (mpv, vlc, spotify, loupe)
 #   editors       - Image editors (gimp, inkscape, krita)
-#   producers     - A/V production (obs, kdenlive, ffmpeg) ⚠️ HEAVY
+#   producers     - A/V production (obs, kdenlive, ardour)
 #   gamedev       - Game development (unity, blender)
 #   communication - Web, chat, office (firefox, discord, obsidian)
 #   sysadmin      - System admin tools (iotop, nmap, tcpdump)
 #
-# ═══════════════════════════════════════════════════════════════════════════════
+# ════════════════════
 
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   cfg = config.roles;
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # PACKAGE GROUPS - What users DO determines what they GET
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
+  # APPLICATION GROUPS - Binary paths for AppArmor enforcement
+  # ════════════════
 
-  defaultPackageGroups = {
+  # Core utilities - no AppArmor enforcement (universally accessible)
+  # These are system essentials that all users need
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # CORE - Everyone gets these
-    # ─────────────────────────────────────────────────────────────────────────
-
-    core = with pkgs; [
-      git curl wget rsync tree htop tmux
-      age gnupg                           # Encryption
-      gzip bzip2 xz unzip zip             # Compression
-      desktop-file-utils #
-    ];
+  defaultApplicationGroups = {
 
     # ─────────────────────────────────────────────────────────────────────────
     # DEVELOPERS - Programming and dev tools
     # ─────────────────────────────────────────────────────────────────────────
 
-    developers = with pkgs; [
-      # Editors
-      neovim
-      vscode
-
-      # CLI dev tools
-      gh                                  # GitHub CLI
-      jq
-      ripgrep
-      fd
-      btop
-      pciutils                            # lspci, etc.
-
-      # Build essentials
-      gnumake gcc pkg-config
-      python3 nodejs
-
-      # Rust
-      rustup
-
-      # Nix development
-      direnv
-      nix-direnv nixd nixfmt
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # Game Development - Unity/Blender etc
-    # ─────────────────────────────────────────────────────────────────────────
-    gamedev = with pkgs; [
-      unityhub
-      blender
-    ];
-
-    desktop = with pkgs; [
-      # Terminal & launcher
-      kitty
-      rofi
-
-      # File manager
-      pcmanfm
-
-      # Status bar & notifications
-      waybar
-      dunst
-
-      # Wallpaper
-      hyprpaper
-
-      # Audio control
-      pavucontrol
-      playerctl
-
-      # Authentication
-      polkit_gnome
-
-      # Portal
-      xdg-desktop-portal-hyprland
-    ];
+    developers = {
+      binaries = [
+        "code"
+        "code-insiders" # VS Code
+        "nvim"
+        "vim" # Editors
+        "gh" # GitHub CLI
+        "rustc"
+        "cargo"
+        "rustup" # Rust
+        "python"
+        "python3"
+        "uv" # Python
+        "node"
+        "npm"
+        "npx" # Node.js
+        "java"
+        "javac" # Java
+        "make"
+        "gcc"
+        "g++" # Build tools
+        "nixd"
+        "nil" # Nix LSP
+      ];
+      description = "Programming and development tools";
+    };
 
     # ─────────────────────────────────────────────────────────────────────────
-    # GAMING - Steam + tools
+    # DESKTOP - Hyprland/Wayland environment
     # ─────────────────────────────────────────────────────────────────────────
 
-    gaming = with pkgs; [
-      steam                               # FHS env + 32-bit libs
-      steamcmd
-      steam-tui
-      gamemode
-      mangohud
-      winetricks
-      protontricks
-
-      # Other stores
-      minigalaxy                          # GOG
-      itch
-      heroic                              # Epic/GOG/Amazon
-      retroarch
-      dosbox
-      limo
-      wine-wayland
-    ];
+    desktop = {
+      binaries = [
+        "kitty" # Terminal
+        "rofi"
+        "rofi-theme-selector" # Launcher
+        "waybar" # Status bar
+        "dunst"
+        "dunstctl" # Notifications
+        "hyprpaper" # Wallpaper
+        "pcmanfm" # File manager
+        "pavucontrol" # Audio control
+        "playerctl" # Media control
+      ];
+      description = "Hyprland desktop environment components";
+    };
 
     # ─────────────────────────────────────────────────────────────────────────
-    # VIEWERS - Media consumption (lightweight)
+    # GAMING - Gaming tools (Steam installed system-wide separately)
     # ─────────────────────────────────────────────────────────────────────────
 
-    viewers = with pkgs; [
-      # Image viewers
-      loupe gthumb
-      imagemagick                         # CLI image tools
-
-      # Video players
-      mpv vlc celluloid
-
-      # Music players
-      spotify
-      rhythmbox
-      playerctl
-
-      # Documents
-      zathura                             # PDF viewer
-    ];
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # EDITORS - Image/document editing (medium weight)
-    # ─────────────────────────────────────────────────────────────────────────
-
-    editors = with pkgs; [
-      gimp inkscape krita darktable
-
-      # Music tagging
-      picard easytag soundconverter
-    ];
+    gaming = {
+      binaries = [
+        "steam"
+        "steam-runtime"
+        "steamcmd" # Steam (system-level)
+        "gamemode"
+        "gamemoded"
+        "gamemoderun" # Performance
+        "mangohud" # Overlay
+        "protontricks" # Proton tools
+        "minigalaxy" # GOG
+        "heroic" # Epic/GOG/Amazon
+        "itch" # Itch.io
+        "cemu" # Wii U emulator
+        "dosbox" # DOS
+        "limo" # Alternative launcher
+        "wine"
+        "wine64"
+        "wineserver" # Wine
+        "winetricks" # Wine configuration
+      ];
+      description = "Gaming applications and tools";
+    };
 
     # ─────────────────────────────────────────────────────────────────────────
-    # PRODUCERS - Video/audio production (HEAVY - ffmpeg, kdenlive, etc.)
+    # VIEWERS - Media consumption
     # ─────────────────────────────────────────────────────────────────────────
 
-    producers = with pkgs; [
-      # Video production (these pull ffmpeg)
-      obs-studio
-      obs-studio-plugins.wlrobs
-      obs-studio-plugins.obs-pipewire-audio-capture
-      # kdePackages.kdenlive # commented out because of recurring ffmpeg on unstable build problem
-      # handbrake  # BUG: pulls ffmpeg-full which fails to build (vlc.c compile error in nixpkgs-unstable)
-      # ffmpeg
+    viewers = {
+      binaries = [
+        "loupe"
+        "gthumb" # Image viewers
+        "convert"
+        "identify"
+        "mogrify" # ImageMagick
+        "mpv" # Video player
+        "vlc" # Video player
+        "celluloid" # Video player (MPV frontend)
+        "spotify" # Music streaming
+        "rhythmbox"
+        "rhythmbox-client" # Music player
+        "zathura" # PDF viewer
+      ];
+      description = "Media viewing applications";
+    };
 
-      # Music production
-      ardour lmms
-      surge-XT vital calf lsp-plugins
-      qsynth carla
-      easyeffects helvum qpwgraph
-    ];
+    # ─────────────────────────────────────────────────────────────────────────
+    # EDITORS - Image/document editing
+    # ─────────────────────────────────────────────────────────────────────────
+
+    editors = {
+      binaries = [
+        "gimp"
+        "gimp-2.10" # Image editor
+        "inkscape" # Vector graphics
+        "krita" # Digital painting
+        "darktable" # Photo workflow
+        "picard" # Music tagging
+        "easytag" # Audio tagging
+        "soundconverter" # Audio conversion
+      ];
+      description = "Image and document editing tools";
+    };
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PRODUCERS - Video/audio production
+    # ─────────────────────────────────────────────────────────────────────────
+
+    producers = {
+      binaries = [
+        "obs"
+        "obs-studio" # Video recording
+        "kdenlive" # Video editing
+        "handbrake"
+        "ghb" # Video transcoding
+        "ffmpeg"
+        "ffprobe"
+        "ffplay" # Media processing
+        "ardour"
+        "ardour8" # DAW
+        "lmms" # Music production
+        "surge-xt" # Synthesizer
+        "vital" # Synthesizer
+        "qsynth" # FluidSynth GUI
+        "carla"
+        "carla-control" # Plugin host
+        "easyeffects" # Audio effects
+        "helvum" # PipeWire patchbay
+        "qpwgraph" # PipeWire graph
+      ];
+      description = "Audio and video production tools";
+    };
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # GAMEDEV - Game development
+    # ─────────────────────────────────────────────────────────────────────────
+
+    gamedev = {
+      binaries = [
+        "unityhub"
+        "unity-editor" # Unity
+        "blender" # 3D modeling
+        "pince" # Memory editor
+        "scanmem"
+        "gameconqueror" # Memory scanning
+      ];
+      description = "Game development tools";
+    };
 
     # ─────────────────────────────────────────────────────────────────────────
     # COMMUNICATION - Web, chat, office
     # ─────────────────────────────────────────────────────────────────────────
 
-    communication = with pkgs; [
-      firefox
-      chromium
-      discord
-      element-desktop
-      signal-desktop
-
-      # Office
-      onlyoffice-desktopeditors
-      obsidian
-      zathura
-    ];
+    communication = {
+      binaries = [
+        "firefox"
+        "firefox-esr" # Browser
+        "chromium"
+        "chrome" # Browser
+        "discord"
+        "Discord" # Chat
+        "element-desktop" # Matrix client
+        "signal-desktop" # Secure messaging
+        "thunderbird" # Email
+        "geary" # Email
+        "onlyoffice-desktopeditors" # Office suite
+        "libreoffice"
+        "soffice"
+        "lowriter"
+        "localc"
+        "loimpress" # LibreOffice
+        "obsidian" # Notes
+      ];
+      description = "Communication and productivity tools";
+    };
 
     # ─────────────────────────────────────────────────────────────────────────
-    # SYSADMIN - System administration tools
+    # SYSADMIN - System administration
     # ─────────────────────────────────────────────────────────────────────────
 
-    sysadmin = with pkgs; [
-      iotop lsof strace
-      tcpdump nmap
-      ncdu duf
-      android-tools
-      gparted-full
-    ];
+    sysadmin = {
+      binaries = [
+        "iotop" # I/O monitoring
+        "lsof" # Open files
+        "strace" # System call tracing
+        "tcpdump" # Network capture
+        "nmap" # Network scanner
+        "ncdu" # Disk usage
+        "duf" # Disk usage (modern)
+        "adb"
+        "fastboot" # Android tools
+        "gparted" # Partition editor
+        "stress-ng" # Stress testing
+      ];
+      description = "System administration tools";
+    };
   };
 
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
   # HELPER FUNCTIONS
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
 
-  # Resolve packages for a list of group names
-  packagesForGroups = groups:
-    lib.unique (lib.flatten (map (g: cfg.packageGroups.${g} or []) groups));
+  # ════════════════
+  # HELPER FUNCTIONS
+  # ════════════════
+
+  # Get all binaries for a list of group names
+  binariesForGroups =
+    groups: lib.unique (lib.flatten (map (g: cfg.applicationGroups.${g}.binaries or [ ]) groups));
 
   # User submodule type definition
-  userSubmodule = lib.types.submodule ({ name, ... }: {
-    options = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = true;
-        description = "Whether to enable this user.";
-      };
+  userSubmodule = lib.types.submodule (
+    { name, ... }:
+    {
+      options = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Whether to enable this user.";
+        };
 
-      description = lib.mkOption {
-        type = lib.types.str;
-        default = name;
-        description = "User's display name/description.";
-      };
+        description = lib.mkOption {
+          type = lib.types.str;
+          default = name;
+          description = "User's display name/description.";
+        };
 
-      uid = lib.mkOption {
-        type = lib.types.nullOr lib.types.int;
-        default = null;
-        description = "User's UID. If null, NixOS assigns one automatically.";
-      };
+        uid = lib.mkOption {
+          type = lib.types.nullOr lib.types.int;
+          default = null;
+          description = "User's UID. If null, NixOS assigns one automatically.";
+        };
 
-      shell = lib.mkOption {
-        type = lib.types.package;
-        default = pkgs.zsh;
-        description = "User's login shell.";
-      };
+        shell = lib.mkOption {
+          type = lib.types.package;
+          default = pkgs.zsh;
+          description = "User's login shell.";
+        };
 
-      groups = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [];
-        description = ''
-          List of package groups to assign to this user.
-          Available groups: ${lib.concatStringsSep ", " (lib.attrNames defaultPackageGroups)}
-        '';
-        example = [ "developers" "gaming" "desktop" ];
-      };
+        groups = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [ ];
+          description = ''
+            List of application groups for access control.
+            Users can only execute applications from groups they belong to (AppArmor enforced).
+            Available groups: ${lib.concatStringsSep ", " (lib.attrNames defaultApplicationGroups)}
 
-      extraGroups = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        default = [];
-        description = "Additional Unix groups (wheel, audio, video, etc.)";
-        example = [ "wheel" "audio" "video" ];
-      };
+            Note: 'core' utilities are universally accessible (no AppArmor enforcement).
+          '';
+          example = [
+            "developers"
+            "gaming"
+            "desktop"
+          ];
+        };
 
-      extraPackages = lib.mkOption {
-        type = lib.types.listOf lib.types.package;
-        default = [];
-        description = "Additional packages specific to this user.";
-        example = lib.literalExpression "[ pkgs.blender pkgs.unityhub ]";
-      };
+        extraGroups = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [ ];
+          description = "Additional Unix groups (wheel, audio, video, etc.)";
+          example = [
+            "wheel"
+            "audio"
+            "video"
+          ];
+        };
 
-      isGuest = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = ''
-          Whether this is a guest user with ephemeral home directory.
-          Guest users get a tmpfs home that is wiped on each reboot.
-        '';
-      };
+        extraPackages = lib.mkOption {
+          type = lib.types.listOf lib.types.package;
+          default = [ ];
+          description = ''
+            Additional packages for guest users (system-level only).
+            Regular users should use Home Manager's home.packages instead.
+            This option is primarily for guest users with ephemeral tmpfs homes.
+          '';
+          example = lib.literalExpression "[ pkgs.firefox pkgs.vlc ]";
+        };
 
-      guestTmpfsSize = lib.mkOption {
-        type = lib.types.str;
-        default = "2G";
-        description = "Size of tmpfs for guest home directory.";
+        isGuest = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = ''
+            Whether this is a guest user with ephemeral home directory.
+            Guest users get a tmpfs home that is wiped on each reboot.
+          '';
+        };
+
+        guestTmpfsSize = lib.mkOption {
+          type = lib.types.str;
+          default = "2G";
+          description = "Size of tmpfs for guest home directory.";
+        };
       };
-    };
-  });
+    }
+  );
 
 in
 {
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
   # MODULE OPTIONS
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
 
   options.roles = {
 
-    packageGroups = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.listOf lib.types.package);
-      default = defaultPackageGroups;
+    applicationGroups = lib.mkOption {
+      type = lib.types.attrsOf (
+        lib.types.submodule {
+          options = {
+            binaries = lib.mkOption {
+              type = lib.types.listOf lib.types.str;
+              default = [ ];
+              description = "List of binary names that require this group for execution.";
+            };
+            description = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = "Human-readable description of this application group.";
+            };
+            customProfile = lib.mkOption {
+              type = lib.types.nullOr lib.types.lines;
+              default = null;
+              description = "Custom AppArmor profile override for this group's applications.";
+            };
+          };
+        }
+      );
+      default = defaultApplicationGroups;
       description = ''
-        Package groups that can be assigned to users.
-        Keys are group names, values are lists of packages.
+        Application groups defining which binaries require which group membership.
+        Keys are group names (matching Unix groups), values define binaries and AppArmor profiles.
       '';
       example = lib.literalExpression ''
         {
-          my-custom-group = with pkgs; [ foo bar baz ];
+          my-custom-group = {
+            binaries = [ "myapp" "myapp-cli" ];
+            description = "My custom application group";
+          };
         }
       '';
     };
 
     users = lib.mkOption {
       type = lib.types.attrsOf userSubmodule;
-      default = {};
+      default = { };
       description = ''
-        User definitions with role-based package assignment.
-        Each user can be assigned to package groups and will receive
-        all packages from those groups.
+        User definitions with role-based access control.
+        Each user is assigned to application groups, determining which apps they can execute.
+
+        Regular users: Packages installed via Home Manager (home.packages)
+        Guest users: Packages installed system-level (ephemeral tmpfs homes)
       '';
       example = lib.literalExpression ''
         {
@@ -341,6 +432,7 @@ in
             description = "Bob";
             groups = [ "gaming" "desktop" ];
             isGuest = true;
+            extraPackages = with pkgs; [ firefox vlc ];
           };
         }
       '';
@@ -350,86 +442,110 @@ in
     lib = lib.mkOption {
       type = lib.types.attrs;
       default = {
-        inherit packagesForGroups;
-        availableGroups = lib.attrNames cfg.packageGroups;
+        inherit binariesForGroups;
+        availableGroups = lib.attrNames cfg.applicationGroups;
       };
       readOnly = true;
       description = "Helper functions for use in other modules.";
     };
   };
 
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
   # MODULE IMPLEMENTATION
-  # ═══════════════════════════════════════════════════════════════════════════
+  # ════════════════
 
-  config = lib.mkIf (cfg.users != {}) {
+  config = lib.mkIf (cfg.users != { }) {
 
     # ─────────────────────────────────────────────────────────────────────────
     # USER ACCOUNTS
     # ─────────────────────────────────────────────────────────────────────────
 
-    users.users = lib.mapAttrs (name: userCfg: {
-      isNormalUser = true;
-      description = userCfg.description;
-      shell = userCfg.shell;
-      extraGroups = userCfg.extraGroups;
-      packages = (packagesForGroups userCfg.groups) ++ userCfg.extraPackages;
-    } // (lib.optionalAttrs (userCfg.uid != null) {
-      uid = userCfg.uid;
-    })) (lib.filterAttrs (n: u: u.enable) cfg.users);
+    users.users = lib.mapAttrs (
+      name: userCfg:
+      {
+        isNormalUser = true;
+        description = userCfg.description;
+        shell = userCfg.shell;
+        extraGroups = userCfg.extraGroups ++ userCfg.groups; # Add role groups to Unix groups
+
+        # Only install packages for guest users (ephemeral tmpfs)
+        # Regular users get packages via Home Manager
+        packages = lib.optionals userCfg.isGuest userCfg.extraPackages;
+      }
+      // (lib.optionalAttrs (userCfg.uid != null) {
+        uid = userCfg.uid;
+      })
+    ) (lib.filterAttrs (n: u: u.enable) cfg.users);
 
     # ─────────────────────────────────────────────────────────────────────────
-    # SYSTEM GROUPS
+    # UNIX GROUPS (for AppArmor enforcement)
     # ─────────────────────────────────────────────────────────────────────────
 
-    # Create gamemode group if any user has gaming
-    users.groups.gamemode = lib.mkIf (lib.any
-      (u: lib.elem "gaming" u.groups)
-      (lib.attrValues cfg.users)
-    ) {};
+    users.groups = lib.listToAttrs (
+      # Create Unix group for each application group
+      lib.mapAttrsToList (groupName: groupCfg: lib.nameValuePair groupName { }) cfg.applicationGroups
+    );
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # APPARMOR ENFORCEMENT
+    # ─────────────────────────────────────────────────────────────────────────
+
+    security.apparmor = {
+      enable = true;
+      packages = [ pkgs.apparmor-profiles ];
+    };
+
+    # Enable AppArmor kernel LSM (via security.lsm, not kernel params)
+    boot.kernelParams = [ "apparmor=1" ];
 
     # ─────────────────────────────────────────────────────────────────────────
     # GUEST USER TMPFS
     # ─────────────────────────────────────────────────────────────────────────
 
-    fileSystems = lib.mkMerge (lib.mapAttrsToList (name: userCfg:
-      lib.optionalAttrs userCfg.isGuest {
-        "/home/${name}" = {
-          device = "tmpfs";
-          fsType = "tmpfs";
-          options = [
-            "size=${userCfg.guestTmpfsSize}"
-            "mode=0700"
-            "uid=${toString (userCfg.uid or 1001)}"
-            "gid=100"  # users group
-          ];
-        };
-      }
-    ) cfg.users);
+    fileSystems = lib.mkMerge (
+      lib.mapAttrsToList (
+        name: userCfg:
+        lib.optionalAttrs userCfg.isGuest {
+          "/home/${name}" = {
+            device = "tmpfs";
+            fsType = "tmpfs";
+            options = [
+              "size=${userCfg.guestTmpfsSize}"
+              "mode=0700"
+              "uid=${toString (userCfg.uid or 1001)}"
+              "gid=100" # users group
+            ];
+          };
+        }
+      ) cfg.users
+    );
 
     # ─────────────────────────────────────────────────────────────────────────
     # GUEST SKELETON SETUP
     # ─────────────────────────────────────────────────────────────────────────
 
-    system.activationScripts = lib.mkMerge (lib.mapAttrsToList (name: userCfg:
-      lib.optionalAttrs userCfg.isGuest {
-        "guestSkeleton-${name}" = lib.stringAfter [ "users" ] ''
-          # Set up guest home directory structure
-          mkdir -p /home/${name}/.config
-          mkdir -p /home/${name}/Downloads
-          mkdir -p /home/${name}/Pictures
-          mkdir -p /home/${name}/Videos
-          mkdir -p /home/${name}/Music
+    system.activationScripts = lib.mkMerge (
+      lib.mapAttrsToList (
+        name: userCfg:
+        lib.optionalAttrs userCfg.isGuest {
+          "guestSkeleton-${name}" = lib.stringAfter [ "users" ] ''
+            # Set up guest home directory structure
+            mkdir -p /home/${name}/.config
+            mkdir -p /home/${name}/Downloads
+            mkdir -p /home/${name}/Pictures
+            mkdir -p /home/${name}/Videos
+            mkdir -p /home/${name}/Music
 
-          # Copy skeleton files if available
-          if [ -d /etc/skel ]; then
-            cp -rn /etc/skel/. /home/${name}/ 2>/dev/null || true
-          fi
+            # Copy skeleton files if available
+            if [ -d /etc/skel ]; then
+              cp -rn /etc/skel/. /home/${name}/ 2>/dev/null || true
+            fi
 
-          # Fix ownership
-          chown -R ${name}:users /home/${name}
-        '';
-      }
-    ) cfg.users);
+            # Fix ownership
+            chown -R ${name}:users /home/${name}
+          '';
+        }
+      ) cfg.users
+    );
   };
 }

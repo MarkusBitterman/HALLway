@@ -16,14 +16,17 @@ HALLway uses [Nix](https://nixos.org/) for reproducible development environments
 ### Prerequisites
 
 1. **Install Nix** (if you haven't already):
+
    ```bash
    # Review the installation script at https://nixos.org/nix/install before running
    sh <(curl -L https://nixos.org/nix/install) --daemon
    ```
+
    See the [official Nix installation guide](https://nixos.org/download.html) for more options.
 
 2. **Enable flakes** (add to `~/.config/nix/nix.conf` or `/etc/nix/nix.conf`):
-   ```
+
+   ```nix
    experimental-features = nix-command flakes
    ```
 
@@ -61,44 +64,43 @@ This repository includes VS Code settings for optimal development:
 
 For automatic shell activation when you `cd` into the project:
 
-1. Install direnv: https://direnv.net/docs/installation.html
+1. Install direnv: <https://direnv.net/docs/installation.html>
 2. Create `.envrc` in the project root:
+
    ```bash
    echo "use flake" > .envrc
    direnv allow
    ```
 
-## Working with Copilot
+## Working with Claude Code
 
-HALLway uses GitHub Copilot as a **power tool, not an authority** 🛠️
+HALLway uses **Claude Code** (Anthropic) as a **power tool, not an authority** 🛠️
 
 ### Expected Usage
 
-- **Drafting**: Use Copilot to accelerate writing boilerplate, configs, and documentation
-- **Exploration**: Ask Copilot for ideas, patterns, or to explain unfamiliar code
-- **Acceleration**: Let Copilot help with repetitive tasks
+- **Drafting**: Use Claude to accelerate writing boilerplate, configs, and documentation
+- **Exploration**: Ask Claude for ideas, patterns, or to explain unfamiliar NixOS/Nix code
+- **Acceleration**: Let Claude help with repetitive tasks and cross-file edits
 
 ### Required Review Posture
 
-**Humans verify everything.** Copilot suggestions must be:
+**Humans verify everything.** AI suggestions must be:
 
-1. ✅ **Reviewed** - Read and understand every suggestion before accepting
-2. ✅ **Tested** - Run builds and tests to verify correctness
-3. ✅ **Audited** - Check for security issues, especially in:
-   - Cryptographic code
-   - Network configuration
-   - Permission handling
-   - Input validation
+1. ✅ **Reviewed** — Read and understand every change before accepting
+2. ✅ **Tested** — Run `nix flake check` and `nix fmt` to verify correctness
+3. ✅ **Audited** — Check for security issues, especially in:
+   - Cryptographic code and agenix secrets
+   - Network configuration (WireGuard, firewall rules)
+   - Permission handling (`mode`, `owner`, `group` on secrets)
 
 ### Prompt Hygiene 🧹
 
-**Never include in prompts or code:**
+**Never include in prompts:**
 
-- 🚫 Private keys or secrets
+- 🚫 Private keys, passphrases, or `.age` file contents
 - 🚫 API tokens or credentials
-- 🚫 Personal identifying information
-- 🚫 Internal infrastructure details
-- 🚫 Proprietary algorithms (unless intentionally open-sourcing)
+- 🚫 Real WireGuard private keys
+- 🚫 Internal infrastructure IP addresses beyond what is already in this repo
 
 ### Before Opening PRs
 
@@ -119,7 +121,7 @@ nix fmt
 
 ### Automated Formatting
 
-- **Nix files**: Formatted with `nixfmt` (nixfmt-rfc-style, RFC 166 style)
+- **Nix files**: Formatted with `nixfmt` (RFC 166 style)
 - **All files**: Follow [.editorconfig](.editorconfig) settings
 
 Run formatting before committing:
@@ -142,10 +144,12 @@ The repository includes an [.editorconfig](.editorconfig) file that most editors
 1. **Fork** the repository and create a feature branch
 2. **Make changes** following the code style guidelines
 3. **Test** your changes locally:
+
    ```bash
    nix flake check
    nix fmt
    ```
+
 4. **Commit** with clear, descriptive messages
 5. **Open a PR** with:
    - Clear description of what changed and why

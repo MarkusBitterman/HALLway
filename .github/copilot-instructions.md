@@ -12,7 +12,7 @@ HALLway is a NixOS-based operating system focused on **local-first computing** w
 - **Outputs**:
   - `nixosModules.roles` → `modules/userRoles.nix` (role-based package management)
   - `nixosConfigurations."2600AD"` → `hosts/2600AD/configuration.nix` (host config)
-  - `devShells.default` → development environment with `nixd`, `nixfmt-rfc-style`
+  - `devShells.default` → development environment with `nixd`, `nixfmt`
 
 ### Module System (`modules/`)
 - `userRoles.nix`: Role-based user management module defining package groups (e.g., `developers`, `gaming`, `desktop`)
@@ -54,7 +54,7 @@ Two-stage USB-bridged installation (see `hosts/2600AD/INSTALLATION.md`):
 ```bash
 nix develop              # Enter dev shell (auto-loads tools)
 nix flake check          # Validate flake syntax (TEST task)
-nix fmt                  # Format all .nix files (nixfmt-rfc-style, RFC 166)
+nix fmt                  # Format all .nix files (nixfmt, RFC 166)
 nix build .#nixosConfigurations.2600AD.config.system.build.toplevel  # Build system
 ```
 
@@ -69,7 +69,7 @@ nix build .#nixosConfigurations.2600AD.config.system.build.toplevel  # Build sys
 - `🛠️ Build` - build system closure without activating (dry-run)
 
 **Daily**:
-- `✨ Format` - format all .nix files with `nixfmt-rfc-style`
+- `✨ Format` - format all .nix files with `nixfmt`
 - `🔄 Update` - update all flake inputs
 
 **Maintenance**:
@@ -90,13 +90,13 @@ sudo nixos-rebuild switch --flake .#2600AD
 ## Code Conventions
 
 ### Nix Formatting
-- **Style**: `nixfmt-rfc-style` (RFC 166) - enforced by `nix fmt`
+- **Style**: `nixfmt` (RFC 166) - enforced by `nix fmt`
 - **Header blocks**: ASCII box art with project name, file purpose, URL
   ```nix
-  # ╔═══════════════════════════════════════════════════════════════════════════╗
+  # ╔════════════════╗
   # ║  HALLway                                                                  ║
   # ║  modules/userRoles.nix - Role-Based User Management Module                ║
-  # ╚═══════════════════════════════════════════════════════════════════════════╝
+  # ╚════════════════╝
   ```
 - **Section dividers**: Use `# ═══════` for major sections, `# ─────────` for subsections
 
