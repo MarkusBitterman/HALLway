@@ -40,6 +40,12 @@ let
   # Then rekey: agenix -r -i ~/.ssh/id_hallpass
   # hallpass = "age1FILL_WITH_HALLPASS_HOST_SSH_TO_AGE_OUTPUT";
 
+  # ── Recipient: HelloMoto phone SSH user key (decrypts in Termux) ──────────
+  # No system host key on Android; the user's SSH key is the identity.
+  # On the phone: cat ~/.ssh/id_ed25519.pub | ssh-to-age
+  # Then uncomment and fill in:
+  # hellomoto = "age1FILL_WITH_PHONE_SSH_TO_AGE_OUTPUT";
+
 in
 {
   # ─── 2600AD ───────────────────────────────────────────────────────────────
@@ -75,6 +81,14 @@ in
   "hosts/2600AD/secrets/wifi-home.age".publicKeys = [
     bittermang
     host2600AD
+  ];
+
+  # ─── HelloMoto (phone) ────────────────────────────────────────────────────
+  # Currently encrypted for admin only — phone SSH key not yet known.
+  # After first activation: cat ~/.ssh/id_ed25519.pub | ssh-to-age on the phone,
+  # fill in `hellomoto` above, add to publicKeys, then rekey.
+  "hosts/HelloMoto/secrets/ssh_key_github.age".publicKeys = [
+    bittermang
   ];
 
   # ─── HALLpass.space ───────────────────────────────────────────────────────

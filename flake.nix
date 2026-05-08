@@ -26,6 +26,7 @@
 
   outputs =
     {
+      self,
       nixpkgs,
       flake-utils,
       home-manager,
@@ -46,6 +47,24 @@
       # Export HALLway as NixOS modules for other flakes
       # ═══════════════════════════════════════════════════════════════════════
       nixosModules = hallwayModules;
+
+      # ═══════════════════════════════════════════════════════════════════════
+      # Standalone Home Manager configurations (non-NixOS hosts)
+      # ═══════════════════════════════════════════════════════════════════════
+      homeConfigurations = {
+
+        # ─────────────────────────────────────────────────────────────────────
+        # HelloMoto - Android phone (Termux + Nix, aarch64-linux)
+        # Activate with: home-manager switch --flake .#HelloMoto
+        # ─────────────────────────────────────────────────────────────────────
+        "HelloMoto" = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages."aarch64-linux";
+          modules = [
+            ./hosts/HelloMoto/home/user.nix
+            agenix.homeManagerModules.age
+          ];
+        };
+      };
 
       # ═══════════════════════════════════════════════════════════════════════
       # Machine Configurations (HALLway Hosts)

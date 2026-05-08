@@ -20,20 +20,25 @@ Always run `nix flake check` and `nix fmt` before committing.
 ## Architecture
 
 ### Flake (`flake.nix`)
-Entry point. Defines two `nixosConfigurations` and a `devShells.default`. `nixosModules.default` is exported but contains no active modules — host configs compose Home Manager and agenix directly. `modules/userRoles.nix` exists but is **not imported anywhere** (dead code from a removed design; candidate for deletion).
+Entry point. Defines `nixosConfigurations` (NixOS hosts), `homeConfigurations` (non-NixOS hosts), and `devShells.default`. `nixosModules.default` is exported but contains no active modules — host configs compose Home Manager and agenix directly. `modules/userRoles.nix` exists but is **not imported anywhere** (dead code from a removed design; candidate for deletion).
 
 **Inputs**: `nixpkgs` (unstable), `home-manager`, `agenix`, `flake-utils`
 
 ### Hosts (`hosts/`)
-Each host directory contains:
+NixOS hosts contain:
 - `configuration.nix` — system-level: boot, networking, services, `users.users`
 - `hardware-configuration.nix` — auto-generated, do not edit manually
-- `secrets.nix` — agenix NixOS module: runtime paths, owners, modes for deployed secrets
+- `secrets.nix` — agenix module: runtime paths, owners, modes for deployed secrets
 - `home/<user>.nix` — Home Manager: package installation **and** user-space configuration
 
+Non-NixOS hosts (standalone Home Manager) contain only:
+- `home/<user>.nix` — Home Manager config; also imports `../secrets.nix`
+- `secrets.nix` — agenix homeManagerModule config; identity is user SSH key, not system host key
+
 **Current hosts**:
-- `2600AD` — Atari VCS 800; workstation/gaming node; ZFS on LUKS, GNOME (transitioning to Hyprland), WireGuard client, Syncthing client
-- `HALLpass.space` — Minimal VPS; WireGuard hub + Syncthing introducer/relay/discovery; nginx front; **not yet deployed** (contains placeholder values)
+- `2600AD` — Atari VCS 800; workstation/gaming node; ZFS on LUKS, GNOME (transitioning to Hyprland), WireGuard client, Syncthing client; activated with `sudo nixos-rebuild switch --flake .#2600AD`
+- `HALLpass.space` — Minimal VPS; WireGuard hub + Syncthing introducer/relay/discovery; nginx front; **not yet deployed** (contains placeholder values); activated with `sudo nixos-rebuild switch --flake .#HALLpass.space`
+- `HelloMoto` — Android phone (Termux + Nix, `aarch64-linux`); standalone Home Manager only; WireGuard and Syncthing via Android apps; activated with `home-manager switch --flake .#HelloMoto`
 
 ### User Model
 `users.users.<name>` in `configuration.nix` defines the account and group membership. Home Manager (`hosts/<host>/home/<user>.nix`) handles both package installation (`home.packages`) and dotfile/app configuration. There is no roles module in use.
@@ -41,7 +46,7 @@ Each host directory contains:
 Guest user on 2600AD has an ephemeral tmpfs `/home/guest` (wiped on reboot); its packages are defined directly on `users.users.guest.packages` in `configuration.nix` since Home Manager persistence is pointless for a guest.
 
 ### Networking (2600AD)
-2600AD uses `networking.useNetworkd = true` (systemd-networkd). GNOME's desktop manager enables NetworkManager by default, producing a benign conflict error at every `nixos-rebuild switch`. The switch completes normally. **Known issue — needs resolution** (either disable NM explicitly or stop using GNOME).
+2600AD uses `networking.useNetworkd = true` with iwd for WiFi. NetworkManager is explicitly disabled (`networking.networkmanager.enable = false`). WiFi PSK is an agenix secret deployed to `/var/lib/iwd/<SSID>.psk` — the SSID placeholder in `hosts/2600AD/secrets.nix` must be replaced with the real network name before deploying.
 
 ### Secrets (agenix)
 Two completely different files share the name `secrets.nix`:
@@ -57,7 +62,7 @@ Encrypted `.age` files live in `hosts/<host>/secrets/` and are committed to git.
 
 **Creating a new secret**: the `.age` file must not exist before first encryption — delete it if present, then run `agenix -e`.
 
-Secrets are referenced in NixOS config via `config.age.secrets."<name>".path` and in Home Manager via `osConfig.age.secrets."<name>".path`.
+Secrets are referenced in NixOS config via `config.age.secrets."<name>".path`, in NixOS-backed Home Manager via `osConfig.age.secrets."<name>".path`, and in standalone Home Manager (HelloMoto) via `config.age.secrets."<name>".path` directly.
 
 **Current gap**: HALLpass.space secrets are encrypted for the admin key only — the VPS host key is not yet known. After first VPS boot: get host key with `ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age`, fill in `secrets.nix`, then run `agenix -r -i ~/.ssh/id_hallpass`.
 
