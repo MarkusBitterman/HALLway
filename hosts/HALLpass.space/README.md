@@ -7,6 +7,34 @@
 
 ---
 
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Purpose](#purpose)
+- [Installation](#installation)
+  - [Standard](#standard)
+  - [Full Step-by-Step](#full-step-by-step)
+- [How to Contribute](#how-to-contribute)
+- [Troubleshooting](#troubleshooting)
+
+---
+
+## Quick Start
+
+**Already deployed?** Rebuild after config changes:
+
+```bash
+# From the VPS:
+sudo nixos-rebuild switch --flake /etc/nixos#HALLpass.space
+
+# Or from 2600AD via SSH:
+ssh matt@hallpass.space "cd /etc/nixos && sudo nixos-rebuild switch --flake .#HALLpass.space"
+```
+
+**Fresh deploy?** See [Installation](#installation) below.
+
+---
+
 ## Purpose
 
 HALLpass.space is a small VPS (25GB class) that provides central infrastructure for all HALLway devices:
@@ -41,8 +69,9 @@ Encrypted files under [secrets/](secrets/):
 | `ssh_key_github.age` | SSH private key for GitHub operations |
 | `wg-hallpass-privatekey.age` | WireGuard server private key |
 | `syncthing-gui-pass.age` | Syncthing GUI password (plaintext; Syncthing hashes it) |
+| `acme-vultr-api-key.age` | Vultr API key for DNS-01 ACME challenges |
 
-Create/edit with (from dev shell — sets `RULES` and `EDITOR` automatically):
+Create/edit with (from dev shell):
 
 ```bash
 nix develop
@@ -51,7 +80,7 @@ agenix -e hosts/HALLpass.space/secrets/wg-hallpass-privatekey.age -i ~/.ssh/id_h
 agenix -e hosts/HALLpass.space/secrets/syncthing-gui-pass.age -i ~/.ssh/id_hallpass
 ```
 
-> **Note**: these three secrets are currently encrypted for the admin key only. After first VPS boot, obtain the host SSH key with `ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age`, add it to the root `secrets.nix`, and rekey with `agenix -r -i ~/.ssh/id_hallpass`.
+> **Note**: These secrets are currently encrypted for the admin key only. After first VPS boot, obtain the host SSH key with `ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age`, add it to root `secrets.nix`, and rekey with `agenix -r -i ~/.ssh/id_hallpass`.
 
 ## Placeholder Values
 
@@ -60,17 +89,181 @@ agenix -e hosts/HALLpass.space/secrets/syncthing-gui-pass.age -i ~/.ssh/id_hallp
 | `DESKTOP_WG_PUBLIC_KEY` | `configuration.nix` | `wg pubkey` from 2600AD keygen |
 | `PHONE_WG_PUBLIC_KEY` | `configuration.nix` | WireGuard app on phone |
 
-## Deploy
+---
+
+## Installation
+
+**Target**: Minimal VPS (Vultr, 25GB disk)
+**Role**: WireGuard hub + Syncthing introducer + web edge + Mercurial host
+**TLS**: Wildcard `*.hallpass.space` via DNS-01 (Vultr API)
+
+### Standard
+
+This is a VPS deployment, not a bare-metal install. Clone the repo and run `nixos-rebuild switch`.
+
+### Full Step-by-Step
+
+#### TLS Strategy
+
+This host uses a **DNS-01 ACME challenge** rather than HTTP-01:
+
+- A single wildcard cert covers `hallpass.space`, `hg.hallpass.space`, and any future subdomains
+- Cert issuance does **not** require DNS A records to point at the server first
+- A records can be pointed at any time (before or after deploy)
+
+#### Pre-Flight Checklist (from 2600AD)
+
+**1. Get the VPS SSH host key (for agenix rekey)**
 
 ```bash
-# From repo root
+ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
+# → age1xxxx...
+```
+
+Paste into `secrets.nix` (root): uncomment the `hallpass` variable, fill in the key, add `hallpass` to the HALLpass.space `publicKeys` lists. Then rekey:
+
+```bash
+nix develop
+agenix -r -i ~/.ssh/id_hallpass
+```
+
+**2. Create the Vultr API key secret**
+
+Get a Vultr API key with DNS write permission from the Vultr control panel.
+
+```bash
+nix develop
+
+# Pipe approach (no editor needed):
+echo "VULTR_API_KEY=your-vultr-api-key-here" \
+  | age -R ~/.ssh/id_hallpass.pub \
+  -o hosts/HALLpass.space/secrets/acme-vultr-api-key.age
+
+# Or editor approach:
+rm -f hosts/HALLpass.space/secrets/acme-vultr-api-key.age
+agenix -e hosts/HALLpass.space/secrets/acme-vultr-api-key.age -i ~/.ssh/id_hallpass
+```
+
+**3. Create remaining secrets (if not already done)**
+
+```bash
+agenix -e hosts/HALLpass.space/secrets/ssh_key_github.age     -i ~/.ssh/id_hallpass
+agenix -e hosts/HALLpass.space/secrets/wg-hallpass-privatekey.age -i ~/.ssh/id_hallpass
+agenix -e hosts/HALLpass.space/secrets/syncthing-gui-pass.age -i ~/.ssh/id_hallpass
+```
+
+**4. Commit and push**
+
+```bash
 nix flake check
-# Run on the VPS itself after nixos-install:
+nix fmt
+git add -A
+git commit -m "feat: HALLpass.space deployment-ready"
+git push origin main
+```
+
+#### Deploy
+
+From the VPS (SSH in as root or via console):
+
+```bash
+# Clone config
+sudo mkdir -p /etc/nixos
+cd /etc/nixos
+sudo git clone https://github.com/MarkusBitterman/HALLway.git .
+
+# Build and activate
 sudo nixos-rebuild switch --flake .#HALLpass.space
 ```
 
+On first activation:
+- `systemd-tmpfiles` creates `/srv/hallspace/_public/` and `/srv/hg/repos/`
+- agenix decrypts all secrets using the host's SSH key
+- lego requests `*.hallpass.space` + `hallpass.space` cert via Vultr DNS-01
+- nginx, hgweb, WireGuard (hub only until peers added), and Syncthing all start
+
+#### Post-Deploy
+
+**Add VPS to agenix (if not done in pre-flight)**
+
+```bash
+ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
+# Uncomment hallpass in secrets.nix, fill key, add to HALLpass.space entries
+agenix -r -i ~/.ssh/id_hallpass
+```
+
+**Collect Syncthing IDs for 2600AD config**
+
+```bash
+ssh matt@hallpass.space
+
+syncthing cli show system | jq -r .myID
+# → replace HALLPASS_SYNCTHING_DEVICE_ID in hosts/2600AD/configuration.nix
+
+journalctl -u syncthing-discovery | grep -i deviceid | tail -1
+# → replace DISCOVERY_SERVER_ID
+
+journalctl -u syncthing.service | grep -i relay | tail -1
+# → replace RELAY_SERVER_ID
+```
+
+**Initialize Mercurial repos**
+
+```bash
+ssh matt@hallpass.space "hg init /srv/hg/repos/hallway"
+# Browse: https://hg.hallpass.space/hallway
+```
+
+**Point DNS A records (when ready for public access)**
+
+In Vultr DNS, add:
+- `hallpass.space` A → VPS IP
+- `hg.hallpass.space` A → VPS IP
+
+The wildcard TLS cert is already issued regardless of when A records are set.
+
+---
+
+## How to Contribute
+
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) in the repository root for:
+
+- Dev environment setup
+- Code style guidelines
+- Pull request process
+
+---
+
+## Troubleshooting
+
+### Required Firewall Ports (Internet-Facing)
+
+| Port | Protocol | Service |
+|------|----------|---------|
+| 22 | TCP | SSH |
+| 80 | TCP | nginx (HTTP redirect to HTTPS) |
+| 443 | TCP | nginx HTTPS |
+| 51820 | UDP | WireGuard |
+
+Syncthing relay/discovery ports (22000, 22067, 22070, 8443) are restricted to the WireGuard interface only.
+
+### ACME certificate not issued
+
+Check lego logs:
+
+```bash
+journalctl -u acme-hallpass.space.service
+```
+
+Ensure the Vultr API key has DNS write permission.
+
+### WireGuard peers not connecting
+
+Verify peer public keys are correctly filled in `configuration.nix` and firewall allows UDP 51820.
+
+---
+
 ## Related
 
-- 2600AD (WireGuard + Syncthing client): [../2600AD/configuration.nix](../2600AD/configuration.nix)
-- Install guide: [INSTALLATION.md](INSTALLATION.md)
+- 2600AD (WireGuard + Syncthing client): [../2600AD/README.md](../2600AD/README.md)
 - Secrets workflow: [../../docs/secrets.md](../../docs/secrets.md)

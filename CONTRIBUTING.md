@@ -1,13 +1,16 @@
-# Contributing to HALLway 🏡🔐
+# Contributing to HALLway
 
 Thank you for your interest in contributing to HALLway! This guide will help you get started.
 
 ## Table of Contents
 
 - [Dev Environment Quickstart](#dev-environment-quickstart)
-- [Working with Copilot](#working-with-copilot)
+- [Working with Claude Code](#working-with-claude-code)
 - [Code Style and Formatting](#code-style-and-formatting)
+- [Committing Changes](#committing-changes)
 - [Pull Request Process](#pull-request-process)
+
+---
 
 ## Dev Environment Quickstart
 
@@ -72,9 +75,11 @@ For automatic shell activation when you `cd` into the project:
    direnv allow
    ```
 
+---
+
 ## Working with Claude Code
 
-HALLway uses **Claude Code** (Anthropic) as a **power tool, not an authority** 🛠️
+HALLway uses **Claude Code** (Anthropic) as a **power tool, not an authority**.
 
 ### Expected Usage
 
@@ -86,36 +91,23 @@ HALLway uses **Claude Code** (Anthropic) as a **power tool, not an authority** �
 
 **Humans verify everything.** AI suggestions must be:
 
-1. ✅ **Reviewed** — Read and understand every change before accepting
-2. ✅ **Tested** — Run `nix flake check` and `nix fmt` to verify correctness
-3. ✅ **Audited** — Check for security issues, especially in:
+1. **Reviewed** — Read and understand every change before accepting
+2. **Tested** — Run `nix flake check` and `nix fmt` to verify correctness
+3. **Audited** — Check for security issues, especially in:
    - Cryptographic code and agenix secrets
    - Network configuration (WireGuard, firewall rules)
    - Permission handling (`mode`, `owner`, `group` on secrets)
 
-### Prompt Hygiene 🧹
+### Prompt Hygiene
 
 **Never include in prompts:**
 
-- 🚫 Private keys, passphrases, or `.age` file contents
-- 🚫 API tokens or credentials
-- 🚫 Real WireGuard private keys
-- 🚫 Internal infrastructure IP addresses beyond what is already in this repo
+- Private keys, passphrases, or `.age` file contents
+- API tokens or credentials
+- Real WireGuard private keys
+- Internal infrastructure IP addresses beyond what is already in this repo
 
-### Before Opening PRs
-
-Always run these checks locally:
-
-```bash
-# Enter dev shell (if not already)
-nix develop
-
-# Validate the flake
-nix flake check
-
-# Format code
-nix fmt
-```
+---
 
 ## Code Style and Formatting
 
@@ -139,6 +131,91 @@ The repository includes an [.editorconfig](.editorconfig) file that most editors
 - 2-space indentation
 - Trailing whitespace trimmed (except in Markdown)
 
+---
+
+## Committing Changes
+
+### Commit Message Format
+
+```
+<type>: <description>
+
+<body (optional)>
+```
+
+### Types
+
+| Type | Use for |
+|------|---------|
+| `feat:` | New feature or capability |
+| `fix:` | Bug fix |
+| `docs:` | Documentation changes |
+| `refactor:` | Code reorganization without behavior change |
+| `chore:` | Build, dependencies, or tooling |
+| `v0.x.x:` | Version bump (e.g., "v0.0.1: Description") |
+
+### Examples
+
+```bash
+# New host implementation
+git commit -m "v0.0.1: 2600AD - Atari VCS 800 initial working build"
+
+# Feature addition
+git commit -m "feat: Add TPM2 auto-unlock support for LUKS partitions"
+
+# Bug fix
+git commit -m "fix: Resolve ZFS module loading issue in Stage 1 installation"
+
+# Documentation
+git commit -m "docs: Add two-stage installation guide with space optimization"
+```
+
+### Before Committing
+
+1. **Format code**:
+   ```bash
+   nix fmt
+   ```
+
+2. **Validate flake**:
+   ```bash
+   nix flake check
+   ```
+
+3. **Review changes**:
+   ```bash
+   git status
+   git diff --staged
+   ```
+
+### Git Workflow
+
+```bash
+# Stage changes
+git add -A
+
+# Commit
+git commit -m "type: description"
+
+# Push
+git push origin main
+```
+
+### Syncing with Remote
+
+```bash
+# Fetch latest
+git fetch origin
+
+# Pull changes
+git pull origin main
+
+# See what's different
+git log HEAD..origin/main
+```
+
+---
+
 ## Pull Request Process
 
 1. **Fork** the repository and create a feature branch
@@ -150,18 +227,34 @@ The repository includes an [.editorconfig](.editorconfig) file that most editors
    nix fmt
    ```
 
-4. **Commit** with clear, descriptive messages
+4. **Commit** with clear, descriptive messages (see above)
 5. **Open a PR** with:
    - Clear description of what changed and why
    - Reference to any related issues
 6. **Address review feedback** promptly
 
-### Commit Message Guidelines
+---
 
-- Use present tense ("Add feature" not "Added feature")
-- Keep the first line under 72 characters
-- Reference issues when applicable (`Fixes #123`)
+## Troubleshooting
+
+### "Permission denied (publickey)"
+
+If using IDE-based authentication, this is handled automatically when you push.
+
+### "Everything up-to-date"
+
+All your commits are already pushed. Run `git log` to see history.
+
+### "Dirty working tree"
+
+You have uncommitted changes:
+
+```bash
+git status
+git add -A
+git commit -m "your message"
+```
 
 ---
 
-Questions? Open an issue or start a discussion. We're building this hallway together! 🚪✨
+Questions? Open an issue or start a discussion.
