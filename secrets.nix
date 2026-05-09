@@ -74,6 +74,10 @@ in
     bittermang
     host2600AD
   ];
+  "hosts/2600AD/secrets/wg-hallspace-psk.age".publicKeys = [
+    bittermang
+    host2600AD
+  ];
   "hosts/2600AD/secrets/syncthing-gui-pass.age".publicKeys = [
     bittermang
     host2600AD
@@ -99,6 +103,9 @@ in
     bittermang
   ];
   "hosts/HALLpass.space/secrets/wg-hallpass-privatekey.age".publicKeys = [
+    bittermang
+  ];
+  "hosts/HALLpass.space/secrets/wg-desktop-psk.age".publicKeys = [
     bittermang
   ];
   "hosts/HALLpass.space/secrets/syncthing-gui-pass.age".publicKeys = [

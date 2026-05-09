@@ -145,10 +145,12 @@ in
     peers = [
       {
         publicKey = peers.desktop.publicKey;
+        presharedKeyFile = config.age.secrets."wg-desktop-psk".path;
         allowedIPs = [ peers.desktop.ip ];
       }
       {
         publicKey = peers.phone.publicKey;
+        # presharedKeyFile = config.age.secrets."wg-phone-psk".path;  # TODO: generate phone PSK
         allowedIPs = [ peers.phone.ip ];
       }
     ];

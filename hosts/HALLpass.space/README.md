@@ -146,11 +146,31 @@ agenix -e hosts/HALLpass.space/secrets/acme-vultr-api-key.age -i ~/.ssh/id_hallp
 
 **3. Create remaining secrets (if not already done)**
 
+**Secrets Checklist:**
+
+| Secret | Format | Required? |
+|--------|--------|-----------|
+| `ssh_key_github.age` | SSH private key (plaintext) | Yes |
+| `wg-hallpass-privatekey.age` | WireGuard private key (plaintext, 44 chars) | Yes |
+| `wg-desktop-psk.age` | WireGuard PSK (plaintext, 44 chars) | Yes |
+| `syncthing-gui-pass.age` | Password (plaintext) | Yes |
+| `acme-vultr-api-key.age` | `VULTR_API_KEY=xxx` format | Yes |
+
 ```bash
-agenix -e hosts/HALLpass.space/secrets/ssh_key_github.age     -i ~/.ssh/id_hallpass
+# SSH key for GitHub operations
+agenix -e hosts/HALLpass.space/secrets/ssh_key_github.age -i ~/.ssh/id_hallpass
+
+# WireGuard server private key (generate with: wg genkey)
 agenix -e hosts/HALLpass.space/secrets/wg-hallpass-privatekey.age -i ~/.ssh/id_hallpass
+
+# WireGuard PSK for desktop peer (same key as 2600AD's wg-hallspace-psk.age)
+agenix -e hosts/HALLpass.space/secrets/wg-desktop-psk.age -i ~/.ssh/id_hallpass
+
+# Syncthing GUI password
 agenix -e hosts/HALLpass.space/secrets/syncthing-gui-pass.age -i ~/.ssh/id_hallpass
 ```
+
+**Note:** The `wg-desktop-psk.age` must contain the **same PSK** as `hosts/2600AD/secrets/wg-hallspace-psk.age` — it's a shared secret between both peers.
 
 **4. Commit and push**
 

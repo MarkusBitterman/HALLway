@@ -24,6 +24,14 @@
     mode = "0400";
   };
 
+  # WireGuard preshared key (HALLpass.space <-> 2600AD desktop)
+  age.secrets."wg-desktop-psk" = {
+    file = ./secrets/wg-desktop-psk.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
   # Syncthing GUI password (plaintext; Syncthing hashes internally)
   age.secrets."syncthing-gui-pass" = {
     file = ./secrets/syncthing-gui-pass.age;

@@ -87,7 +87,8 @@
 
     peers = [
       {
-        publicKey = "HALLPASS_WG_PUBLIC_KEY";
+        publicKey = "xVl7ZD5oumSdXDYudc3zip0Zo3draHuniQoYQFNth1M=";
+        presharedKeyFile = config.age.secrets."wg-hallspace-psk".path;
         endpoint = "hallpass.space:51820";
         allowedIPs = [ "10.44.0.0/24" ];
         persistentKeepalive = 25;
@@ -433,7 +434,7 @@
         };
 
         Nintendo64 = {
-          id = "PHONE_SYNCTHING_DEVICE_ID";
+          id = "RNQ46P5-MED5PWA-2UAPW2O-VVA6FUK-34KPUAQ-GAEATTS-ONCPRMN-YKJ77QH";
           addresses = [
             "tcp://10.44.0.3:22000"
             "quic://10.44.0.3:22000"

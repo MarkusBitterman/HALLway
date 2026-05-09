@@ -56,6 +56,14 @@
     mode = "0400";
   };
 
+  # WireGuard preshared key (2600AD <-> HALLpass.space)
+  age.secrets."wg-hallspace-psk" = {
+    file = ./secrets/wg-hallspace-psk.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
+
   # Syncthing GUI password (plaintext file; Syncthing hashes internally)
   age.secrets."syncthing-gui-pass" = {
     file = ./secrets/syncthing-gui-pass.age;
@@ -69,10 +77,9 @@
   # File content format:
   #   [Security]
   #   Passphrase=your-wifi-password
-  # Replace HOME_WIFI_SSID with the actual network SSID before deploying.
   age.secrets."wifi-home" = {
     file = ./secrets/wifi-home.age;
-    path = "/var/lib/iwd/HOME_WIFI_SSID.psk";
+    path = "/var/lib/iwd/Minus World.psk";
     owner = "root";
     group = "root";
     mode = "0600";

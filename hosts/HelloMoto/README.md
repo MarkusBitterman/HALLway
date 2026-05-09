@@ -92,10 +92,18 @@ agenix -r -i ~/.ssh/id_hallpass
 
 #### Step 3: Create the GitHub SSH secret
 
+**Secrets Checklist:**
+
+| Secret | Format | Required? |
+|--------|--------|-----------|
+| `ssh_key_github.age` | SSH private key (plaintext) | Yes |
+
 ```bash
 # From 2600AD dev shell (admin-only until phone key is added):
 agenix -e hosts/HelloMoto/secrets/ssh_key_github.age -i ~/.ssh/id_hallpass
 ```
+
+In the editor, paste the SSH private key content (plaintext), save and close.
 
 #### Step 4: Replace remaining placeholders
 

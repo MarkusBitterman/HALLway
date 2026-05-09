@@ -235,14 +235,66 @@ sudo git clone https://github.com/MarkusBitterman/HALLway.git .
 ```bash
 cd /mnt/2600AD/etc/nixos
 nix-shell  # Provides agenix command
+```
 
-# Edit/create encrypted secrets
+**Secrets Checklist:**
+
+| Secret | Format | Required? |
+|--------|--------|-----------|
+| `ssh_key_github.age` | SSH private key (plaintext) | Yes |
+| `ssh_key_hobbs.age` | SSH private key (plaintext) | Optional |
+| `ssh_key_hallpass.age` | SSH private key (plaintext) | Yes (for VPS access) |
+| `github_token.age` | GitHub PAT (plaintext) | Optional |
+| `gpg_key.age` | GPG private key (armor export) | Optional |
+| `wg-2600ad-privatekey.age` | WireGuard private key (plaintext, 44 chars) | Yes |
+| `wg-hallspace-psk.age` | WireGuard PSK (plaintext, 44 chars) | Yes |
+| `syncthing-gui-pass.age` | Password (plaintext) | Yes |
+| `wifi-home.age` | iwd format (see below) | Yes (for WiFi) |
+
+**Create each secret** (editor opens, enter content, save and close):
+
+```bash
+# SSH keys (paste private key content)
 agenix -e hosts/2600AD/secrets/ssh_key_github.age -i ~/.ssh/id_hallpass
-agenix -e hosts/2600AD/secrets/ssh_key_hobbs.age -i ~/.ssh/id_hallpass
-agenix -e hosts/2600AD/secrets/github_token.age -i ~/.ssh/id_hallpass
-agenix -e hosts/2600AD/secrets/gpg_key.age -i ~/.ssh/id_hallpass
+agenix -e hosts/2600AD/secrets/ssh_key_hallpass.age -i ~/.ssh/id_hallpass
+
+# WireGuard (generate with: wg genkey)
 agenix -e hosts/2600AD/secrets/wg-2600ad-privatekey.age -i ~/.ssh/id_hallpass
+
+# WireGuard PSK (generate with: wg genpsk)
+agenix -e hosts/2600AD/secrets/wg-hallspace-psk.age -i ~/.ssh/id_hallpass
+
+# Syncthing GUI password (plaintext)
 agenix -e hosts/2600AD/secrets/syncthing-gui-pass.age -i ~/.ssh/id_hallpass
+
+# WiFi credentials for iwd
+agenix -e hosts/2600AD/secrets/wifi-home.age -i ~/.ssh/id_hallpass
+```
+
+**WiFi secret format** (for iwd):
+
+```
+[Security]
+Passphrase=your-wifi-password-here
+```
+
+**WireGuard key generation:**
+
+```bash
+# Generate private key (keep secret)
+wg genkey > privatekey
+
+# Derive public key (share with peers)
+cat privatekey | wg pubkey > publickey
+
+# Generate preshared key (same key on both peers)
+wg genpsk > psk
+```
+
+**After creating secrets**, stage them for git:
+
+```bash
+git add hosts/2600AD/secrets/*.age
 ```
 
 #### Step 6: Install NixOS
