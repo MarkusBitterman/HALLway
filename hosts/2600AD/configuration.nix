@@ -22,15 +22,20 @@
 
   boot = {
     loader = {
-      systemd-boot.enable = true;
+      systemd-boot = {
+        enable = true;
+        memtest86.enable = true;
+      };
       efi.canTouchEfiVariables = true;
+      timeout = 7;
     };
 
     kernelPackages = pkgs.linuxPackages; # Stable kernel (guaranteed ZFS support)
 
     zfs = {
-      allowHibernation = true;
-      forceImportRoot = false;
+      allowHibernation = false;
+      # allowHibernation = true;
+      # forceImportRoot = false; the perferred setting
     };
 
     resumeDevice = "/dev/mapper/stella_crypt"; # Encrypted swap for hibernation
@@ -48,7 +53,6 @@
       "udev.log_level=3"
       "systemd.show_status=auto"
     ];
-    loader.timeout = 0;
   };
 
   # ════════════════
@@ -69,55 +73,77 @@
   # NETWORKING
   # ════════════════
 
-  networking.hostId = "ad42069f"; # Required for ZFS
+  networking.hostId = "76fe1b68"; # Required for ZFS
   networking.hostName = "2600AD";
-  networking.useNetworkd = true;
-  networking.networkmanager.enable = false; # iwd + systemd-networkd instead; GNOME would enable this implicitly
+  # networking.useNetworkd = true;
+  networking.networkmanager.enable = true; # iwd + systemd-networkd instead; GNOME would enable this implicitly; we have enabled it implicitly becuase attemnpting to switch to NetworkD has not gone well
 
   # WiFi managed by iwd; DHCP handed to systemd-networkd
-  networking.wireless.iwd = {
-    enable = true;
-    settings.DriverQuirks.DefaultInterface = true;
-  };
+  # networking.wireless.iwd = {
+  #  enable = true;
+  #  settings.DriverQuirks.DefaultInterface = true;
+  #};
 
-  # Hallpass overlay network client settings
-  networking.wireguard.interfaces.wg-hallspace = {
-    ips = [ "10.44.0.2/24" ];
-    privateKeyFile = config.age.secrets."wg-2600ad-privatekey".path;
+  # ─────────────────────────────────────────────────────────────────────────
+  # DNS (AdGuard public resolvers)
+  # ─────────────────────────────────────────────────────────────────────────
+  networking.nameservers = [
+    "94.140.14.14"
+    "94.140.15.15"
+    "2a10:50c0::ad1:ff"
+    "2a10:50c0::ad2:ff"
+  ];
 
-    peers = [
-      {
-        publicKey = "xVl7ZD5oumSdXDYudc3zip0Zo3draHuniQoYQFNth1M=";
-        presharedKeyFile = config.age.secrets."wg-hallspace-psk".path;
-        endpoint = "hallpass.space:51820";
-        allowedIPs = [ "10.44.0.0/24" ];
-        persistentKeepalive = 25;
-      }
-    ];
-  };
+  # ─────────────────────────────────────────────────────────────────────────
+  # HALLpass overlay network (WireGuard)
+  # ─────────────────────────────────────────────────────────────────────────
+  # Subnet: 10.23.11.0/24
+  #   - HALLpass.space (hub):  10.23.11.1
+  #   - 2600AD (this host):    10.23.11.80
+  #   - HelloMoto (phone):     10.23.11.64
+  #
+  # NOTE: Using IP endpoint instead of hostname avoids DNS chicken-and-egg
+  # when routing DNS through the tunnel. Get VPS IP with: dig +short hallpass.space
+  #
+  # networking.firewall.checkReversePath = "loose"; # Required for WireGuard rpfilter
+  #
+  # networking.wireguard.interfaces.wg-hallpass = {
+  #   ips = [ "10.23.11.80/24" ];
+  #   privateKeyFile = config.age.secrets."wg-2600ad-privatekey".path;
+  #
+  #   peers = [
+  #     {
+  #       publicKey = "HALLPASS_WG_PUBLIC_KEY";
+  #       presharedKeyFile = config.age.secrets."wg-hallpass-psk".path;
+  #       endpoint = "hallpass.space:51820"; # TODO: replace with IP once VPS is deployed
+  #       allowedIPs = [ "10.23.11.0/24" ];
+  #       persistentKeepalive = 25;
+  #     }
+  #   ];
+  # };
 
   # Don't block boot waiting for ALL interfaces — any one coming up is enough.
   systemd.network.wait-online.anyInterface = true;
 
-  systemd.network = {
-    enable = true;
-
-    networks."10-lan" = {
-      matchConfig.Name = "en*";
-      networkConfig.DHCP = "yes";
-    };
-
-    networks."20-wifi" = {
-      matchConfig.Name = "wl*";
-      networkConfig.DHCP = "yes";
-      # Don't fail activation if WiFi isn't connected at boot
-      linkConfig.RequiredForOnline = "no";
-    };
-  };
+  # systemd.network = {
+  #   enable = true;
+  #
+  #   networks."10-lan" = {
+  #     matchConfig.Name = "en*";
+  #     networkConfig.DHCP = "yes";
+  #   };
+  #
+  #   networks."20-wifi" = {
+  #     matchConfig.Name = "wl*";
+  #     networkConfig.DHCP = "yes";
+  #     # Don't fail activation if WiFi isn't connected at boot
+  #     linkConfig.RequiredForOnline = "no";
+  #   };
+  # };
 
   networking.firewall = {
     enable = true;
-    interfaces.wg-hallspace = {
+    interfaces.wg-hallpass = {
       allowedTCPPorts = [ 22000 ];
       allowedUDPPorts = [ 22000 ];
     };
@@ -143,15 +169,46 @@
   time.timeZone = "America/Chicago";
   i18n.defaultLocale = "en_US.UTF-8";
 
-  # ___________________________________________________________________________
-  # DISPLAY MANAGER (troubleshooting with Gnome)
-  # ___________________________________________________________________________
-  services = {
-    desktopManager.gnome.enable = true;
-    displayManager.gdm = {
-      enable = true;
-      wayland = true; # Required for Wayland sessions (including Hyprland) to appear in GDM
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DISPLAY MANAGER (greetd + regreet - Wayland-native)
+  # ═══════════════════════════════════════════════════════════════════════════
+  # regreet: GTK4 greeter with user list, password entry, session selection
+  # cage: minimal Wayland compositor that runs only the greeter
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        command = "${pkgs.cage}/bin/cage -s -- ${pkgs.regreet}/bin/regreet";
+        user = "greeter";
+      };
     };
+  };
+
+  # regreet configuration
+  programs.regreet = {
+    enable = true;
+    settings = {
+      background = {
+        fit = "Cover";
+        # path = "/path/to/wallpaper.png"; # Optional: add a login wallpaper
+      };
+      GTK = {
+        application_prefer_dark_theme = true;
+      };
+    };
+  };
+
+  # Prevent console spam on greetd TTY
+  systemd.services.greetd.serviceConfig = {
+    Type = "idle";
+    StandardInput = "tty";
+    StandardOutput = "tty";
+    StandardError = "journal";
+    TTYReset = true;
+    TTYVHangup = true;
+    TTYVTDisallocate = true;
   };
 
   # ════════════════
@@ -197,9 +254,7 @@
     # System tools
     sshfs
 
-    # Steam (requires system-level for 32-bit FHS compatibility)
-    steam
-    steam-run
+    # Note: Steam provided by programs.steam.enable (includes steam-run)
   ];
 
   fonts.packages = with pkgs; [
@@ -237,7 +292,11 @@
     zsh.enable = true;
     # Registers the Hyprland session with GDM and enables polkit, XWayland,
     # xdg-desktop-portal-hyprland, and graphics support system-wide.
-    hyprland.enable = true;
+    hyprland = {
+      enable = true;
+      withUWSM = true; # Universal Wayland Session Manager (recommended since 24.11)
+      xwayland.enable = true;
+    };
     nix-ld = {
       enable = true;
       # Libraries exposed to foreign (non-Nix) ELF binaries via nix-ld.
@@ -296,7 +355,7 @@
         fuse
         fuse3
         gdk-pixbuf
-        glew110
+        glew_1_10
         glib
         gmp
         gst_all_1.gst-plugins-base
@@ -392,16 +451,16 @@
     };
     steam = {
       enable = true;
-      extest.enable = true;
-      gamescopeSession.enable = true;
+      gamescopeSession.enable = true; # Separate GDM session (Steam Deck-like)
       protontricks.enable = true;
       extraPackages = with pkgs; [
-        gamescope
+        freetype # TrueType font rendering (required by some Proton games)
       ];
       extraCompatPackages = with pkgs; [
         proton-ge-bin
-        freetype
       ];
+      # Note: gamescope provided by programs.gamescope.enable
+      # Note: extest removed (X11 input emulation, not needed for pure Wayland)
     };
   };
 
@@ -427,8 +486,8 @@
         hallpass = {
           id = "HALLPASS_SYNCTHING_DEVICE_ID";
           addresses = [
-            "tcp://10.44.0.1:22000"
-            "quic://10.44.0.1:22000"
+            "tcp://10.23.11.1:22000"
+            "quic://10.23.11.1:22000"
           ];
           introducer = true;
         };
@@ -436,8 +495,8 @@
         Nintendo64 = {
           id = "RNQ46P5-MED5PWA-2UAPW2O-VVA6FUK-34KPUAQ-GAEATTS-ONCPRMN-YKJ77QH";
           addresses = [
-            "tcp://10.44.0.3:22000"
-            "quic://10.44.0.3:22000"
+            "tcp://10.23.11.64:22000"
+            "quic://10.23.11.64:22000"
           ];
         };
       };
@@ -453,14 +512,14 @@
       options = {
         globalAnnounceEnabled = true;
         globalAnnounceServers = [
-          "https://10.44.0.1:8443/?id=DISCOVERY_SERVER_ID"
+          "https://10.23.11.1:8443/?id=DISCOVERY_SERVER_ID"
         ];
         localAnnounceEnabled = false;
         natEnabled = false;
         relaysEnabled = true;
         listenAddresses = [
           "default"
-          "relay://10.44.0.1:22067/?id=RELAY_SERVER_ID"
+          "relay://10.23.11.1:22067/?id=RELAY_SERVER_ID"
         ];
       };
     };

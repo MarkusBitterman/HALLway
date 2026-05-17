@@ -36,7 +36,7 @@ Non-NixOS hosts (standalone Home Manager) contain only:
 - `secrets.nix` — agenix homeManagerModule config; identity is user SSH key, not system host key
 
 **Current hosts**:
-- `2600AD` — Atari VCS 800; workstation/gaming node; ZFS on LUKS, GNOME (transitioning to Hyprland), WireGuard client, Syncthing client; activated with `sudo nixos-rebuild switch --flake .#2600AD`
+- `2600AD` — Atari VCS 800; workstation/gaming node; ZFS on LUKS, Hyprland (via UWSM) with greetd/regreet, WireGuard client, Syncthing client; activated with `sudo nixos-rebuild switch --flake .#2600AD`
 - `HALLpass.space` — Minimal VPS; WireGuard hub + Syncthing introducer/relay/discovery; nginx front; **not yet deployed** (contains placeholder values); activated with `sudo nixos-rebuild switch --flake .#HALLpass.space`
 - `HelloMoto` — Android phone (Termux + Nix, `aarch64-linux`); standalone Home Manager only; WireGuard and Syncthing via Android apps; activated with `home-manager switch --flake .#HelloMoto`
 
@@ -46,7 +46,16 @@ Non-NixOS hosts (standalone Home Manager) contain only:
 Guest user on 2600AD has an ephemeral tmpfs `/home/guest` (wiped on reboot); its packages are defined directly on `users.users.guest.packages` in `configuration.nix` since Home Manager persistence is pointless for a guest.
 
 ### Networking (2600AD)
-2600AD uses `networking.useNetworkd = true` with iwd for WiFi. NetworkManager is explicitly disabled (`networking.networkmanager.enable = false`). WiFi PSK is an agenix secret deployed to `/var/lib/iwd/<SSID>.psk` — the SSID placeholder in `hosts/2600AD/secrets.nix` must be replaced with the real network name before deploying.
+2600AD currently uses NetworkManager (`networking.networkmanager.enable = true`) as a temporary fallback while systemd-networkd configuration is being stabilized. The plan is to return to `networking.useNetworkd = true` with iwd for WiFi once the Hyprland desktop is confirmed working. WiFi PSK will be an agenix secret deployed to `/var/lib/iwd/<SSID>.psk`.
+
+### Display Manager (2600AD)
+2600AD uses **greetd + regreet** (GTK4 Wayland-native greeter) instead of GDM. The greeter runs on cage (minimal Wayland compositor) and provides user selection, password entry, and session dropdown. Hyprland is launched via UWSM (Universal Wayland Session Manager).
+
+### WireGuard Overlay
+The HALLpass WireGuard subnet is `10.23.11.0/24`:
+- `10.23.11.1` — HALLpass.space (hub)
+- `10.23.11.80` — 2600AD
+- `10.23.11.64` — HelloMoto (phone)
 
 ### Secrets (agenix)
 Two completely different files share the name `secrets.nix`:

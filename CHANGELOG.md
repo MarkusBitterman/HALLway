@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **AdGuard DNS** (2600AD): System-wide DNS using AdGuard public resolvers (94.140.14.14, 94.140.15.15, IPv6 variants)
+- **greetd + regreet** (2600AD): Wayland-native display manager replacing GDM; GTK4 greeter with user list, password entry, and session selection; runs on cage minimal compositor
+- **UWSM session management** (2600AD): Hyprland now launched via Universal Wayland Session Manager (`programs.hyprland.withUWSM = true`)
+- **Gamescope Vulkan fix** (2600AD): Added `debug { full_cm_proto = true }` to Hyprland config for Steam/gamescope compatibility
 - **HALLpass.space host**: Second HALLway host — minimal VPS acting as WireGuard hub, Syncthing introducer/relay/discovery, nginx edge, and Mercurial server
 - **Mercurial hosting** (`hg.hallpass.space`): `hgweb` systemd service serving repos from `/srv/hg/repos/**`; nginx reverse proxy with ACME TLS
 - **Static web** (`hallpass.space`): nginx vhost serving `/srv/hallspace/_public/`; ACME TLS via Let's Encrypt
@@ -20,7 +24,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **Networking (2600AD)**: `networking.networkmanager.enable = false` explicitly set; GNOME no longer enables NetworkManager implicitly; systemd-networkd `20-wifi` entry added with `RequiredForOnline = "no"` so a missing WiFi connection does not stall boot
+- **WireGuard subnet**: Changed from `10.44.0.x` to `10.23.11.x` (2600AD = `.80`, HALLpass.space = `.1`, HelloMoto = `.64`)
+- **Display manager** (2600AD): Replaced GDM/GNOME with greetd + regreet (Wayland-native)
+- **Steam configuration** (2600AD): Moved `freetype` from `extraCompatPackages` (wrong) to `extraPackages` (correct); removed redundant `steam`/`steam-run` from `environment.systemPackages`; removed `extest` (X11-only)
+- **Hyprland Home Manager** (2600AD): Added `systemd.enable = false` to prevent conflict with UWSM session management
+- **ZFS import** (2600AD): Temporarily added `forceImportAll = true` and `forceImportRoot = true` as workaround for hostId changes
+- **hostId** (2600AD): Changed to `76fe1b68` (derived from machine-id for consistency)
+- **Networking (2600AD)**: Temporarily using NetworkManager while systemd-networkd configuration is stabilized; commented out iwd/networkd config
 - **GDM Wayland** (2600AD): `services.displayManager.gdm.wayland = true` — required for Wayland sessions to appear in the GDM session picker
 - **Hyprland Home Manager** (2600AD): Added `package = pkgs.hyprland` to pin HM to the same package as the system module; removed redundant `xdg-desktop-portal-hyprland` from `home.packages` and the `xdg.portal` block (both owned by the NixOS module)
 - **HALLpass.space system packages**: Added `mercurial`, `age`, `ssh-to-age` for on-server operations

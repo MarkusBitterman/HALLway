@@ -232,9 +232,15 @@
   wayland.windowManager.hyprland = {
     enable = true;
     package = pkgs.hyprland;
+    systemd.enable = false; # UWSM handles session management (conflicts otherwise)
     extraConfig = ''
       # Custom monitor resolution for older non-SmartTV (1368x768@59.85Hz)
       monitor=HDMI-A-1,1368x768@59.85,0x0,1
+
+      # Gamescope/Steam compatibility (fixes Vulkan issues when running inside Hyprland)
+      debug {
+        full_cm_proto = true
+      }
 
       # Startup applications (packages installed via Home Manager)
       exec-once = dunst &
