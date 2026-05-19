@@ -99,7 +99,7 @@ nixos-rebuild switch --flake .#HALLpass.space
 2. **Get HALLpass.space WireGuard public key**:
    ```bash
    ssh matt@hallpass.space "cat /run/secrets/wg_privatekey | wg pubkey"
-   # Update HALLPASS_WG_PUBLIC_KEY in hosts/2600AD/configuration.nix
+   # Update 894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo= in hosts/2600AD/configuration.nix
    ```
 
 3. **Get Syncthing IDs** (for 2600AD config):

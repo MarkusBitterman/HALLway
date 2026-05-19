@@ -13,7 +13,7 @@ HALLpass.space configuration exists but has never been deployed. Placeholder val
   sops updatekeys hosts/HALLpass.space/secrets.yaml
   ```
 - [ ] Generate WireGuard keypairs (see `docs/secrets.md`) and replace placeholders:
-  - `HALLPASS_WG_PUBLIC_KEY` in `hosts/2600AD/configuration.nix`
+  - `894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=` in `hosts/2600AD/configuration.nix`
   - `DESKTOP_WG_PUBLIC_KEY` in `hosts/HALLpass.space/configuration.nix`
   - `PHONE_WG_PUBLIC_KEY` in `hosts/HALLpass.space/configuration.nix`
 - [ ] After first Syncthing startup on HALLpass.space, replace:

@@ -111,7 +111,7 @@
   #
   #   peers = [
   #     {
-  #       publicKey = "HALLPASS_WG_PUBLIC_KEY";
+  #       publicKey = "894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=";
   #       presharedKeyFile = config.sops.secrets."wg_psk".path;
   #       endpoint = "hallpass.space:51820"; # TODO: replace with IP once VPS is deployed
   #       allowedIPs = [ "10.23.11.0/24" ];

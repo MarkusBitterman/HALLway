@@ -133,7 +133,7 @@ Examples: `feat: Add TPM2 auto-unlock support`, `v0.0.1: 2600AD initial working 
 
 ### Placeholder Values
 Several config values in `hosts/HALLpass.space/configuration.nix` and `hosts/2600AD/configuration.nix` are not yet populated — they are literal placeholder strings that must be replaced before deployment is functional:
-- `HALLPASS_WG_PUBLIC_KEY` / `DESKTOP_WG_PUBLIC_KEY` / `PHONE_WG_PUBLIC_KEY` — WireGuard public keys
+- `894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=` / `DESKTOP_WG_PUBLIC_KEY` / `PHONE_WG_PUBLIC_KEY` — WireGuard public keys
 - `HALLPASS_SYNCTHING_DEVICE_ID` / `PHONE_SYNCTHING_DEVICE_ID` — Syncthing device IDs
 - `DISCOVERY_SERVER_ID` / `RELAY_SERVER_ID` — Syncthing infra IDs from HALLpass.space startup logs
 

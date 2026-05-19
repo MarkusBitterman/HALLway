@@ -93,7 +93,7 @@ These must be replaced before WireGuard and Syncthing are functional:
 
 | Placeholder | Location | How to get it |
 |-------------|----------|---------------|
-| `HALLPASS_WG_PUBLIC_KEY` | `configuration.nix` | `wg pubkey` from HALLpass.space keygen |
+| `894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=` | `configuration.nix` | `wg pubkey` from HALLpass.space keygen |
 | `HALLPASS_SYNCTHING_DEVICE_ID` | `configuration.nix` | `syncthing cli show system` on HALLpass.space |
 | `DISCOVERY_SERVER_ID` | `configuration.nix` | `journalctl -u syncthing-discovery` on HALLpass.space |
 | `RELAY_SERVER_ID` | `configuration.nix` | `journalctl -u syncthing.service` on HALLpass.space |

@@ -89,7 +89,7 @@ First HALLway implementation, targeting the Atari VCS 800 as a gaming/media work
 
 ### [0.0.2] — HALLpass.space live
 - [ ] First deploy of HALLpass.space (VPS provision, sops rekey, WireGuard keys, Syncthing IDs)
-- [ ] All placeholder values replaced (`HALLPASS_WG_PUBLIC_KEY`, `DESKTOP_WG_PUBLIC_KEY`, Syncthing device IDs)
+- [ ] All placeholder values replaced (`894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=`, `DESKTOP_WG_PUBLIC_KEY`, Syncthing device IDs)
 - [ ] HALLway migrated from Git to Mercurial; primary repo at `hg.hallpass.space`
 - [ ] GitHub becomes a read-only mirror
 
