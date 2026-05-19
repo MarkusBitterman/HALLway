@@ -33,9 +33,7 @@
     kernelPackages = pkgs.linuxPackages; # Stable kernel (guaranteed ZFS support)
 
     zfs = {
-      allowHibernation = false;
-      # allowHibernation = true;
-      # forceImportRoot = false; the perferred setting
+      allowHibernation = true;
     };
 
     resumeDevice = "/dev/mapper/stella_crypt"; # Encrypted swap for hibernation
@@ -109,12 +107,12 @@
   #
   # networking.wireguard.interfaces.wg-hallpass = {
   #   ips = [ "10.23.11.80/24" ];
-  #   privateKeyFile = config.age.secrets."wg-2600ad-privatekey".path;
+  #   privateKeyFile = config.sops.secrets."wg_privatekey".path;
   #
   #   peers = [
   #     {
   #       publicKey = "HALLPASS_WG_PUBLIC_KEY";
-  #       presharedKeyFile = config.age.secrets."wg-hallpass-psk".path;
+  #       presharedKeyFile = config.sops.secrets."wg_psk".path;
   #       endpoint = "hallpass.space:51820"; # TODO: replace with IP once VPS is deployed
   #       allowedIPs = [ "10.23.11.0/24" ];
   #       persistentKeepalive = 25;
@@ -282,6 +280,18 @@
 
   security.polkit.enable = true;
   security.apparmor.enable = true;
+
+  # ════════════════
+  # XFCE FALLBACK SESSION
+  # ════════════════
+  # Stable X11 fallback for debugging Wayland/Hyprland issues.
+  # Appears in regreet session dropdown alongside Hyprland.
+
+  services.xserver = {
+    enable = true;
+    desktopManager.xfce.enable = true;
+    displayManager.startx.enable = true; # Don't start X automatically; let greetd handle it
+  };
 
   # ════════════════
   # PROGRAMS
@@ -477,7 +487,7 @@
     dataDir = "/home/bittermang";
     configDir = "/home/bittermang/.config/syncthing";
     guiAddress = "127.0.0.1:8384";
-    guiPasswordFile = config.age.secrets."syncthing-gui-pass".path;
+    guiPasswordFile = config.sops.secrets."syncthing_gui_pass".path;
     overrideDevices = true;
     overrideFolders = true;
 

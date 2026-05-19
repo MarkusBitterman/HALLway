@@ -55,7 +55,7 @@ nix build .#nixosConfigurations.2600AD.config.system.build.toplevel
 
 ### Standard (Generic)
 
-HALLway uses a **flake-based NixOS installation** with LUKS encryption, ZFS root filesystem, and agenix secrets.
+HALLway uses a **flake-based NixOS installation** with LUKS encryption, ZFS root filesystem, and sops-nix secrets.
 
 #### Overview
 
@@ -64,7 +64,7 @@ HALLway uses a **flake-based NixOS installation** with LUKS encryption, ZFS root
 3. **Create** LUKS containers and ZFS pool with datasets
 4. **Mount** filesystems to `/mnt/<hostname>`
 5. **Clone** HALLway flake to `/mnt/<hostname>/etc/nixos`
-6. **Create** agenix secrets (see below)
+6. **Create** sops secrets (see below)
 7. **Run** `nixos-install --root /mnt/<hostname> --flake .#<hostname>`
 8. **Reboot** into your new system
 
@@ -111,15 +111,17 @@ cd /mnt/<hostname>/etc/nixos
 sudo git clone https://github.com/MarkusBitterman/HALLway.git .
 ```
 
-#### Create agenix Secrets
+#### Create sops Secrets
 
 ```bash
-nix-shell  # Provides agenix command
+nix develop  # Provides sops command
 
-# Example for 2600AD:
-agenix -e hosts/2600AD/secrets/ssh_key_github.age -i ~/.ssh/id_hallpass
-agenix -e hosts/2600AD/secrets/wg-2600ad-privatekey.age -i ~/.ssh/id_hallpass
-# ... repeat for each secret in hosts/<host>/secrets.nix
+# Create admin age key (first time only)
+mkdir -p ~/.config/sops/age
+age-keygen -o ~/.config/sops/age/keys.txt
+
+# Edit secrets (decrypts, opens editor, re-encrypts on save)
+sops hosts/2600AD/secrets.yaml
 ```
 
 See [docs/secrets.md](docs/secrets.md) for the full secrets workflow.
@@ -208,24 +210,25 @@ Or set the environment variable:
 export NIX_CONFIG="experimental-features = nix-command flakes"
 ```
 
-### agenix: "No matching host key"
+### sops: "Failed to get data key"
 
-Ensure you're using the correct identity file:
+Your admin key can't decrypt the secrets file. Check:
+
+1. `~/.config/sops/age/keys.txt` exists and contains a valid age private key
+2. The key format starts with `AGE-SECRET-KEY-` (no extra `Public key:` line)
+3. Your public key is listed in `.sops.yaml`
 
 ```bash
-agenix -e <file.age> -i ~/.ssh/id_hallpass
+# Verify key format
+cat ~/.config/sops/age/keys.txt
 ```
 
-Check that your age public key is in the root `secrets.nix` file.
+### sops: "no identity matched any of the recipients"
 
-### Wrong agenix version (agenix-cli)
-
-If `agenix --version` shows `agenix-cli`, you have the wrong package. Exit and re-enter the dev shell:
+The host key isn't in the recipient list. Rekey the secrets:
 
 ```bash
-exit
-nix develop
-agenix --help  # Should show ryantm/agenix options
+sops updatekeys hosts/<host>/secrets.yaml
 ```
 
 ---
@@ -234,5 +237,9 @@ agenix --help  # Should show ryantm/agenix options
 
 - [HALLway Project Bible](HALLway%20Project%20Bible.md) — Comprehensive project vision
 - [CLAUDE.md](CLAUDE.md) — AI assistant guidelines and architecture reference
-- [docs/secrets.md](docs/secrets.md) — agenix secrets management
+- [docs/secrets.md](docs/secrets.md) — sops-nix secrets management
 - [docs/dev-tools.md](docs/dev-tools.md) — Development tools reference
+
+### Related Projects
+
+- [HALLwayDE](https://github.com/MarkusBitterman/HALLwayDE) — Hyprland desktop environment (HyDE port for NixOS); imported as a Home Manager module to manage the complete Wayland desktop stack

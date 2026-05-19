@@ -39,7 +39,7 @@ ssh matt@hallpass.space "cd /etc/nixos && sudo nixos-rebuild switch --flake .#HA
 
 HALLpass.space is a small VPS (25GB class) that provides central infrastructure for all HALLway devices:
 
-- **WireGuard hub** (`wg-hallspace`, `10.44.0.1/24`) — desktop and phone connect as peers
+- **WireGuard hub** (`wg-hallspace`, `10.23.11.1/24`) — desktop and phone connect as peers
 - **Syncthing introducer** — private relay (`strelaysrv`) and discovery (`stdiscosrv`) accessible only over WireGuard
 - **Static web** (`hallpass.space`) — serves `/srv/hallspace/_public/`
 - **Mercurial hosting** (`hg.hallpass.space`) — `hgweb` serving repos from `/srv/hg/repos/`; nginx TLS termination via ACME
@@ -49,7 +49,7 @@ HALLpass.space is a small VPS (25GB class) that provides central infrastructure 
 
 - System config: [configuration.nix](configuration.nix)
 - Home Manager user profile: [home/matt.nix](home/matt.nix)
-- agenix secret mappings: [secrets.nix](secrets.nix)
+- sops-nix secret mappings: [secrets.nix](secrets.nix)
 - Hardware profile: [hardware-configuration.nix](hardware-configuration.nix)
 
 ## Security Baseline
@@ -58,29 +58,26 @@ HALLpass.space is a small VPS (25GB class) that provides central infrastructure 
 - Firewall: only `22/tcp`, `80/tcp`, `443/tcp`, `51820/udp` exposed publicly
 - Syncthing infra ports allowed only on `wg-hallspace` interface
 - AppArmor enabled
-- Secrets managed by agenix
+- Secrets managed by sops-nix
 
 ## Required Secrets
 
-Encrypted files under [secrets/](secrets/):
+All secrets stored in `hosts/HALLpass.space/secrets.yaml`:
 
-| File | Contents |
-|------|----------|
-| `ssh_key_github.age` | SSH private key for GitHub operations |
-| `wg-hallpass-privatekey.age` | WireGuard server private key |
-| `syncthing-gui-pass.age` | Syncthing GUI password (plaintext; Syncthing hashes it) |
-| `acme-vultr-api-key.age` | Vultr API key for DNS-01 ACME challenges |
+| Key | Contents |
+|-----|----------|
+| `ssh_key_github` | SSH private key for GitHub operations |
+| `wg_hallpass_privatekey` | WireGuard server private key |
+| `syncthing_gui_pass` | Syncthing GUI password (plaintext; Syncthing hashes it) |
 
-Create/edit with (from dev shell):
+Edit secrets:
 
 ```bash
 nix develop
-agenix -e hosts/HALLpass.space/secrets/ssh_key_github.age     -i ~/.ssh/id_hallpass
-agenix -e hosts/HALLpass.space/secrets/wg-hallpass-privatekey.age -i ~/.ssh/id_hallpass
-agenix -e hosts/HALLpass.space/secrets/syncthing-gui-pass.age -i ~/.ssh/id_hallpass
+sops hosts/HALLpass.space/secrets.yaml
 ```
 
-> **Note**: These secrets are currently encrypted for the admin key only. After first VPS boot, obtain the host SSH key with `ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age`, add it to root `secrets.nix`, and rekey with `agenix -r -i ~/.ssh/id_hallpass`.
+> **Note**: These secrets are currently encrypted for the admin key only. After first VPS boot, obtain the host SSH key with `ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age`, add it to `.sops.yaml`, and rekey with `sops updatekeys hosts/HALLpass.space/secrets.yaml`.
 
 ## Placeholder Values
 
@@ -113,66 +110,39 @@ This host uses a **DNS-01 ACME challenge** rather than HTTP-01:
 
 #### Pre-Flight Checklist (from 2600AD)
 
-**1. Get the VPS SSH host key (for agenix rekey)**
+**1. Get the VPS SSH host key (for sops rekey)**
 
 ```bash
 ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
 # → age1xxxx...
 ```
 
-Paste into `secrets.nix` (root): uncomment the `hallpass` variable, fill in the key, add `hallpass` to the HALLpass.space `publicKeys` lists. Then rekey:
+Add to `.sops.yaml`: uncomment the `hallpass` key anchor, fill in the value, add to HALLpass.space creation_rules. Then rekey:
 
 ```bash
 nix develop
-agenix -r -i ~/.ssh/id_hallpass
+sops updatekeys hosts/HALLpass.space/secrets.yaml
 ```
 
-**2. Create the Vultr API key secret**
-
-Get a Vultr API key with DNS write permission from the Vultr control panel.
+**2. Edit secrets**
 
 ```bash
 nix develop
-
-# Pipe approach (no editor needed):
-echo "VULTR_API_KEY=your-vultr-api-key-here" \
-  | age -R ~/.ssh/id_hallpass.pub \
-  -o hosts/HALLpass.space/secrets/acme-vultr-api-key.age
-
-# Or editor approach:
-rm -f hosts/HALLpass.space/secrets/acme-vultr-api-key.age
-agenix -e hosts/HALLpass.space/secrets/acme-vultr-api-key.age -i ~/.ssh/id_hallpass
+sops hosts/HALLpass.space/secrets.yaml
 ```
 
-**3. Create remaining secrets (if not already done)**
+Add the following keys to the YAML:
 
-**Secrets Checklist:**
-
-| Secret | Format | Required? |
-|--------|--------|-----------|
-| `ssh_key_github.age` | SSH private key (plaintext) | Yes |
-| `wg-hallpass-privatekey.age` | WireGuard private key (plaintext, 44 chars) | Yes |
-| `wg-desktop-psk.age` | WireGuard PSK (plaintext, 44 chars) | Yes |
-| `syncthing-gui-pass.age` | Password (plaintext) | Yes |
-| `acme-vultr-api-key.age` | `VULTR_API_KEY=xxx` format | Yes |
-
-```bash
-# SSH key for GitHub operations
-agenix -e hosts/HALLpass.space/secrets/ssh_key_github.age -i ~/.ssh/id_hallpass
-
-# WireGuard server private key (generate with: wg genkey)
-agenix -e hosts/HALLpass.space/secrets/wg-hallpass-privatekey.age -i ~/.ssh/id_hallpass
-
-# WireGuard PSK for desktop peer (same key as 2600AD's wg-hallspace-psk.age)
-agenix -e hosts/HALLpass.space/secrets/wg-desktop-psk.age -i ~/.ssh/id_hallpass
-
-# Syncthing GUI password
-agenix -e hosts/HALLpass.space/secrets/syncthing-gui-pass.age -i ~/.ssh/id_hallpass
+```yaml
+ssh_key_github: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    ...your GitHub deploy key...
+    -----END OPENSSH PRIVATE KEY-----
+wg_hallpass_privatekey: <output of wg genkey>
+syncthing_gui_pass: your-strong-password
 ```
 
-**Note:** The `wg-desktop-psk.age` must contain the **same PSK** as `hosts/2600AD/secrets/wg-hallspace-psk.age` — it's a shared secret between both peers.
-
-**4. Commit and push**
+**3. Commit and push**
 
 ```bash
 nix flake check
@@ -198,18 +168,18 @@ sudo nixos-rebuild switch --flake .#HALLpass.space
 
 On first activation:
 - `systemd-tmpfiles` creates `/srv/hallspace/_public/` and `/srv/hg/repos/`
-- agenix decrypts all secrets using the host's SSH key
+- sops-nix decrypts all secrets using the host's SSH key
 - lego requests `*.hallpass.space` + `hallpass.space` cert via Vultr DNS-01
 - nginx, hgweb, WireGuard (hub only until peers added), and Syncthing all start
 
 #### Post-Deploy
 
-**Add VPS to agenix (if not done in pre-flight)**
+**Add VPS to sops (if not done in pre-flight)**
 
 ```bash
 ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
-# Uncomment hallpass in secrets.nix, fill key, add to HALLpass.space entries
-agenix -r -i ~/.ssh/id_hallpass
+# Add to .sops.yaml, update creation_rules
+sops updatekeys hosts/HALLpass.space/secrets.yaml
 ```
 
 **Collect Syncthing IDs for 2600AD config**

@@ -66,7 +66,7 @@ Personal workstation. Primary use: development, gaming, media production.
 ## Configuration Model
 
 - System config: [configuration.nix](configuration.nix)
-- agenix secret mappings: [secrets.nix](secrets.nix)
+- sops-nix secret mappings: [secrets.nix](secrets.nix)
 - User environment (Home Manager): [home/bittermang.nix](home/bittermang.nix), [home/guest.nix](home/guest.nix)
 - Hardware profile: [hardware-configuration.nix](hardware-configuration.nix) (auto-generated, do not edit)
 
@@ -76,7 +76,7 @@ Personal workstation. Primary use: development, gaming, media production.
 - **Hibernation** — encrypted swap on eMMC, `boot.zfs.allowHibernation = true`
 - **GNOME/GDM** — current display manager; Hyprland configured as alternate session
 - **Steam + gamescope** — system-level install with Proton, proton-ge-bin, mangohud
-- **WireGuard client** — `wg-hallspace` interface, peer: HALLpass.space hub at `10.44.0.2/24`
+- **WireGuard client** — `wg-hallspace` interface, peer: HALLpass.space hub at `10.23.11.80/24`
 - **Syncthing client** — routes through HALLpass.space introducer/relay/discovery
 - **iwd + systemd-networkd** — WiFi managed by iwd (no NetworkManager); `iwgtk` for tray
 
@@ -230,52 +230,53 @@ cd /mnt/2600AD/etc/nixos
 sudo git clone https://github.com/MarkusBitterman/HALLway.git .
 ```
 
-#### Step 5.5: Create agenix Secrets
+#### Step 5.5: Create sops Secrets
 
 ```bash
 cd /mnt/2600AD/etc/nixos
-nix-shell  # Provides agenix command
+nix develop  # Provides sops command
+
+# Create admin age key (first time only)
+mkdir -p ~/.config/sops/age
+age-keygen -o ~/.config/sops/age/keys.txt
+# Note the public key for .sops.yaml
 ```
 
 **Secrets Checklist:**
 
-| Secret | Format | Required? |
-|--------|--------|-----------|
-| `ssh_key_github.age` | SSH private key (plaintext) | Yes |
-| `ssh_key_hobbs.age` | SSH private key (plaintext) | Optional |
-| `ssh_key_hallpass.age` | SSH private key (plaintext) | Yes (for VPS access) |
-| `github_token.age` | GitHub PAT (plaintext) | Optional |
-| `gpg_key.age` | GPG private key (armor export) | Optional |
-| `wg-2600ad-privatekey.age` | WireGuard private key (plaintext, 44 chars) | Yes |
-| `wg-hallspace-psk.age` | WireGuard PSK (plaintext, 44 chars) | Yes |
-| `syncthing-gui-pass.age` | Password (plaintext) | Yes |
-| `wifi-home.age` | iwd format (see below) | Yes (for WiFi) |
+All secrets are stored in `hosts/2600AD/secrets.yaml`:
 
-**Create each secret** (editor opens, enter content, save and close):
+| Key | Format | Required? |
+|-----|--------|-----------|
+| `ssh_key_github` | SSH private key | Yes |
+| `ssh_key_hobbs` | SSH private key | Optional |
+| `ssh_key_hallpass` | SSH private key | Yes (for VPS access) |
+| `github_token` | GitHub PAT | Optional |
+| `gpg_key` | GPG private key (armor export) | Optional |
+| `wg_2600ad_privatekey` | WireGuard private key (44 chars) | Yes |
+| `wg_hallspace_psk` | WireGuard PSK (44 chars) | Yes |
+| `syncthing_gui_pass` | Password | Yes |
+| `wifi_home` | iwd format (see below) | Yes (for WiFi) |
+
+**Edit secrets** (opens editor with decrypted YAML, re-encrypts on save):
 
 ```bash
-# SSH keys (paste private key content)
-agenix -e hosts/2600AD/secrets/ssh_key_github.age -i ~/.ssh/id_hallpass
-agenix -e hosts/2600AD/secrets/ssh_key_hallpass.age -i ~/.ssh/id_hallpass
-
-# WireGuard (generate with: wg genkey)
-agenix -e hosts/2600AD/secrets/wg-2600ad-privatekey.age -i ~/.ssh/id_hallpass
-
-# WireGuard PSK (generate with: wg genpsk)
-agenix -e hosts/2600AD/secrets/wg-hallspace-psk.age -i ~/.ssh/id_hallpass
-
-# Syncthing GUI password (plaintext)
-agenix -e hosts/2600AD/secrets/syncthing-gui-pass.age -i ~/.ssh/id_hallpass
-
-# WiFi credentials for iwd
-agenix -e hosts/2600AD/secrets/wifi-home.age -i ~/.ssh/id_hallpass
+sops hosts/2600AD/secrets.yaml
 ```
 
-**WiFi secret format** (for iwd):
+**Example secrets.yaml structure:**
 
-```
-[Security]
-Passphrase=your-wifi-password-here
+```yaml
+ssh_key_github: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    ...your key content...
+    -----END OPENSSH PRIVATE KEY-----
+github_token: ghp_xxxxxxxxxxxxx
+wg_2600ad_privatekey: base64-wireguard-key
+syncthing_gui_pass: your-password
+wifi_home: |
+    [Security]
+    Passphrase=your-wifi-password-here
 ```
 
 **WireGuard key generation:**
@@ -291,10 +292,10 @@ cat privatekey | wg pubkey > publickey
 wg genpsk > psk
 ```
 
-**After creating secrets**, stage them for git:
+**After creating secrets**, stage for git:
 
 ```bash
-git add hosts/2600AD/secrets/*.age
+git add hosts/2600AD/secrets.yaml
 ```
 
 #### Step 6: Install NixOS

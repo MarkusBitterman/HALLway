@@ -1,4 +1,4 @@
-# Development Tools 🛠️
+# Development Tools
 
 This document describes the development tools and workflows used in HALLway.
 
@@ -10,9 +10,9 @@ HALLway uses Nix flakes for reproducible development environments.
 
 > Nix gives us the boring superpower that makes everything else possible:
 >
-> - **Reproducible builds** (no "works on my machine" ghost stories) 👻
-> - **Declarative configs** (systems are described, not accidentally assembled) 🧾
-> - Easy to audit "what changed" between builds 🔎
+> - **Reproducible builds** (no "works on my machine" ghost stories)
+> - **Declarative configs** (systems are described, not accidentally assembled)
+> - Easy to audit "what changed" between builds
 >
 > — HALLway Project Bible
 
@@ -25,7 +25,7 @@ HALLway uses Nix flakes for reproducible development environments.
 | `nixfmt` | Nix code formatter (RFC 166 style) |
 | `direnv` | Automatic environment activation |
 | `nix-direnv` | Fast direnv integration for Nix |
-| `agenix` | Encrypted secrets management (ryantm/agenix via `nix run`) |
+| `sops` | Encrypted secrets management (YAML + age) |
 | `age` | Age encryption primitives |
 | `ssh-to-age` | Convert SSH ed25519 public keys to age recipient format |
 
@@ -43,6 +43,9 @@ nix fmt
 
 # Update flake inputs
 nix flake update
+
+# Edit secrets
+sops hosts/2600AD/secrets.yaml
 ```
 
 ## Editor Setup
@@ -71,11 +74,11 @@ Should work well with this project.
 
 HALLway uses **Claude Code** (Anthropic) as the AI development assistant. Use it as a **power tool, not an authority**:
 
-- ✅ Use for drafting configs, exploring options, understanding unfamiliar NixOS patterns
-- ✅ Always run `nix flake check` after AI-suggested changes
-- ✅ Review all changes — especially cryptographic code, network config, and agenix secrets
-- 🚫 Never include secrets, passphrases, or private keys in prompts
-- 🚫 Don't blindly accept suggestions for security-sensitive config
+- Use for drafting configs, exploring options, understanding unfamiliar NixOS patterns
+- Always run `nix flake check` after AI-suggested changes
+- Review all changes — especially cryptographic code, network config, and sops secrets
+- Never include secrets, passphrases, or private keys in prompts
+- Don't blindly accept suggestions for security-sensitive config
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed guidelines.
 
@@ -103,6 +106,8 @@ Run `nix fmt` before committing.
 ### Linting
 
 *(Linters will be added as the codebase grows)*
+
+---
 
 ## Troubleshooting
 
@@ -135,6 +140,66 @@ nix flake check
 1. Make sure you're in the dev shell (`nix develop`)
 2. Restart VS Code
 3. Check that Nix IDE extension is installed
+
+### "Pre-switch check 'switchInhibitors' failed"
+
+When `nixos-rebuild switch` reports changes to critical system components, it will refuse to apply them live:
+
+```
+There are changes to critical components of the system:
+
+dbus-implementation : dbus -> broker
+
+Switching into this system is not recommended.
+```
+
+**What's happening**: Components like D-Bus, systemd, or the kernel are fundamental to the running system. Swapping them while running can cause session instability or crash services.
+
+**Solution**: Use `nixos-rebuild boot` followed by a reboot instead of `switch`:
+
+```bash
+sudo nixos-rebuild boot --flake .#2600AD
+sudo reboot
+```
+
+The `boot` command installs the new configuration as the default boot entry without activating it. After reboot, the system starts fresh with the new components.
+
+**Override (not recommended)**: If you really need to switch live, set `NIXOS_NO_CHECK=1`:
+
+```bash
+sudo NIXOS_NO_CHECK=1 nixos-rebuild switch --flake .#2600AD
+```
+
+This bypasses the safety check but may cause instability.
+
+### "Failed to get data key" (sops)
+
+Your admin key can't decrypt the secrets file. Check:
+
+1. `~/.config/sops/age/keys.txt` exists
+2. Contains a valid age private key (starts with `AGE-SECRET-KEY-`)
+3. No extra lines like `Public key:` at the top
+4. Your public key is in `.sops.yaml` for the file's `creation_rules`
+
+**Solution**: Fix the key file format:
+
+```bash
+# Check current format
+cat ~/.config/sops/age/keys.txt
+
+# Should look like:
+# # created: 2026-05-18T16:43:31-05:00
+# # public key: age1xxxxx...
+# AGE-SECRET-KEY-xxxxxx
+```
+
+### "no identity matched any of the recipients"
+
+The host key isn't in the recipient list. Rekey the secrets:
+
+```bash
+sops updatekeys hosts/<host>/secrets.yaml
+```
 
 ---
 

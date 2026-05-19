@@ -94,7 +94,7 @@ HALLway uses **Claude Code** (Anthropic) as a **power tool, not an authority**.
 1. **Reviewed** — Read and understand every change before accepting
 2. **Tested** — Run `nix flake check` and `nix fmt` to verify correctness
 3. **Audited** — Check for security issues, especially in:
-   - Cryptographic code and agenix secrets
+   - Cryptographic code and sops secrets
    - Network configuration (WireGuard, firewall rules)
    - Permission handling (`mode`, `owner`, `group` on secrets)
 
@@ -102,7 +102,7 @@ HALLway uses **Claude Code** (Anthropic) as a **power tool, not an authority**.
 
 **Never include in prompts:**
 
-- Private keys, passphrases, or `.age` file contents
+- Private keys, passphrases, or `secrets.yaml` contents
 - API tokens or credentials
 - Real WireGuard private keys
 - Internal infrastructure IP addresses beyond what is already in this repo

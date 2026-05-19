@@ -39,7 +39,7 @@ Thumbs.db
 
 /configuration.nix
 /hardware-configuration.nix
-# Per-host secrets module (NixOS declarations) — NOT the root agenix rules file
+# Per-host secrets module (NixOS declarations) — runtime paths, owners, modes
 hosts/*/secrets.nix
 /home/
 
@@ -51,8 +51,8 @@ hosts/*/secrets.nix
 # SECRETS - CRITICAL: Never commit plaintext secrets
 # ════════════════
 
-# Encrypted secrets (.age files) - these are intentionally tracked
-# *.age
+# Encrypted secrets (secrets.yaml files) - these are intentionally tracked
+# hosts/*/secrets.yaml
 
 # Plaintext secrets - NEVER commit these
 hosts/*/secrets/*.key
@@ -61,6 +61,6 @@ hosts/*/secrets/*.txt
 hosts/*/secrets/*.pub
 hosts/*/secrets/*_unencrypted
 
-# agenix decrypted runtime secrets (if manually decrypted for inspection)
-*.age.dec
+# sops decrypted runtime secrets (if manually decrypted for inspection)
+*.dec
 *_decrypted

@@ -88,7 +88,7 @@
     },
     {
       "label": "🔄 Update",
-      "detail": "Update all flake inputs (nixpkgs, home-manager, agenix)",
+      "detail": "Update all flake inputs (nixpkgs, home-manager, sops-nix)",
       "type": "shell",
       "command": "nix flake update",
       "problemMatcher": [],
@@ -104,9 +104,9 @@
     // ═══════════════════════════════════════════════════════════════════════
     {
       "label": "🔑 Secrets",
-      "detail": "Show encryption status of all .age secret files",
+      "detail": "Show status of sops secrets files",
       "type": "shell",
-      "command": "echo '════════════════════════════════════' && echo '  HALLway Secrets Status' && echo '════════════════════════════════════' && for host in 2600AD HALLpass.space; do echo '' && echo \"  ▸ $host\"; for f in hosts/$host/secrets/*.age; do [ -f \"$f\" ] || continue; if head -1 \"$f\" 2>/dev/null | grep -q '^age-encryption'; then echo \"    ✓  $(basename $f)\"; else echo \"    ✗  $(basename $f)  ← run: agenix -e $f\"; fi; done; done && echo '' && echo '════════════════════════════════════' && echo '  See docs/secrets.md for full workflow'",
+      "command": "echo '════════════════════════════════════' && echo '  HALLway Secrets Status' && echo '════════════════════════════════════' && for host in 2600AD HALLpass.space HelloMoto; do f=\"hosts/$host/secrets.yaml\"; if [ -f \"$f\" ]; then if head -1 \"$f\" 2>/dev/null | grep -q '^sops:'; then echo \"  ✓  $f\"; else echo \"  ⚠  $f (not encrypted)\"; fi; else echo \"  ✗  $f (missing)\"; fi; done && echo '' && echo '════════════════════════════════════' && echo '  Edit: sops hosts/<host>/secrets.yaml' && echo '  Docs: docs/secrets.md'",
       "problemMatcher": [],
       "presentation": {
         "echo": true,

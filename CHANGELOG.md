@@ -18,13 +18,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Mercurial hosting** (`hg.hallpass.space`): `hgweb` systemd service serving repos from `/srv/hg/repos/**`; nginx reverse proxy with ACME TLS
 - **Static web** (`hallpass.space`): nginx vhost serving `/srv/hallspace/_public/`; ACME TLS via Let's Encrypt
 - **iwd WiFi management** (2600AD): Replaced NetworkManager with `networking.wireless.iwd`; systemd-networkd now manages both ethernet and WiFi; `iwgtk` tray app launched at Hyprland startup
-- **`wifi-home` agenix secret** (2600AD): WiFi credentials deployed as an iwd PSK file at `/var/lib/iwd/<SSID>.psk`
+- **`wifi-home` secret** (2600AD): WiFi credentials deployed as an iwd PSK file at `/var/lib/iwd/<SSID>.psk`
 - **Hyprland session registration** (2600AD): `programs.hyprland.enable = true` in system config — installs the `.desktop` session file so GDM shows Hyprland as a session option
 - **CLAUDE.md**: Project context file for Claude Code AI assistant
 
 ### Changed
 
-- **WireGuard subnet**: Changed from `10.44.0.x` to `10.23.11.x` (2600AD = `.80`, HALLpass.space = `.1`, HelloMoto = `.64`)
+- **Secrets management**: Migrated from agenix to [sops-nix](https://github.com/Mic92/sops-nix); secrets now stored in `hosts/<host>/secrets.yaml` (encrypted YAML) instead of individual `.age` files; config in `.sops.yaml`; uses dedicated age key at `~/.config/sops/age/keys.txt` for editing and SSH host key for runtime decryption
+- **Hibernation** (2600AD): Enabled `boot.zfs.allowHibernation = true` and set `boot.zfs.forceImportRoot = false`; swap on LUKS partition (`/dev/mapper/stella_crypt`) used as resume device
+- **WireGuard subnet**: Changed from `10.23.11.x` to `10.23.11.x` (2600AD = `.80`, HALLpass.space = `.1`, HelloMoto = `.64`)
 - **Display manager** (2600AD): Replaced GDM/GNOME with greetd + regreet (Wayland-native)
 - **Steam configuration** (2600AD): Moved `freetype` from `extraCompatPackages` (wrong) to `extraPackages` (correct); removed redundant `steam`/`steam-run` from `environment.systemPackages`; removed `extest` (X11-only)
 - **Hyprland Home Manager** (2600AD): Added `systemd.enable = false` to prevent conflict with UWSM session management
@@ -69,7 +71,7 @@ First HALLway implementation, targeting the Atari VCS 800 as a gaming/media work
 #### Desktop Environment
 - Hyprland compositor config in Home Manager (keybindings, monitor resolution, startup apps)
 - Waybar, rofi, dunst, hyprpaper, kitty, pavucontrol, polkit-gnome
-- WireGuard client (`wg-hallspace`) connected to HALLpass.space hub at `10.44.0.2/24`
+- WireGuard client (`wg-hallspace`) connected to HALLpass.space hub at `10.23.11.80/24`
 - Syncthing client with HALLpass.space as introducer (pending key population)
 
 #### 2600AD-Specific Hardware
@@ -86,7 +88,7 @@ First HALLway implementation, targeting the Atari VCS 800 as a gaming/media work
 ## Roadmap
 
 ### [0.0.2] — HALLpass.space live
-- [ ] First deploy of HALLpass.space (VPS provision, agenix rekey, WireGuard keys, Syncthing IDs)
+- [ ] First deploy of HALLpass.space (VPS provision, sops rekey, WireGuard keys, Syncthing IDs)
 - [ ] All placeholder values replaced (`HALLPASS_WG_PUBLIC_KEY`, `DESKTOP_WG_PUBLIC_KEY`, Syncthing device IDs)
 - [ ] HALLway migrated from Git to Mercurial; primary repo at `hg.hallpass.space`
 - [ ] GitHub becomes a read-only mirror

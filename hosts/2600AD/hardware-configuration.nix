@@ -13,8 +13,7 @@
 
   # ZFS filesystem support
   boot.supportedFilesystems = [ "zfs" ];
-  boot.zfs.forceImportAll = true; # remove this after we've fixed our networking/hostid shennanigans
-  boot.zfs.forceImportRoot = true; # requred by above, also remove after network is un-borked
+  boot.zfs.forceImportRoot = false; # required for hibernation (default is true)
 
   # ─────────────────────────────────────────────────────────────────────────
   # LUKS Encrypted Devices (Atari-themed labels)

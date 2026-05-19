@@ -51,7 +51,7 @@ in
     enable = true;
     matchBlocks = {
       "github.com" = {
-        identityFile = config.age.secrets."ssh_key_github".path;
+        identityFile = config.sops.secrets."ssh_key_github".path;
         identitiesOnly = true;
         user = "git";
       };

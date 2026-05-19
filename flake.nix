@@ -17,20 +17,27 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # agenix for secrets management
-    agenix = {
-      url = "github:ryantm/agenix";
+    # sops-nix for secrets management
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # HALLwayDE - Hyprland desktop environment (HyDE port)
+    hallwayde = {
+      url = "github:MarkusBitterman/HALLwayDE";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
   outputs =
-    {
+    inputs@{
       self,
       nixpkgs,
       flake-utils,
       home-manager,
-      agenix,
+      sops-nix,
+      hallwayde,
       ...
     }:
     let
@@ -61,7 +68,7 @@
           pkgs = nixpkgs.legacyPackages."aarch64-linux";
           modules = [
             ./hosts/HelloMoto/home/user.nix
-            agenix.homeManagerModules.age
+            sops-nix.homeManagerModules.sops
           ];
         };
       };
@@ -86,12 +93,13 @@
             {
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = false; # Allow Home Manager to manage packages independently
+              home-manager.extraSpecialArgs = { inherit inputs; };
               home-manager.users.bittermang = import ./hosts/2600AD/home/bittermang.nix;
               home-manager.users.guest = import ./hosts/2600AD/home/guest.nix;
             }
 
-            # agenix for secrets management
-            agenix.nixosModules.default
+            # sops-nix for secrets management
+            sops-nix.nixosModules.sops
           ];
         };
 
@@ -110,7 +118,7 @@
               home-manager.users.matt = import ./hosts/HALLpass.space/home/matt.nix;
             }
 
-            agenix.nixosModules.default
+            sops-nix.nixosModules.sops
           ];
         };
       };
@@ -128,50 +136,69 @@
         devShells.default = pkgs.mkShell {
           name = "hallway-dev";
 
-          packages =
-            with pkgs;
-            [
-              # Core tools
-              git
+          packages = with pkgs; [
+            # Core tools
+            git
 
-              # Nix tooling
-              nixd # Nix language server
-              nixfmt # Nix formatter (RFC 166 style)
+            # Nix tooling
+            nixd # Nix language server
+            nixfmt # Nix formatter (RFC 166 style)
 
-              # Secrets tooling
-              age
-              ssh-to-age
+            # Secrets tooling (sops + age backend)
+            sops
+            age
+            ssh-to-age
+            wireguard-tools
 
-              # Editor support
-              direnv
-              nix-direnv
-            ]
-            ++ [
-              # Official agenix CLI (ryantm/agenix)
-              agenix.packages.${system}.default
-            ];
+            # Editor support
+            direnv
+            nix-direnv
+          ];
 
           shellHook = ''
-            echo "🏠 Welcome to the HALLway development shell!"
-            echo ""
-            echo "Available commands:"
-            echo "  nix flake check      - Validate the flake"
-            echo "  nix fmt              - Format Nix files"
-            echo "  nix build .#nixosConfigurations.2600AD.config.system.build.toplevel"
-            echo "                       - Build 2600AD system"
-            echo "  agenix -e <file.age> - Edit encrypted secrets"
-            echo ""
-            echo "See CONTRIBUTING.md for more information."
+            # ── Environment variables ─────────────────────────────────────────
+            export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+            export ADMIN_KEY="$HOME/.ssh/id_hallpass"
 
-            # Tell agenix-cli where to find the encryption rules file.
-            export RULES="$PWD/secrets.nix"
-
-            # Prefer VS Code for editor-driven tools (agenix, git commit, etc.).
-            # --wait keeps the command blocked until the file is closed.
+            # Prefer VS Code for editor-driven tools (sops, git commit, etc.).
             if command -v code >/dev/null 2>&1; then
               export EDITOR="code --wait"
               export VISUAL="code --wait"
             fi
+
+            # ── Aliases ───────────────────────────────────────────────────────
+            alias check='nix flake check'
+            alias fmt='nix fmt'
+            alias rebuild='sudo nixos-rebuild switch --flake .#2600AD'
+            alias build='nix build .#nixosConfigurations.2600AD.config.system.build.toplevel'
+
+            # ── Welcome message ───────────────────────────────────────────────
+            echo "🏠 HALLway dev shell"
+            echo ""
+
+            # Git status
+            if git rev-parse --git-dir > /dev/null 2>&1; then
+              branch=$(git branch --show-current)
+              if git diff --quiet 2>/dev/null; then
+                echo "📍 Branch: $branch"
+              else
+                echo "📍 Branch: $branch (dirty)"
+              fi
+            fi
+
+            # SOPS key status
+            if [[ -f "$SOPS_AGE_KEY_FILE" ]]; then
+              echo "🔐 SOPS age key: $SOPS_AGE_KEY_FILE"
+            else
+              echo "⚠️  SOPS age key missing! Run:"
+              echo "   mkdir -p ~/.config/sops/age"
+              echo "   age-keygen -o ~/.config/sops/age/keys.txt"
+            fi
+
+            echo ""
+            echo "Aliases: check, fmt, build, rebuild"
+            echo "Secrets: sops hosts/2600AD/secrets.yaml"
+            echo ""
           '';
         };
 

@@ -16,16 +16,32 @@
 #
 # ════════════════════
 
-{ osConfig, pkgs, ... }:
+{
+  osConfig,
+  pkgs,
+  inputs,
+  ...
+}:
 
 {
+  imports = [ inputs.hallwayde.homeManagerModules.default ];
+
+  # ════════════════
+  # HALLwayDE DESKTOP ENVIRONMENT
+  # ════════════════
+  hallwayde = {
+    enable = true;
+    monitor = "HDMI-A-1,1368x768@59.85,0x0,1";
+    keyboard = "us";
+  };
+
   home.stateVersion = "25.11";
 
-  # Runtime paths to decrypted agenix secrets (NixOS module).
-  # These resolve under /run/agenix/<name> at activation time.
+  # Runtime paths to decrypted sops secrets (NixOS module).
+  # These resolve under /run/secrets/<name> at activation time.
   home.sessionVariables = {
-    GITHUB_TOKEN_FILE = osConfig.age.secrets."github_token".path;
-    GPG_PRIVATE_KEY_FILE = osConfig.age.secrets."gpg_key".path;
+    GITHUB_TOKEN_FILE = osConfig.sops.secrets."github_token".path;
+    GPG_PRIVATE_KEY_FILE = osConfig.sops.secrets."gpg_key".path;
   };
 
   # ════════════════
@@ -104,10 +120,24 @@
 
     kitty # Terminal
     rofi # Launcher
-    pcmanfm # File manager
+    kdePackages.dolphin # File manager (KDE)
     waybar # Status bar
     dunst # Notifications
-    hyprpaper # Wallpaper
+
+    # Hyprland ecosystem
+    hyprpaper # Wallpaper (static)
+    swww # Wallpaper (animated)
+    hyprlock # Screen locker
+    hypridle # Idle daemon
+    hyprsunset # Blue light filter
+    wlogout # Logout menu
+
+    # Screenshot/clipboard
+    grim # Screenshot tool
+    slurp # Region selector
+    satty # Screenshot annotation
+    cliphist # Clipboard history
+
     pavucontrol # Audio control
     playerctl # Media control
     polkit_gnome # Authentication agent
@@ -225,43 +255,10 @@
   # ════════════════
   # DESKTOP ENVIRONMENT CONFIGURATION
   # ════════════════
-
-  # Hyprland compositor
-  # package must match the system-level programs.hyprland package to avoid
-  # two different Hyprland versions fighting over the socket.
-  wayland.windowManager.hyprland = {
-    enable = true;
-    package = pkgs.hyprland;
-    systemd.enable = false; # UWSM handles session management (conflicts otherwise)
-    extraConfig = ''
-      # Custom monitor resolution for older non-SmartTV (1368x768@59.85Hz)
-      monitor=HDMI-A-1,1368x768@59.85,0x0,1
-
-      # Gamescope/Steam compatibility (fixes Vulkan issues when running inside Hyprland)
-      debug {
-        full_cm_proto = true
-      }
-
-      # Startup applications (packages installed via Home Manager)
-      exec-once = dunst &
-      exec-once = /run/current-system/sw/libexec/polkit-gnome-authentication-agent-1 &
-      exec-once = blueman-applet &
-      exec-once = waybar &
-      exec-once = hyprpaper &
-      exec-once = iwgtk --tray &
-
-      # Keybindings
-      bind = SUPER, Return, exec, kitty
-      bind = SUPER, D, exec, rofi -show drun
-      bind = SUPER, Q, killactive,
-      bind = SUPER SHIFT, E, exit,
-
-      # Volume controls (PipeWire)
-      bind = , XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
-      bind = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
-      bind = , XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
-    '';
-  };
+  # NOTE: Hyprland, waybar, rofi, dunst, and other DE components are now
+  # managed by HALLwayDE module (see hallwayde options above).
+  # The module handles: compositor config, keybindings, autostart apps,
+  # theming, and all HyDE-derived configurations.
 
   # ════════════════
   # PROGRAM CONFIGURATION
@@ -303,19 +300,19 @@
       "github.com" = {
         hostname = "github.com";
         user = "git";
-        identityFile = osConfig.age.secrets."ssh_key_github".path;
+        identityFile = osConfig.sops.secrets."ssh_key_github".path;
         identitiesOnly = true;
       };
       "hobbs" = {
         hostname = "144.202.50.58";
         user = "matt";
-        identityFile = osConfig.age.secrets."ssh_key_hobbs".path;
+        identityFile = osConfig.sops.secrets."ssh_key_hobbs".path;
         identitiesOnly = true;
       };
       "hallpass" = {
         hostname = "136.244.101.171";
         user = "matt";
-        identityFile = osConfig.age.secrets."ssh_key_hallpass".path;
+        identityFile = osConfig.sops.secrets."ssh_key_hallpass".path;
         identitiesOnly = true;
       };
     };

@@ -10,27 +10,27 @@ let
   wgIf = "wg-hallspace";
   wgPort = 51820;
 
-  # WireGuard private key via agenix
-  serverPrivKeyFile = config.age.secrets."wg-hallpass-privatekey".path;
+  # WireGuard private key via sops-nix
+  serverPrivKeyFile = config.sops.secrets."wg_privatekey".path;
 
   peers = {
     desktop = {
-      publicKey = "DESKTOP_WG_PUBLIC_KEY";
-      ip = "10.44.0.2/32";
+      publicKey = "xVl7ZD5oumSdXDYudc3zip0Zo3draHuniQoYQFNth1M=";
+      ip = "10.23.11.80/32";
     };
     phone = {
       publicKey = "PHONE_WG_PUBLIC_KEY";
-      ip = "10.44.0.3/32";
+      ip = "10.23.11.64/32";
     };
   };
 
   # Syncthing GUI password secret (plaintext file; Syncthing hashes it)
-  guiPassFile = config.age.secrets."syncthing-gui-pass".path;
+  guiPassFile = config.sops.secrets."syncthing_gui_pass".path;
 
   # ── ACME / TLS ──────────────────────────────────────────────────────────────
   # Credentials file for lego's Vultr DNS-01 provider.
   # File content (sourced as shell env): VULTR_API_KEY=your-key-here
-  acmeCredFile = config.age.secrets."acme-vultr-api-key".path;
+  acmeCredFile = config.sops.secrets."acme_vultr_api_key".path;
 
   # ── Mercurial web server ────────────────────────────────────────────────────
   hgPort = 8085;
@@ -138,19 +138,19 @@ in
   # ═════════════════════════════════════════════════════════════════════════
 
   networking.wireguard.interfaces.${wgIf} = {
-    ips = [ "10.44.0.1/24" ];
+    ips = [ "10.23.11.1/24" ];
     listenPort = wgPort;
     privateKeyFile = serverPrivKeyFile;
 
     peers = [
       {
         publicKey = peers.desktop.publicKey;
-        presharedKeyFile = config.age.secrets."wg-desktop-psk".path;
+        presharedKeyFile = config.sops.secrets."wg_desktop_psk".path;
         allowedIPs = [ peers.desktop.ip ];
       }
       {
         publicKey = peers.phone.publicKey;
-        # presharedKeyFile = config.age.secrets."wg-phone-psk".path;  # TODO: generate phone PSK
+        # presharedKeyFile = config.sops.secrets."wg_phone_psk".path;  # TODO: generate phone PSK
         allowedIPs = [ peers.phone.ip ];
       }
     ];
@@ -184,8 +184,8 @@ in
   services.syncthing.relay = {
     enable = true;
     pools = [ ];
-    listenAddress = "10.44.0.1";
-    statusListenAddress = "10.44.0.1";
+    listenAddress = "10.23.11.1";
+    statusListenAddress = "10.23.11.1";
     port = 22067;
     statusPort = 22070;
     providedBy = "hallpass.space";
@@ -202,7 +202,7 @@ in
       WorkingDirectory = "/var/lib/syncthing-discovery";
       ExecStart = ''
         ${pkgs.syncthing-discovery}/bin/stdiscosrv \
-          -listen=10.44.0.1:8443 \
+          -listen=10.23.11.1:8443 \
           -db-dir=/var/lib/syncthing-discovery/db \
           -cert=/var/lib/syncthing-discovery/cert.pem \
           -key=/var/lib/syncthing-discovery/key.pem
@@ -295,7 +295,7 @@ in
     syncthing
     mercurial
     jq
-    age # age encryption (key operations, agenix workflow)
+    age # age encryption (key operations, sops workflow)
     ssh-to-age # derive age public keys from SSH ed25519 keys
   ];
 

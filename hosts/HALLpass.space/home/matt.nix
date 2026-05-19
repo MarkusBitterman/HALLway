@@ -54,7 +54,7 @@
       "github.com" = {
         hostname = "github.com";
         user = "git";
-        identityFile = osConfig.age.secrets."ssh_key_github".path;
+        identityFile = osConfig.sops.secrets."ssh_key_github".path;
         identitiesOnly = true;
       };
       "hobbs" = {
