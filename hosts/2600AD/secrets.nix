@@ -52,6 +52,13 @@
     mode = "0400";
   };
 
+  # Vultr API key (for DNS management, future automation)
+  sops.secrets."vultr_api_key" = {
+    owner = "bittermang";
+    group = "users";
+    mode = "0400";
+  };
+
   # ─────────────────────────────────────────────────────────────────────────
   # WireGuard
   # ─────────────────────────────────────────────────────────────────────────

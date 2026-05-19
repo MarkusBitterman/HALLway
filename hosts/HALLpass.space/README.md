@@ -3,7 +3,7 @@
 > HALLway host — minimal VPS, network hub and web edge
 
 **Architecture**: x86_64
-**Status**: Configuration complete; not yet deployed (placeholder values remain)
+**Status**: Ready for first deployment
 
 ---
 
@@ -11,6 +11,7 @@
 
 - [Quick Start](#quick-start)
 - [Purpose](#purpose)
+- [First Deployment Workflow](#first-deployment-workflow)
 - [Installation](#installation)
   - [Standard](#standard)
   - [Full Step-by-Step](#full-step-by-step)
@@ -60,15 +61,83 @@ HALLpass.space is a small VPS (25GB class) that provides central infrastructure 
 - AppArmor enabled
 - Secrets managed by sops-nix
 
+## First Deployment Workflow
+
+### Phase 1: Pre-Deployment (from 2600AD)
+
+1. **Provision VPS** at Vultr with NixOS image
+2. **Generate a Vultr API key** for ACME DNS-01 challenges
+3. **Edit secrets** (all secrets should already be populated):
+   ```bash
+   nix develop
+   sops hosts/HALLpass.space/secrets.yaml
+   ```
+4. **Verify secrets exist**: `wg_privatekey`, `wg_desktop_psk`, `acme_vultr_api_key`, `syncthing_gui_pass`, `ssh_key_github`
+
+### Phase 2: Deploy
+
+```bash
+# SSH into VPS as root
+ssh root@<vps-ip>
+
+# Clone and deploy
+mkdir -p /etc/nixos && cd /etc/nixos
+git clone https://github.com/MarkusBitterman/HALLway.git .
+nixos-rebuild switch --flake .#HALLpass.space
+```
+
+### Phase 3: Post-Deployment (from 2600AD)
+
+1. **Add VPS host key to sops**:
+   ```bash
+   ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
+   # Add to .sops.yaml as &host_hallpass, uncomment in creation_rules
+   nix develop
+   sops updatekeys hosts/HALLpass.space/secrets.yaml
+   ```
+
+2. **Get HALLpass.space WireGuard public key**:
+   ```bash
+   ssh matt@hallpass.space "cat /run/secrets/wg_privatekey | wg pubkey"
+   # Update HALLPASS_WG_PUBLIC_KEY in hosts/2600AD/configuration.nix
+   ```
+
+3. **Get Syncthing IDs** (for 2600AD config):
+   ```bash
+   ssh matt@hallpass.space "syncthing cli show system | jq -r .myID"
+   # Update HALLPASS_SYNCTHING_DEVICE_ID
+
+   ssh matt@hallpass.space "journalctl -u syncthing-discovery --no-pager | grep -i 'device id' | tail -1"
+   # Update DISCOVERY_SERVER_ID
+
+   ssh matt@hallpass.space "journalctl -u syncthing.service --no-pager | grep -i 'relay://' | tail -1"
+   # Update RELAY_SERVER_ID
+   ```
+
+4. **Uncomment WireGuard config in 2600AD** and fill placeholders
+
+5. **Rebuild 2600AD**:
+   ```bash
+   sudo nixos-rebuild switch --flake .#2600AD
+   ```
+
+6. **Test connectivity**:
+   ```bash
+   ping 10.23.11.1  # WireGuard tunnel to HALLpass.space
+   curl https://hallpass.space  # HTTPS (once DNS A record set)
+   ```
+
 ## Required Secrets
 
 All secrets stored in `hosts/HALLpass.space/secrets.yaml`:
 
-| Key | Contents |
-|-----|----------|
-| `ssh_key_github` | SSH private key for GitHub operations |
-| `wg_hallpass_privatekey` | WireGuard server private key |
-| `syncthing_gui_pass` | Syncthing GUI password (plaintext; Syncthing hashes it) |
+| Key | Contents | How to generate |
+|-----|----------|-----------------|
+| `ssh_key_github` | SSH private key for GitHub operations | `ssh-keygen -t ed25519 -C "matt@hallpass.space"` |
+| `wg_privatekey` | WireGuard server private key | `wg genkey` |
+| `wg_desktop_psk` | WireGuard PSK shared with 2600AD | `wg genpsk` (same value in both hosts) |
+| `syncthing_gui_pass` | Syncthing GUI password (plaintext; Syncthing hashes it) | Choose a password |
+| `acme_vultr_api_key` | Vultr API key for DNS-01 ACME challenge | [Vultr API Settings](https://my.vultr.com/settings/#settingsapi) |
 
 Edit secrets:
 
@@ -83,8 +152,9 @@ sops hosts/HALLpass.space/secrets.yaml
 
 | Placeholder | Location | How to get it |
 |-------------|----------|---------------|
-| `DESKTOP_WG_PUBLIC_KEY` | `configuration.nix` | `wg pubkey` from 2600AD keygen |
-| `PHONE_WG_PUBLIC_KEY` | `configuration.nix` | WireGuard app on phone |
+| `PHONE_WG_PUBLIC_KEY` | `configuration.nix:23` | WireGuard app on phone |
+
+The desktop public key is already populated (`xVl7ZD5o...`).
 
 ---
 

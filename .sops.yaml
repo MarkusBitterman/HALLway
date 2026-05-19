@@ -24,7 +24,7 @@ keys:
 
   # Host keys - can decrypt at runtime
   - &host_2600AD age1hhyeuve5crq8edq57r06g7evc7wm0jjv63jgk2eyt6mj79zwkgfquvj25s
-  # - &host_hallpass age1... (fill in after VPS first boot)
+  - &host_hallpass age1a9m3tv0wz63whadg277533752j2lgzqa8s88tu8750h2xljud9xsdef259
 
 creation_rules:
   # 2600AD secrets - encrypted for admin + 2600AD host
