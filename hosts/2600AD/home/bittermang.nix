@@ -76,7 +76,7 @@
 
     # Editors
     neovim
-    vscodium-fhs
+    vscodium
     claude-code
 
     # CLI dev tools

@@ -39,7 +39,7 @@ creation_rules:
     key_groups:
       - age:
           - *admin
-          # - *host_hallpass
+          - *host_hallpass
 
   # HelloMoto secrets - encrypted for admin only (phone uses user SSH key)
   - path_regex: hosts/HelloMoto/secrets\.yaml$

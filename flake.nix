@@ -166,38 +166,41 @@
               export VISUAL="code --wait"
             fi
 
+            # ── Host detection ────────────────────────────────────────────────
+            HALLWAY_HOST=$(hostname)
+
             # ── Aliases ───────────────────────────────────────────────────────
             alias check='nix flake check'
             alias fmt='nix fmt'
-            alias rebuild='sudo nixos-rebuild switch --flake .#2600AD'
-            alias build='nix build .#nixosConfigurations.2600AD.config.system.build.toplevel'
+            alias rebuild="sudo nixos-rebuild switch --flake .#$HALLWAY_HOST"
+            alias build="nix build .#nixosConfigurations.$HALLWAY_HOST.config.system.build.toplevel"
 
             # ── Welcome message ───────────────────────────────────────────────
-            echo "🏠 HALLway dev shell"
+            echo "HALLway dev shell ($HALLWAY_HOST)"
             echo ""
 
             # Git status
             if git rev-parse --git-dir > /dev/null 2>&1; then
               branch=$(git branch --show-current)
               if git diff --quiet 2>/dev/null; then
-                echo "📍 Branch: $branch"
+                echo "Branch: $branch"
               else
-                echo "📍 Branch: $branch (dirty)"
+                echo "Branch: $branch (dirty)"
               fi
             fi
 
             # SOPS key status
             if [[ -f "$SOPS_AGE_KEY_FILE" ]]; then
-              echo "🔐 SOPS age key: $SOPS_AGE_KEY_FILE"
+              echo "SOPS age key: $SOPS_AGE_KEY_FILE"
             else
-              echo "⚠️  SOPS age key missing! Run:"
+              echo "SOPS age key missing! Run:"
               echo "   mkdir -p ~/.config/sops/age"
               echo "   age-keygen -o ~/.config/sops/age/keys.txt"
             fi
 
             echo ""
             echo "Aliases: check, fmt, build, rebuild"
-            echo "Secrets: sops hosts/2600AD/secrets.yaml"
+            echo "Secrets: sops hosts/$HALLWAY_HOST/secrets.yaml"
             echo ""
           '';
         };

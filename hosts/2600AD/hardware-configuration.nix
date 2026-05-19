@@ -140,7 +140,11 @@
       enable = true;
       enable32Bit = true;
       extraPackages = with pkgs; [
+        libglvnd # GLVND dispatch (provides libGL.so.1 - required for Steam/Proton)
         rocmPackages.clr.icd
+      ];
+      extraPackages32 = with pkgs.pkgsi686Linux; [
+        libglvnd # 32-bit GLVND for 32-bit games/Proton
       ];
     };
     amdgpu = {
