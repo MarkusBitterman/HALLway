@@ -29,11 +29,11 @@
     curl
     wget
     tmux
-    jq
+    # jq in configuration.nix systemPackages
 
-    # Security/secrets
-    age
-    gnupg
+    # Security tools (age, ssh-to-age) in configuration.nix systemPackages
+    # gnupg removed: pulls X11 deps via pinentry. If needed headless:
+    # (gnupg.override { guiSupport = false; })
 
     # Diagnostics (keep sparse)
     htop
@@ -43,25 +43,22 @@
 
   programs.ssh = {
     enable = true;
-    enableDefaultConfig = false; # Silence deprecation warning
-    matchBlocks = {
-      # Explicit defaults (previously implicit)
+    enableDefaultConfig = false;
+    settings = {
       "*" = {
-        extraOptions = {
-          AddKeysToAgent = "yes";
-        };
+        AddKeysToAgent = "yes";
       };
       "github.com" = {
-        hostname = "github.com";
-        user = "git";
-        identityFile = osConfig.sops.secrets."ssh_key_github".path;
-        identitiesOnly = true;
+        HostName = "github.com";
+        User = "git";
+        IdentityFile = osConfig.sops.secrets."ssh_key_github".path;
+        IdentitiesOnly = "yes";
       };
       "hobbs" = {
-        hostname = "hobbsfamilycleaning.us";
-        user = "matt";
-        identityFile = "~/.ssh/id_hobbs";
-        identitiesOnly = true;
+        HostName = "hobbsfamilycleaning.us";
+        User = "matt";
+        IdentityFile = "~/.ssh/id_hobbs";
+        IdentitiesOnly = "yes";
       };
     };
   };

@@ -278,7 +278,8 @@ in
       email = "bittermang@duck.com";
       dnsProvider = "vultr";
       # File must contain: VULTR_API_KEY=<your-api-key>
-      credentialsFile = acmeCredFile;
+      # (renamed from credentialsFile in NixOS 26.05)
+      environmentFile = acmeCredFile;
     };
     # Single wildcard cert covers hallpass.space and all current/future subdomains.
     # DNS-01 challenge: lego creates a TXT record via Vultr API — no A record needed.

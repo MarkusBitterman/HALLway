@@ -85,7 +85,6 @@
     jq
     ripgrep
     fd
-    btop
     pciutils # lspci, etc.
     imagemagick
 
@@ -115,31 +114,14 @@
     # jre # jdk #handled now by jetbrains, above?
 
     # ─────────────────────────────────────────────────────────────────────────
-    # DESKTOP - Hyprland/Wayland environment
+    # DESKTOP - Additional Wayland tools (HALLwayDE provides core Hyprland stack)
     # ─────────────────────────────────────────────────────────────────────────
+    # HALLwayDE installs: hyprland, hyprlock, hypridle, hyprpaper, hyprsunset,
+    # waybar, rofi, dunst, wlogout, kitty, grim, slurp, satty, cliphist,
+    # playerctl, awww, brightnessctl, pamixer, libnotify
 
-    kitty # Terminal
-    rofi # Launcher
     kdePackages.dolphin # File manager (KDE)
-    waybar # Status bar
-    dunst # Notifications
-
-    # Hyprland ecosystem
-    hyprpaper # Wallpaper (static)
-    swww # Wallpaper (animated)
-    hyprlock # Screen locker
-    hypridle # Idle daemon
-    hyprsunset # Blue light filter
-    wlogout # Logout menu
-
-    # Screenshot/clipboard
-    grim # Screenshot tool
-    slurp # Region selector
-    satty # Screenshot annotation
-    cliphist # Clipboard history
-
     pavucontrol # Audio control
-    playerctl # Media control
     polkit_gnome # Authentication agent
     iwgtk # WiFi manager (iwd frontend, Wayland tray)
 
@@ -158,7 +140,7 @@
     cemu # Wii U emulator
     dosbox # DOS
     limo # Alternative launcher
-    wineWowPackages.staging # Wine staging (32/64bit, preferred for gaming)
+    wineWow64Packages.staging # Wine staging (32/64bit) - renamed from wineWowPackages
     winetricks # Wine configuration
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -200,14 +182,14 @@
     # Music production
     ardour
     lmms
-    surge-XT
+    surge-xt # renamed from surge-XT
     vital
     calf
     lsp-plugins
     qsynth
     carla
     easyeffects
-    helvum
+    # helvum removed (unmaintained, vulnerable dep) - use qpwgraph or crosspipe
     qpwgraph
 
     # ─────────────────────────────────────────────────────────────────────────
@@ -289,31 +271,28 @@
   # };  # SSH configuration
   programs.ssh = {
     enable = true;
-    enableDefaultConfig = false; # Silence deprecation warning
-    matchBlocks = {
-      # Explicit defaults (previously implicit)
+    enableDefaultConfig = false;
+    settings = {
       "*" = {
-        extraOptions = {
-          AddKeysToAgent = "yes";
-        };
+        AddKeysToAgent = "yes";
       };
       "github.com" = {
-        hostname = "github.com";
-        user = "git";
-        identityFile = osConfig.sops.secrets."ssh_key_github".path;
-        identitiesOnly = true;
+        HostName = "github.com";
+        User = "git";
+        IdentityFile = osConfig.sops.secrets."ssh_key_github".path;
+        IdentitiesOnly = "yes";
       };
       "hobbs" = {
-        hostname = "144.202.50.58";
-        user = "matt";
-        identityFile = osConfig.sops.secrets."ssh_key_hobbs".path;
-        identitiesOnly = true;
+        HostName = "144.202.50.58";
+        User = "matt";
+        IdentityFile = osConfig.sops.secrets."ssh_key_hobbs".path;
+        IdentitiesOnly = "yes";
       };
       "hallpass" = {
-        hostname = "136.244.101.171";
-        user = "matt";
-        identityFile = osConfig.sops.secrets."ssh_key_hallpass".path;
-        identitiesOnly = true;
+        HostName = "136.244.101.171";
+        User = "matt";
+        IdentityFile = osConfig.sops.secrets."ssh_key_hallpass".path;
+        IdentitiesOnly = "yes";
       };
     };
   };

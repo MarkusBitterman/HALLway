@@ -196,8 +196,8 @@ let
         "carla"
         "carla-control" # Plugin host
         "easyeffects" # Audio effects
-        "helvum" # PipeWire patchbay
-        "qpwgraph" # PipeWire graph
+        # "helvum" removed (unmaintained) - use qpwgraph
+        "qpwgraph" # PipeWire patchbay
       ];
       description = "Audio and video production tools";
     };

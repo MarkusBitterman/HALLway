@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **NixOS 26.05 compatibility**: Fixed deprecation warnings across all hosts
+  - `security.acme.defaults.credentialsFile` → `environmentFile` (HALLpass.space)
+  - `programs.ssh.matchBlocks` → `programs.ssh.settings` (all hosts)
+  - `wineWowPackages` → `wineWow64Packages` (2600AD)
+  - `surge-XT` → `surge-xt` (2600AD)
+  - `boot.zfs.allowHibernation` commented out pending `unsafeAllowHibernation` migration (2600AD)
+- **HALLwayDE deduplication** (2600AD): Removed 15 packages from `bittermang.nix` now provided by HALLwayDE module (hyprland, hyprlock, hypridle, hyprpaper, hyprsunset, waybar, rofi, dunst, wlogout, kitty, grim, slurp, satty, cliphist, playerctl, awww)
+- **Minimal VPS cleanup** (HALLpass.space): Removed `gnupg` (pulls X11 via pinentry), deduplicated `age` and `jq` (already in systemPackages)
+
+### Removed
+
+- **helvum** (2600AD, userRoles.nix): Package removed from nixpkgs (unmaintained, vulnerable dependency); qpwgraph already present as replacement
+
 ### Added
 
 - **AdGuard DNS** (2600AD): System-wide DNS using AdGuard public resolvers (94.140.14.14, 94.140.15.15, IPv6 variants)

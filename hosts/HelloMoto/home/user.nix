@@ -49,21 +49,22 @@ in
 
   programs.ssh = {
     enable = true;
-    matchBlocks = {
+    enableDefaultConfig = false;
+    settings = {
       "github.com" = {
-        identityFile = config.sops.secrets."ssh_key_github".path;
-        identitiesOnly = true;
-        user = "git";
+        IdentityFile = config.sops.secrets."ssh_key_github".path;
+        IdentitiesOnly = "yes";
+        User = "git";
       };
       "hallpass" = {
-        hostname = "hallpass.space";
-        user = "matt";
-        identityFile = "${phoneHome}/.ssh/id_ed25519";
+        HostName = "hallpass.space";
+        User = "matt";
+        IdentityFile = "${phoneHome}/.ssh/id_ed25519";
       };
       "2600ad" = {
-        hostname = "DESKTOP_IP_OR_HOSTNAME";
-        user = "bittermang";
-        identityFile = "${phoneHome}/.ssh/id_ed25519";
+        HostName = "DESKTOP_IP_OR_HOSTNAME";
+        User = "bittermang";
+        IdentityFile = "${phoneHome}/.ssh/id_ed25519";
       };
     };
   };

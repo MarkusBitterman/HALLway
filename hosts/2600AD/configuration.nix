@@ -33,7 +33,8 @@
     kernelPackages = pkgs.linuxPackages; # Stable kernel (guaranteed ZFS support)
 
     zfs = {
-      allowHibernation = true;
+      # allowHibernation = true;
+      # renamed to unsafeAllowHibernation in NixOS 26.05 - commented to test behavior
     };
 
     resumeDevice = "/dev/mapper/stella_crypt"; # Encrypted swap for hibernation
