@@ -44,6 +44,9 @@
     GPG_PRIVATE_KEY_FILE = osConfig.sops.secrets."gpg_key".path;
   };
 
+  # Ensure ~/.local/bin is in PATH (for claude-code, user scripts, etc.)
+  home.sessionPath = [ "$HOME/.local/bin" ];
+
   # ════════════════
   # PACKAGE INSTALLATION
   # ════════════════
