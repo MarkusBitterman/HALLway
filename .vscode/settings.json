@@ -1,88 +1,108 @@
 {
-  "editor.formatOnSave": true,
-  "editor.tabSize": 2,
-  "editor.insertSpaces": true,
-  "files.trimTrailingWhitespace": true,
-  "files.insertFinalNewline": true,
+  // ═══════════════════════════════════════════════════════════════════════
+  // Direnv Integration
+  // ═══════════════════════════════════════════════════════════════════════
+  "direnv.restart.automatic": true,
+  "direnv.status.showChangesCount": true,
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Nix Language Server
+  // ═══════════════════════════════════════════════════════════════════════
   "nix.enableLanguageServer": true,
   "nix.serverPath": "nixd",
   "nix.serverSettings": {
     "nixd": {
       "formatting": {
-        "command": [
-          "nixfmt"
-        ]
+        "command": ["nixfmt"]
       }
     }
   },
-  // Task shortcuts
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Editor
+  // ═══════════════════════════════════════════════════════════════════════
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.rulers": [80, 120],
+  "editor.renderWhitespace": "boundary",
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Files
+  // ═══════════════════════════════════════════════════════════════════════
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.associations": {
+    "*.nix": "nix",
+    "flake.lock": "json",
+    "*.conf": "ini"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.direnv": true,
+    "**/result": true,
+    "**/result-*": true
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Search & Watcher
+  // ═══════════════════════════════════════════════════════════════════════
+  "search.exclude": {
+    "**/result": true,
+    "**/result-*": true,
+    "**/.direnv": true
+  },
+  "files.watcherExclude": {
+    "**/result": true,
+    "**/result-*": true,
+    "**/.direnv": true
+  },
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Tasks
+  // ═══════════════════════════════════════════════════════════════════════
   "task.autoDetect": "on",
   "task.quickOpen.detail": true,
   "task.quickOpen.showAll": true,
-  // ═══════════════════════════════════════════════════════════════════════
-  // Task Buttons - Status bar buttons for common tasks
-  // ═══════════════════════════════════════════════════════════════════════
-  "VssTaskBar.showCounter": false,
+
+  // Task Buttons - status bar shortcuts
   "VsCodeTaskButtons.showCounter": false,
   "VsCodeTaskButtons.tasks": [
     {
-      "label": "🧪✅ Check",
+      "label": "✅ Check",
       "task": "✅ Verify",
       "tooltip": "Validate flake syntax"
     },
     {
-      "label": "🚀📦 Install",
-      "task": "🚀 Install",
-      "tooltip": "Install NixOS to ZFS"
+      "label": "🛠️ Build",
+      "task": "🛠️ Build",
+      "tooltip": "Build system closure"
     },
     {
-      "label": "🔧✨ Fmt",
+      "label": "✨ Fmt",
       "task": "✨ Format",
       "tooltip": "Format .nix files"
     },
     {
-      "label": "💾🖴 Disk",
-      "task": "🖴 Disk Space",
-      "tooltip": "Check disk/swap/RAM"
-    },
-    {
-      "label": "🧹🔥 GC",
-      "task": "🔥🗑️ GC Now",
-      "tooltip": "Garbage collect now"
-    },
-    {
-      "label": "📁🗑️ Clean",
-      "task": "🗑️ Clean",
-      "tooltip": "Clean results & archive logs"
+      "label": "🔄 Update",
+      "task": "🔄 Update",
+      "tooltip": "Update all flake inputs"
     }
   ],
-  // Terminal settings
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // Terminal
+  // ═══════════════════════════════════════════════════════════════════════
   "terminal.integrated.scrollback": 10000,
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.env.linux": {
+    "DIRENV_LOG_FORMAT": ""
+  },
+
   // ═══════════════════════════════════════════════════════════════════════
   // GitHub Extensions
   // ═══════════════════════════════════════════════════════════════════════
   "githubPullRequests.showPullRequestNumberInTree": true,
   "githubPullRequests.fileListLayout": "tree",
-  "github-actions.workflows.pinned.workflows": [],
-  // File associations
-  "files.associations": {
-    "*.nix": "nix",
-    "flake.lock": "json"
-  },
-  // Search exclusions
-  "search.exclude": {
-    "**/result": true,
-    "**/result-*": true,
-    "**/.direnv": true,
-    "**/install-history.log": true,
-    "**/logs": true
-  },
-  // File watching exclusions (performance)
-  "files.watcherExclude": {
-    "**/result": true,
-    "**/result-*": true,
-    "**/.direnv": true,
-    "**/install-history.log": true,
-    "**/logs": true
-  }
+  "github-actions.workflows.pinned.workflows": []
 }

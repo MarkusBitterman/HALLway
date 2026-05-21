@@ -41,13 +41,16 @@
 					"gallery": "https://api.mcp.github.com",
 					"version": "1.0.0"
 				},
-        "github": {
-          "type": "http",
-          "url": "https://api.githubcopilot.com/mcp/"
-        }
+				"github": {
+					"type": "http",
+					"url": "https://api.githubcopilot.com/mcp/"
+				}
 			},
 			"inputs": []
-		}
+		},
+		"nixEnvSelector.nixFile": "${workspaceFolder}/flake.nix",
+		"nixEnvSelector.useFlakes": true,
+		"nixEnvSelector.flakeShell": "default"
 	},
 	"extensions": {
 		"recommendations": [
