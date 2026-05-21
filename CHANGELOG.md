@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `wineWowPackages` → `wineWow64Packages` (2600AD)
   - `surge-XT` → `surge-xt` (2600AD)
   - `boot.zfs.allowHibernation` commented out pending `unsafeAllowHibernation` migration (2600AD)
-- **HALLwayDE deduplication** (2600AD): Removed 15 packages from `bittermang.nix` now provided by HALLwayDE module (hyprland, hyprlock, hypridle, hyprpaper, hyprsunset, waybar, rofi, dunst, wlogout, kitty, grim, slurp, satty, cliphist, playerctl, awww)
+- **DOORwayDE deduplication** (2600AD): Removed 15 packages from `bittermang.nix` now provided by DOORwayDE module (hyprland, hyprlock, hypridle, hyprpaper, hyprsunset, waybar, rofi, dunst, wlogout, kitty, grim, slurp, satty, cliphist, playerctl, awww)
 - **Minimal VPS cleanup** (HALLpass.space): Removed `gnupg` (pulls X11 via pinentry), deduplicated `age` and `jq` (already in systemPackages)
 
 ### Removed

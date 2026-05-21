@@ -13,16 +13,20 @@ sudo nixos-rebuild switch --flake .#2600AD          # Build and activate on 2600
 sudo nixos-rebuild switch --flake .#HALLpass.space  # Build and activate on VPS (run on VPS)
 sops hosts/2600AD/secrets.yaml                      # Edit encrypted secrets (decrypt/edit/re-encrypt)
 sops updatekeys hosts/2600AD/secrets.yaml           # Rekey after adding recipients to .sops.yaml
+nix flake update                                    # Update all inputs to latest
+nix flake update <input>                            # Update single input (e.g., doorwayde, nixpkgs)
 ```
 
 Always run `nix flake check` and `nix fmt` before committing.
+
+**When to update inputs**: After changing input URLs in `flake.nix`, when upstream fixes are needed, or periodically for security patches. The `flake.lock` file pins exact revisions — `nix flake update` refreshes them.
 
 ## Architecture
 
 ### Flake (`flake.nix`)
 Entry point. Defines `nixosConfigurations` (NixOS hosts), `homeConfigurations` (non-NixOS hosts), and `devShells.default`. `nixosModules.default` is exported but contains no active modules — host configs compose Home Manager and sops-nix directly. `modules/userRoles.nix` exists but is **not imported anywhere** (dead code from a removed design; candidate for deletion).
 
-**Inputs**: `nixpkgs` (unstable), `home-manager`, `sops-nix`, `flake-utils`, `hallwayde`
+**Inputs**: `nixpkgs` (unstable), `home-manager`, `sops-nix`, `flake-utils`, `doorwayde`
 
 ### Hosts (`hosts/`)
 NixOS hosts contain:
@@ -51,16 +55,16 @@ Guest user on 2600AD has an ephemeral tmpfs `/home/guest` (wiped on reboot); its
 ### Display Manager (2600AD)
 2600AD uses **greetd + regreet** (GTK4 Wayland-native greeter) instead of GDM. The greeter runs on cage (minimal Wayland compositor) and provides user selection, password entry, and session dropdown. Hyprland is launched via UWSM (Universal Wayland Session Manager).
 
-### Desktop Environment (HALLwayDE)
-The Hyprland desktop environment is managed by [HALLwayDE](https://github.com/MarkusBitterman/HALLwayDE), a NixOS port of HyDE (HyprDots Environment). HALLwayDE is imported as a flake input and consumed as a Home Manager module.
+### Desktop Environment (DOORwayDE)
+The Hyprland desktop environment is managed by [DOORwayDE](https://github.com/MarkusBitterman/DOORwayDE), a NixOS port of HyDE (HyprDots Environment). DOORwayDE is imported as a flake input and consumed as a Home Manager module.
 
 **Integration**: The module is imported in `hosts/<host>/home/<user>.nix`:
 ```nix
 { inputs, ... }:
 {
-  imports = [ inputs.hallwayde.homeManagerModules.default ];
+  imports = [ inputs.doorwayde.homeManagerModules.default ];
 
-  hallwayde = {
+  doorwayde = {
     enable = true;
     monitor = "HDMI-A-1,1920x1080@60,0x0,1";
     keyboard = "us";
@@ -69,9 +73,9 @@ The Hyprland desktop environment is managed by [HALLwayDE](https://github.com/Ma
 }
 ```
 
-**What HALLwayDE manages**: Hyprland config, waybar, rofi, dunst, hyprlock, wlogout, theming, keybindings, and autostart applications. Do not duplicate these in the host's Home Manager config.
+**What DOORwayDE manages**: Hyprland config, waybar, rofi, dunst, hyprlock, wlogout, theming, keybindings, and autostart applications. Do not duplicate these in the host's Home Manager config.
 
-**Upstream**: HALLwayDE is maintained separately at `github:MarkusBitterman/HALLwayDE`. To update: `nix flake update hallwayde`.
+**Upstream**: DOORwayDE is maintained separately at `github:MarkusBitterman/DOORwayDE`. To update: `nix flake update doorwayde`.
 
 ### WireGuard Overlay
 The HALLpass WireGuard subnet is `10.23.11.0/24`:

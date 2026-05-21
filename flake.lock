@@ -1,5 +1,25 @@
 {
   "nodes": {
+    "doorwayde": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779310752,
+        "narHash": "sha256-iraX0m6oZtlKHXWlua4OmZAOKr1VsMFYE9ZBoOYm02I=",
+        "owner": "MarkusBitterman",
+        "repo": "DOORwayDE",
+        "rev": "069fad35609458efc46f6b1b38ba460d45d6eaaf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "MarkusBitterman",
+        "repo": "DOORwayDE",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -15,26 +35,6 @@
       "original": {
         "owner": "numtide",
         "repo": "flake-utils",
-        "type": "github"
-      }
-    },
-    "hallwayde": {
-      "inputs": {
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1779152330,
-        "narHash": "sha256-kAOhnN1+ism+pqElcdNwA/QZzQi5Gd3un4NhthXueq0=",
-        "owner": "MarkusBitterman",
-        "repo": "HALLwayDE",
-        "rev": "c85e983564c5dd6d057c2c6eba759a098bac1736",
-        "type": "github"
-      },
-      "original": {
-        "owner": "MarkusBitterman",
-        "repo": "HALLwayDE",
         "type": "github"
       }
     },
@@ -76,8 +76,8 @@
     },
     "root": {
       "inputs": {
+        "doorwayde": "doorwayde",
         "flake-utils": "flake-utils",
-        "hallwayde": "hallwayde",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",
         "sops-nix": "sops-nix"

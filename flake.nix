@@ -23,9 +23,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # HALLwayDE - Hyprland desktop environment (HyDE port)
-    hallwayde = {
-      url = "github:MarkusBitterman/HALLwayDE";
+    # DOORwayDE - Hyprland desktop environment (HyDE port)
+    doorwayde = {
+      url = "github:MarkusBitterman/DOORwayDE";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -37,7 +37,7 @@
       flake-utils,
       home-manager,
       sops-nix,
-      hallwayde,
+      doorwayde,
       ...
     }:
     let
@@ -94,6 +94,7 @@
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = false; # Allow Home Manager to manage packages independently
               home-manager.extraSpecialArgs = { inherit inputs; };
+              home-manager.backupFileExtension = "backup";
               home-manager.users.bittermang = import ./hosts/2600AD/home/bittermang.nix;
               home-manager.users.guest = import ./hosts/2600AD/home/guest.nix;
             }

@@ -34,14 +34,14 @@ HALLpass.space configuration exists but has never been deployed. Placeholder val
 - [ ] Configure GitHub as a read-only mirror of the Hg repo
 - [ ] Update CLAUDE.md, CONTRIBUTING.md, and README.md to reflect Hg as primary VCS
 
-## 2600AD — HALLwayDE Integration
+## 2600AD — DOORwayDE Integration
 
-HALLwayDE is a Nix Home Manager module derived from HyDE (Arch Hyprland). Once stable, it will replace the current minimal Hyprland config.
+DOORwayDE is a Nix Home Manager module derived from HyDE (Arch Hyprland). Once stable, it will replace the current minimal Hyprland config.
 
-- [ ] Import HALLwayDE module into `flake.nix` inputs
-- [ ] Integrate HALLwayDE into `hosts/2600AD/home/bittermang.nix`
+- [ ] Import DOORwayDE module into `flake.nix` inputs
+- [ ] Integrate DOORwayDE into `hosts/2600AD/home/bittermang.nix`
 - [ ] Test session stability with greetd/regreet
-- [ ] Migrate guest user to HALLwayDE (or subset thereof)
+- [ ] Migrate guest user to DOORwayDE (or subset thereof)
 
 ## 2600AD — Hyprland
 
@@ -49,7 +49,7 @@ HALLwayDE is a Nix Home Manager module derived from HyDE (Arch Hyprland). Once s
 - [x] Added `services.displayManager.gdm.wayland = true` — Wayland sessions now appear in session picker
 - [x] Pinned `package = pkgs.hyprland` in Home Manager — prevents version mismatch on socket
 - [x] Removed redundant `xdg-desktop-portal-hyprland` from Home Manager (system module owns it)
-- [x] Added XFCE as stable X11 fallback session for debugging HALLwayDE integration
+- [x] Added XFCE as stable X11 fallback session for debugging DOORwayDE integration
 - [ ] Evaluate removing GNOME once Hyprland is confirmed stable — waybar needs tray module enabled for iwgtk
 
 ## 2600AD — Networking

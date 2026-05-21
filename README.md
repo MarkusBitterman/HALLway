@@ -152,6 +152,24 @@ sudo nixos-rebuild switch --flake /etc/nixos#<hostname>
 sudo systemd-cryptenroll --tpm2-device=auto /dev/<luks-device>
 ```
 
+#### Updating Inputs
+
+The `flake.lock` file pins exact versions of all dependencies. To pull in upstream changes:
+
+```bash
+# Update all inputs (nixpkgs, home-manager, doorwayde, etc.)
+nix flake update
+
+# Update a single input
+nix flake update doorwayde
+nix flake update nixpkgs
+
+# Then rebuild to apply
+sudo nixos-rebuild switch --flake /etc/nixos#<hostname>
+```
+
+**When to update**: After changing input URLs in `flake.nix`, when you need upstream bug fixes, or periodically for security patches.
+
 ### Full Examples by Host
 
 For detailed, hardware-specific installation with exact commands:
@@ -242,4 +260,4 @@ sops updatekeys hosts/<host>/secrets.yaml
 
 ### Related Projects
 
-- [HALLwayDE](https://github.com/MarkusBitterman/HALLwayDE) — Hyprland desktop environment (HyDE port for NixOS); imported as a Home Manager module to manage the complete Wayland desktop stack
+- [DOORwayDE](https://github.com/MarkusBitterman/DOORwayDE) — Hyprland desktop environment (HyDE port for NixOS); imported as a Home Manager module to manage the complete Wayland desktop stack

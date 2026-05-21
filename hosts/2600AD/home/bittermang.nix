@@ -24,12 +24,12 @@
 }:
 
 {
-  imports = [ inputs.hallwayde.homeManagerModules.default ];
+  imports = [ inputs.doorwayde.homeManagerModules.default ];
 
   # ════════════════
-  # HALLwayDE DESKTOP ENVIRONMENT
+  # DOORwayDE DESKTOP ENVIRONMENT
   # ════════════════
-  hallwayde = {
+  doorwayde = {
     enable = true;
     monitor = "HDMI-A-1,1368x768@59.85,0x0,1";
     keyboard = "us";
@@ -117,9 +117,9 @@
     # jre # jdk #handled now by jetbrains, above?
 
     # ─────────────────────────────────────────────────────────────────────────
-    # DESKTOP - Additional Wayland tools (HALLwayDE provides core Hyprland stack)
+    # DESKTOP - Additional Wayland tools (DOORwayDE provides core Hyprland stack)
     # ─────────────────────────────────────────────────────────────────────────
-    # HALLwayDE installs: hyprland, hyprlock, hypridle, hyprpaper, hyprsunset,
+    # DOORwayDE installs: hyprland, hyprlock, hypridle, hyprpaper, hyprsunset,
     # waybar, rofi, dunst, wlogout, kitty, grim, slurp, satty, cliphist,
     # playerctl, awww, brightnessctl, pamixer, libnotify
 
@@ -241,7 +241,7 @@
   # DESKTOP ENVIRONMENT CONFIGURATION
   # ════════════════
   # NOTE: Hyprland, waybar, rofi, dunst, and other DE components are now
-  # managed by HALLwayDE module (see hallwayde options above).
+  # managed by DOORwayDE module (see doorwayde options above).
   # The module handles: compositor config, keybindings, autostart apps,
   # theming, and all HyDE-derived configurations.
 

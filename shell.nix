@@ -51,6 +51,8 @@ pkgs.mkShell {
     echo "Available commands:"
     echo "  nix flake check            - Validate flake"
     echo "  nix fmt                    - Format .nix files"
+    echo "  nix flake update           - Update all inputs to latest"
+    echo "  nix flake update <input>   - Update single input (e.g., doorwayde)"
     echo "  nix build .#2600AD...      - Build system configuration"
     echo "  git / gh                   - Version control"
     echo "  sops hosts/<host>/secrets.yaml - Edit encrypted secrets"
