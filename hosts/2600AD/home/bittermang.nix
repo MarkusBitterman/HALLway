@@ -79,7 +79,6 @@
 
     # Editors
     neovim
-    vscodium
     claude-code
 
     # CLI dev tools
@@ -249,29 +248,32 @@
   # PROGRAM CONFIGURATION
   # ════════════════
 
-  # VS Code extensions and settings
-  # NOTE: VSCode binary installed via home.packages
-  # Home Manager extension management disabled to avoid conflicts
-  # Install extensions manually via `code --install-extension` or VS Code UI
+  programs.vscodium = {
+    enable = true;
+    mutableExtensionsDir = true;
+    profiles.default = {
+      extensions = with pkgs.vscode-extensions; [
+        anthropic.claude-code
+        jnoortheen.nix-ide
+        eamodio.gitlens
+        sumneko.lua
+        ms-dotnettools.vscode-dotnet-runtime # required by csdevkit
+        ms-dotnettools.csharp
+        ms-dotnettools.csdevkit
+        yzhang.markdown-all-in-one
+        rust-lang.rust-analyzer
+      ];
+      userSettings = {
+        "nix.enableLanguageServer" = true;
+        "nix.serverPath" = "nil";
+        "editor.formatOnSave" = true;
+        "editor.minimap.enabled" = false;
+        "terminal.integrated.defaultProfile.linux" = "zsh";
+      };
+    };
+  };
 
-  # For now, we comment out vscode config to avoid the buildEnv conflict
-  # programs.vscode = {
-  #   enable = true;
-  #   extensions = with pkgs.vscode-extensions; [
-  #     jnoortheen.nix-ide
-  #     ms-dotnettools.csharp
-  #     ms-python.python
-  #     ms-python.vscode-pylance
-  #     rust-lang.rust-analyzer
-  #   ];
-  #   userSettings = {
-  #     "nix.enableLanguageServer" = true;
-  #     "nix.serverPath" = "nil";
-  #     "editor.formatOnSave" = true;
-  #     "editor.minimap.enabled" = false;
-  #     "terminal.integrated.defaultProfile.linux" = "zsh";
-  #   };
-  # };  # SSH configuration
+  # SSH configuration
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;

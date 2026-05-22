@@ -331,124 +331,58 @@
         # ── System / GTK glue (uv-installed GUI/tray tools) ───────────────
         glib # libglib-2.0.so.0
 
-        # !! IMPORTANT !!
-        # everything above this line are libraries included intentionally for wine/proton
-        # everything beblow this line comes from NixOS Wiki: Jetbeans Tools
-        # and is included continuing to troubleshoot wine/proton edge cases
-        # thanks :)
+        # ── Linux native game binaries (itch, GOG/minigalaxy) ─────────────
+        # Steam/Proton runs inside its own FHS container — the entries below
+        # are for pre-built native Linux ELF binaries from itch and minigalaxy
+        # that are NOT Nix-wrapped and ARE loaded by the Linux ELF dynamic linker.
 
-        SDL
+        # GPU / rendering
+        libGL # OpenGL ICD loader
+        libGLU # GLU utility (older pre-builts)
+        mesa # DRI/software GL fallback
+        vulkan-loader # Vulkan ICD loader (libvulkan.so.1)
+        libdrm # DRM/KMS interface (Mesa internal dep)
+
+        # Audio
+        alsa-lib # libasound.so.2 (most common audio ABI in pre-built Linux bins)
+        libpulseaudio # libpulse.so.0 (PipeWire exposes this ABI on this system)
+        libvorbis # Ogg Vorbis decode
+        libogg # Ogg container (libvorbis dep)
+
+        # SDL2 game framework (dominant for itch/GOG indie titles)
         SDL2
         SDL2_image
         SDL2_mixer
         SDL2_ttf
-        SDL_image
-        SDL_mixer
-        SDL_ttf
-        alsa-lib
-        at-spi2-atk
-        at-spi2-core
-        atk
-        bzip2
-        cairo
-        cups
-        curlWithGnuTls
-        dbus
-        dbus-glib
-        desktop-file-utils
-        e2fsprogs
-        expat
-        flac
-        fontconfig
-        freeglut
-        freetype
-        fribidi
-        fuse
-        fuse3
-        gdk-pixbuf
-        glew_1_10
-        glib
-        gmp
-        gst_all_1.gst-plugins-base
-        gst_all_1.gst-plugins-ugly
-        gst_all_1.gstreamer
-        gtk2
-        harfbuzz
-        icu
-        keyutils.lib
-        libGL
-        libGLU
-        libappindicator-gtk2
-        libcaca
-        libcanberra
-        libcap
-        libclang.lib
-        libdbusmenu
-        libdrm
-        libgcrypt
-        libgpg-error
-        libidn
-        libjack2
-        libjpeg
-        libmikmod
-        libogg
-        libpng12
-        libpulseaudio
-        librsvg
-        libsamplerate
-        libthai
-        libtheora
-        libtiff
-        libudev0-shim
-        libusb1
-        libuuid
-        libvdpau
-        libvorbis
-        libvpx
-        libxcrypt-legacy
-        libxkbcommon
-        libxml2
-        mesa
-        nspr
-        nss
-        openssl
-        p11-kit
-        pango
-        pixman
-        python3
-        speex
-        tbb
-        udev
-        vulkan-loader
-        wayland
-        xorg.libICE
-        xorg.libSM
-        xorg.libX11
-        xorg.libXScrnSaver
-        xorg.libXcomposite
-        xorg.libXcursor
-        xorg.libXdamage
-        xorg.libXext
-        xorg.libXfixes
-        xorg.libXft
-        xorg.libXi
-        xorg.libXinerama
-        xorg.libXmu
-        xorg.libXrandr
-        xorg.libXrender
-        xorg.libXt
-        xorg.libXtst
-        xorg.libXxf86vm
-        xorg.libpciaccess
-        xorg.libxcb
-        xorg.xcbutil
-        xorg.xcbutilimage
-        xorg.xcbutilkeysyms
-        xorg.xcbutilrenderutil
-        xorg.xcbutilwm
-        xorg.xkeyboardconfig
-        xz
-        zlib
+
+        # Input / display
+        libxkbcommon # keyboard input (X11 + Wayland; SDL2/GLFW dep)
+        wayland # Wayland client (SDL2 Wayland backend)
+
+        # Text rendering
+        fontconfig # font discovery (libfontconfig.so.1)
+        freetype # TrueType/OTF rendering (libfreetype.so.6)
+        harfbuzz # text shaping (SDL2_ttf + FreeType dep)
+
+        # System integration
+        libuuid # UUID generation (engine save/session systems)
+        libxcrypt-legacy # libcrypt.so.1 legacy ABI (pre-2020 pre-built binaries)
+        dbus # D-Bus client (itch/minigalaxy launcher IPC)
+        libxml2 # libxml2.so.2 (game engines + minigalaxy GTK dep)
+
+        # X11 compatibility (XWayland + pure X11 mode)
+        libx11
+        libxext
+        libxcursor
+        libxrandr
+        libxi
+        libxfixes
+        libxrender
+        libxinerama # multi-monitor X11 (SDL2 links against it)
+        libxcb
+        libxcb-image
+        libxcb-keysyms
+        libxcb-render-util
 
       ];
     };

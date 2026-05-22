@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **nix-ld library pruning** (2600AD): Replaced ~110-package unvetted JetBrains wiki block with 44 targeted packages; dev-tools block (rustup/uv/pip/npm) preserved; new second block covers pre-built native Linux game ELF binaries from itch and minigalaxy launchers (GPU, audio, SDL2, X11/XCB, Wayland, text rendering); updated deprecated `xorg.*` aliases to top-level names (`xorg.libX11` → `libx11`, `xorg.xcbutilimage` → `libxcb-image`, etc.)
+- **VSCodium configuration** (2600AD): Switched from bare `vscodium` package to `programs.vscodium` Home Manager module with extensions (claude-code, nix-ide, gitlens, lua, dotnet/csharp/csdevkit, markdown, rust-analyzer) and user settings; `mutableExtensionsDir = true` preserves UI-installed extensions across rebuilds
+
 - **NixOS 26.05 compatibility**: Fixed deprecation warnings across all hosts
   - `security.acme.defaults.credentialsFile` → `environmentFile` (HALLpass.space)
   - `programs.ssh.matchBlocks` → `programs.ssh.settings` (all hosts)
