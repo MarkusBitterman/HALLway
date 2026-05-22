@@ -101,6 +101,9 @@
     # Rust
     rustup
 
+    # Lua
+    lua-language-server
+
     # Nix development
     direnv
     nix-direnv
@@ -255,11 +258,8 @@
       extensions = with pkgs.vscode-extensions; [
         anthropic.claude-code
         jnoortheen.nix-ide
-        eamodio.gitlens
         sumneko.lua
-        ms-dotnettools.vscode-dotnet-runtime # required by csdevkit
         ms-dotnettools.csharp
-        ms-dotnettools.csdevkit
         yzhang.markdown-all-in-one
         rust-lang.rust-analyzer
       ];
