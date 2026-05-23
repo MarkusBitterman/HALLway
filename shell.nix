@@ -1,6 +1,6 @@
 # ╔════════════════╗
 # ║  HALLway                                                                  ║
-# ║  shell.nix - Development Shell (alternative to `nix develop`)            ║
+# ║  shell.nix - Fallback dev shell (nix-shell, bypasses flake/direnv)        ║
 # ║  https://github.com/markusbitterman/hallway                              ║
 # ╚════════════════╝
 #
@@ -8,22 +8,13 @@
 #   nix-shell           # Enter dev shell with tools
 #   nix-shell --run CMD # Run command in dev environment
 #
-# Tools provided:
-#   - git, gh (GitHub CLI)
-#   - nixd (Nix LSP), nixfmt (formatter)
-#   - sops, age, ssh-to-age (secrets management)
+# When to use this instead of `nix develop` / direnv:
+#   - Debugging direnv or flake evaluation failures
+#   - Bootstrapping a new machine before flakes are configured
+#   - Any situation where the flake itself is suspect
 #
-# Common tasks:
-#   - Edit secrets:  sops hosts/<host>/secrets.yaml
-#   - Rotate any SSH key (use nix develop for the rotate-key helper):
-#       ssh-keygen -t ed25519 -C "<host>-<secret-name>" -f ~/.ssh/<secret-name> -N ""
-#       # --passphrase flag omitted = no passphrase (automation-safe)
-#       # paste private key into secrets.yaml under <secret-name>
-#       # register public key with the target service
+# Tools provided match devShells.default in flake.nix — keep in sync.
 #
-# For installation/deployment:
-#   - git, gh for cloning and pushing
-#   - nixos-install reads this repo's flake.nix
 # ════════════════════
 
 {
@@ -40,7 +31,7 @@ pkgs.mkShell {
 
     # Nix development
     nixd # Nix LSP server
-    nixfmt # Code formatter
+    nixfmt # Code formatter (RFC 166 style)
     nix-tree # Visualize dependency tree
     nix-diff # Compare derivations
 
@@ -48,41 +39,96 @@ pkgs.mkShell {
     sops # Encrypted secrets (YAML + age)
     age # Encryption tool
     ssh-to-age # Convert SSH public keys to age recipients
+    wireguard-tools # wg genkey / genpsk — used by rotate-key
 
     # Documentation
     mdbook # For future documentation builds
+
+    # Dev tools — mirrors writeShellScriptBin entries in flake.nix devShell
+    (writeShellScriptBin "rotate-key" ''
+      name="''${1:?Usage: rotate-key <secret-name> [--passphrase]}"
+      host=$(hostname)
+      case "$name" in
+
+        ssh_key_*)
+          keyfile="$HOME/.ssh/$name"
+          if [[ "''${2:-}" == "--passphrase" ]]; then
+            ssh-keygen -t ed25519 -C "$host-$name" -f "$keyfile"
+          else
+            ssh-keygen -t ed25519 -C "$host-$name" -f "$keyfile" -N ""
+          fi
+          echo ""
+          echo "Public key — register with the target service:"
+          echo ""
+          cat "$keyfile.pub"
+          echo ""
+          echo "Next steps:"
+          echo "  1. Register the public key with the target service"
+          echo "  2. sops hosts/$host/secrets.yaml"
+          echo "       -> set '$name' to the contents of $keyfile"
+          echo "  3. If new (not a rotation): also update secrets.nix and home/<user>.nix"
+          echo "  4. sudo nixos-rebuild switch --flake .#$host"
+          ;;
+
+        *psk*)
+          psk=$(wg genpsk)
+          echo "WireGuard PSK (copy this value into BOTH peer secrets.yaml files):"
+          echo ""
+          echo "$psk"
+          echo ""
+          echo "Next steps:"
+          echo "  1. sops hosts/<host-a>/secrets.yaml  -> set '$name': <value>"
+          echo "  2. sops hosts/<host-b>/secrets.yaml  -> set matching PSK key: <same value>"
+          echo "  3. rebuild both hosts"
+          ;;
+
+        wg_*)
+          privkey=$(wg genkey)
+          pubkey=$(echo "$privkey" | wg pubkey)
+          echo "WireGuard private key (SECRET — goes in secrets.yaml only):"
+          echo ""
+          echo "$privkey"
+          echo ""
+          echo "WireGuard public key (not secret — goes in the peer's configuration.nix):"
+          echo ""
+          echo "$pubkey"
+          echo ""
+          echo "Next steps:"
+          echo "  1. sops hosts/$host/secrets.yaml  -> set '$name': <private key>"
+          echo "  2. Add public key to the peer host's configuration.nix"
+          echo "  3. rebuild both hosts"
+          ;;
+
+        *)
+          echo "'$name' is an externally sourced secret — obtain the new value from its source, then:"
+          echo ""
+          echo "  sops hosts/$host/secrets.yaml"
+          echo "    -> update '$name' with the new value"
+          echo ""
+          echo "  sudo nixos-rebuild switch --flake .#$host"
+          ;;
+
+      esac
+    '')
   ];
 
   shellHook = ''
+    # ── Environment variables ──────────────────────────────────────────────
     export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
-
-    echo "🌍 HALLway Development Environment"
-    echo ""
-    echo "Available commands:"
-    echo "  nix flake check            - Validate flake"
-    echo "  nix fmt                    - Format .nix files"
-    echo "  nix flake update           - Update all inputs to latest"
-    echo "  nix flake update <input>   - Update single input (e.g., doorwayde)"
-    echo "  nix build .#2600AD...      - Build system configuration"
-    echo "  git / gh                   - Version control"
-    echo "  sops hosts/<host>/secrets.yaml - Edit encrypted secrets"
-    echo "  ssh-to-age < key.pub       - Convert SSH pubkey to age recipient"
-    echo ""
-    echo "For installation, see README.md"
-    echo "For contributing, see CONTRIBUTING.md"
-    echo ""
-
-    # Enable experimental features for this shell session
+    export ADMIN_KEY="$HOME/.ssh/id_hallpass"
     export NIX_CONFIG="experimental-features = nix-command flakes"
 
-    # Tell sops where to find the age key
-    export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
-
-    # Prefer VS Code for editor-driven tools (sops, git commit, etc.).
-    # --wait keeps the command blocked until the file is closed.
     if command -v code >/dev/null 2>&1; then
       export EDITOR="code --wait"
       export VISUAL="code --wait"
     fi
+
+    # ── Welcome message ────────────────────────────────────────────────────
+    host=$(hostname)
+    echo "HALLway fallback shell ($host)"
+    echo ""
+    echo "Secrets:   sops hosts/$host/secrets.yaml"
+    echo "Key mgmt:  rotate-key <secret-name> [--passphrase]"
+    echo ""
   '';
 }
