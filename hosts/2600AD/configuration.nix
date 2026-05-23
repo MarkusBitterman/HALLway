@@ -283,18 +283,6 @@
   security.apparmor.enable = true;
 
   # ════════════════
-  # XFCE FALLBACK SESSION
-  # ════════════════
-  # Stable X11 fallback for debugging Wayland/Hyprland issues.
-  # Appears in regreet session dropdown alongside Hyprland.
-
-  services.xserver = {
-    enable = true;
-    desktopManager.xfce.enable = true;
-    displayManager.startx.enable = true; # Don't start X automatically; let greetd handle it
-  };
-
-  # ════════════════
   # PROGRAMS
   # ════════════════
 
