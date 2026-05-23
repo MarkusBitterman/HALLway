@@ -173,14 +173,23 @@ wifi_home: |
 
 This project stores SSH private keys as sops secrets and deploys them via sops-nix. Four things must stay in sync whenever a key is added or rotated.
 
-**1. Generate the key** (`nix develop` exposes the `rotate-key` helper):
+**1. Generate or obtain the new value** (`nix develop` exposes the `rotate-key` helper):
 
 ```bash
-rotate-key <secret-name>              # no passphrase — automation-safe
-rotate-key <secret-name> --passphrase # prompts for a passphrase — interactive use
+rotate-key <secret-name>              # dispatches on name prefix — see below
+rotate-key <secret-name> --passphrase # SSH keys only: prompt for a passphrase
 ```
 
-The key is written to `~/.ssh/<secret-name>`. The public key is printed for you to copy.
+`rotate-key` dispatches by naming convention:
+
+| Name pattern | Tool used | Notes |
+|---|---|---|
+| `ssh_key_*` | `ssh-keygen -t ed25519` | Private key → sops; public key → target service |
+| `wg_*` (not psk) | `wg genkey` | Private key → sops; public key → peer's `configuration.nix` |
+| `*psk*` | `wg genpsk` | Same value must go into **both** peer `secrets.yaml` files |
+| anything else | (none) | Externally sourced — obtain from GitHub, Vultr, etc. |
+
+For SSH keys, the private key is written to `~/.ssh/<secret-name>` and the public key is printed.
 
 **2. Register the public key** with the target service (GitHub SSH keys page, remote host's `~/.ssh/authorized_keys`, etc.).
 
