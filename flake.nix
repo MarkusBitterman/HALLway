@@ -154,6 +154,73 @@
             # Editor support
             direnv
             nix-direnv
+
+            # Dev tools — available via direnv and nix develop alike
+            (writeShellScriptBin "rotate-key" ''
+              name="''${1:?Usage: rotate-key <secret-name> [--passphrase]}"
+              host=$(hostname)
+              case "$name" in
+
+                ssh_key_*)
+                  keyfile="$HOME/.ssh/$name"
+                  if [[ "''${2:-}" == "--passphrase" ]]; then
+                    ssh-keygen -t ed25519 -C "$host-$name" -f "$keyfile"
+                  else
+                    ssh-keygen -t ed25519 -C "$host-$name" -f "$keyfile" -N ""
+                  fi
+                  echo ""
+                  echo "Public key — register with the target service:"
+                  echo ""
+                  cat "$keyfile.pub"
+                  echo ""
+                  echo "Next steps:"
+                  echo "  1. Register the public key with the target service"
+                  echo "  2. sops hosts/$host/secrets.yaml"
+                  echo "       → set '$name' to the contents of $keyfile"
+                  echo "  3. If new (not a rotation): also update secrets.nix and home/<user>.nix"
+                  echo "  4. rebuild"
+                  ;;
+
+                *psk*)
+                  psk=$(wg genpsk)
+                  echo "WireGuard PSK (copy this value into BOTH peer secrets.yaml files):"
+                  echo ""
+                  echo "$psk"
+                  echo ""
+                  echo "Next steps:"
+                  echo "  1. sops hosts/<host-a>/secrets.yaml  → set '$name': <value>"
+                  echo "  2. sops hosts/<host-b>/secrets.yaml  → set matching PSK key: <same value>"
+                  echo "  3. rebuild both hosts"
+                  ;;
+
+                wg_*)
+                  privkey=$(wg genkey)
+                  pubkey=$(echo "$privkey" | wg pubkey)
+                  echo "WireGuard private key (SECRET — goes in secrets.yaml only):"
+                  echo ""
+                  echo "$privkey"
+                  echo ""
+                  echo "WireGuard public key (not secret — goes in the peer's configuration.nix):"
+                  echo ""
+                  echo "$pubkey"
+                  echo ""
+                  echo "Next steps:"
+                  echo "  1. sops hosts/$host/secrets.yaml  → set '$name': <private key>"
+                  echo "  2. Add public key to the peer host's configuration.nix"
+                  echo "  3. rebuild both hosts"
+                  ;;
+
+                *)
+                  echo "'$name' is an externally sourced secret — obtain the new value from its source, then:"
+                  echo ""
+                  echo "  sops hosts/$host/secrets.yaml"
+                  echo "    → update '$name' with the new value"
+                  echo ""
+                  echo "  rebuild"
+                  ;;
+
+              esac
+            '')
           ];
 
           shellHook = ''
@@ -175,83 +242,6 @@
             alias fmt='nix fmt'
             alias rebuild="sudo nixos-rebuild switch --flake .#$HALLWAY_HOST"
             alias build="nix build .#nixosConfigurations.$HALLWAY_HOST.config.system.build.toplevel"
-
-            # ── Functions ─────────────────────────────────────────────────────
-            # Generate or guide rotation of any HALLway secret.
-            # Dispatches on secret name prefix — see docs/secrets.md for the full workflow.
-            # Usage: rotate-key <secret-name> [--passphrase]
-            #   --passphrase  SSH keys only: prompt for a passphrase (default: none)
-            rotate-key() {
-              local name="''${1:?Usage: rotate-key <secret-name> [--passphrase]}"
-              case "$name" in
-
-                ssh_key_*)
-                  # ed25519 SSH keypair — private key → sops, public key → target service
-                  local keyfile="$HOME/.ssh/$name"
-                  if [[ "''${2:-}" == "--passphrase" ]]; then
-                    ssh-keygen -t ed25519 -C "$HALLWAY_HOST-$name" -f "$keyfile"
-                  else
-                    ssh-keygen -t ed25519 -C "$HALLWAY_HOST-$name" -f "$keyfile" -N ""
-                  fi
-                  echo ""
-                  echo "Public key — register with the target service:"
-                  echo ""
-                  cat "$keyfile.pub"
-                  echo ""
-                  echo "Next steps:"
-                  echo "  1. Register the public key with the target service"
-                  echo "  2. sops hosts/$HALLWAY_HOST/secrets.yaml"
-                  echo "       → set '$name' to the contents of $keyfile"
-                  echo "  3. If new (not a rotation): also update secrets.nix and home/<user>.nix"
-                  echo "  4. rebuild"
-                  ;;
-
-                *psk*)
-                  # WireGuard PSK — symmetric; the same value goes into BOTH peers
-                  local psk
-                  psk=$(wg genpsk)
-                  echo "WireGuard PSK (copy this value into BOTH peer secrets.yaml files):"
-                  echo ""
-                  echo "$psk"
-                  echo ""
-                  echo "Next steps:"
-                  echo "  1. sops hosts/<host-a>/secrets.yaml  → set '$name': <value>"
-                  echo "  2. sops hosts/<host-b>/secrets.yaml  → set matching PSK key: <same value>"
-                  echo "  3. rebuild both hosts"
-                  ;;
-
-                wg_*)
-                  # WireGuard private key — asymmetric; public key goes to the peer's config
-                  local privkey pubkey
-                  privkey=$(wg genkey)
-                  pubkey=$(echo "$privkey" | wg pubkey)
-                  echo "WireGuard private key (SECRET — goes in secrets.yaml only):"
-                  echo ""
-                  echo "$privkey"
-                  echo ""
-                  echo "WireGuard public key (not secret — goes in the peer's configuration.nix):"
-                  echo ""
-                  echo "$pubkey"
-                  echo ""
-                  echo "Next steps:"
-                  echo "  1. sops hosts/$HALLWAY_HOST/secrets.yaml  → set '$name': <private key>"
-                  echo "  2. Add public key to the peer host's configuration.nix"
-                  echo "  3. rebuild both hosts"
-                  ;;
-
-                *)
-                  # Externally sourced secret (token, password, API key, GPG key, etc.)
-                  # No local generation step — obtain the new value from the source first.
-                  echo "'$name' is an externally sourced secret — obtain the new value from its source, then:"
-                  echo ""
-                  echo "  sops hosts/$HALLWAY_HOST/secrets.yaml"
-                  echo "    → update '$name' with the new value"
-                  echo ""
-                  echo "  rebuild"
-                  ;;
-
-              esac
-            }
 
             # ── Welcome message ───────────────────────────────────────────────
             echo "HALLway dev shell ($HALLWAY_HOST)"
