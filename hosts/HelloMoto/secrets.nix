@@ -13,8 +13,8 @@
   # The encrypted secrets file
   sops.defaultSopsFile = ./secrets.yaml;
 
-  # SSH key for GitHub operations on the phone
-  sops.secrets."ssh_key_github" = {
+  # SSH key for GitHub automation (no passphrase; used by scripts and non-interactive tools)
+  sops.secrets."ssh_key_github_automation" = {
     mode = "0600";
   };
 }

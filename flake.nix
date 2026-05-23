@@ -176,6 +176,32 @@
             alias rebuild="sudo nixos-rebuild switch --flake .#$HALLWAY_HOST"
             alias build="nix build .#nixosConfigurations.$HALLWAY_HOST.config.system.build.toplevel"
 
+            # ── Functions ─────────────────────────────────────────────────────
+            # Generate an SSH key and print guided next steps.
+            # Usage: rotate-key <secret-name> [--passphrase]
+            #   <secret-name>  sops key name; key is written to ~/.ssh/<secret-name>
+            #   --passphrase   prompt for a passphrase (default: none, automation-safe)
+            rotate-key() {
+              local name="''${1:?Usage: rotate-key <secret-name> [--passphrase]}"
+              local keyfile="$HOME/.ssh/$name"
+              if [[ "''${2:-}" == "--passphrase" ]]; then
+                ssh-keygen -t ed25519 -C "$HALLWAY_HOST-$name" -f "$keyfile"
+              else
+                ssh-keygen -t ed25519 -C "$HALLWAY_HOST-$name" -f "$keyfile" -N ""
+              fi
+              echo ""
+              echo "Public key — register with the target service:"
+              echo ""
+              cat "$keyfile.pub"
+              echo ""
+              echo "Next steps:"
+              echo "  1. Register the public key with the target service"
+              echo "  2. sops hosts/$HALLWAY_HOST/secrets.yaml"
+              echo "       → set '$name' to the contents of $keyfile"
+              echo "  3. If new (not a rotation): also update secrets.nix and home/<user>.nix"
+              echo "  4. rebuild"
+            }
+
             # ── Welcome message ───────────────────────────────────────────────
             echo "HALLway dev shell ($HALLWAY_HOST)"
             echo ""
@@ -200,8 +226,9 @@
             fi
 
             echo ""
-            echo "Aliases: check, fmt, build, rebuild"
-            echo "Secrets: sops hosts/$HALLWAY_HOST/secrets.yaml"
+            echo "Aliases:   check, fmt, build, rebuild"
+            echo "Secrets:   sops hosts/$HALLWAY_HOST/secrets.yaml"
+            echo "Key mgmt:  rotate-key <secret-name> [--passphrase]"
             echo ""
           '';
         };

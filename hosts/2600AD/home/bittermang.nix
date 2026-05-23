@@ -284,7 +284,7 @@
       "github.com" = {
         HostName = "github.com";
         User = "git";
-        IdentityFile = osConfig.sops.secrets."ssh_key_github".path;
+        IdentityFile = osConfig.sops.secrets."ssh_key_github_automation".path;
         IdentitiesOnly = "yes";
       };
       "hobbs" = {

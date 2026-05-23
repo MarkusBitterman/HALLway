@@ -13,7 +13,7 @@
   # ─────────────────────────────────────────────────────────────────────────
   # SSH Keys
   # ─────────────────────────────────────────────────────────────────────────
-  sops.secrets."ssh_key_github" = {
+  sops.secrets."ssh_key_github_automation" = {
     owner = "bittermang";
     group = "users";
     mode = "0600";

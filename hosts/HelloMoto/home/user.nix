@@ -52,7 +52,7 @@ in
     enableDefaultConfig = false;
     settings = {
       "github.com" = {
-        IdentityFile = config.sops.secrets."ssh_key_github".path;
+        IdentityFile = config.sops.secrets."ssh_key_github_automation".path;
         IdentitiesOnly = "yes";
         User = "git";
       };

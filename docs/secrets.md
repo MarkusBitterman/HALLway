@@ -118,7 +118,7 @@ Now `sops hosts/<this-host>/secrets.yaml` works locally. The host still can't ed
 
 | Key | What it is | How to generate |
 |-----|------------|-----------------|
-| `ssh_key_github` | GitHub SSH key | `ssh-keygen -t ed25519 -C "bittermang@2600AD"` |
+| `ssh_key_github_automation` | GitHub SSH key (no passphrase; automation/CI use) | `ssh-keygen -t ed25519 -C "2600AD-github-automation" -N ""` |
 | `ssh_key_hobbs` | Hobbs server SSH key | `ssh-keygen -t ed25519` |
 | `ssh_key_hallpass` | HALLpass.space SSH key | `ssh-keygen -t ed25519` |
 | `github_token` | GitHub PAT | [GitHub Settings](https://github.com/settings/tokens) |
@@ -133,7 +133,7 @@ Now `sops hosts/<this-host>/secrets.yaml` works locally. The host still can't ed
 
 | Key | What it is | How to generate |
 |-----|------------|-----------------|
-| `ssh_key_github` | GitHub SSH key | `ssh-keygen -t ed25519 -C "matt@hallpass.space"` |
+| `ssh_key_github_automation` | GitHub SSH key (no passphrase; automation/CI use) | `ssh-keygen -t ed25519 -C "HALLpass-github-automation" -N ""` |
 | `wg_privatekey` | WireGuard server key | `wg genkey` |
 | `wg_desktop_psk` | WireGuard PSK for 2600AD | `wg genpsk` (same as 2600AD's `wg_psk`) |
 | `syncthing_gui_pass` | Syncthing GUI password | Choose one |
@@ -158,7 +158,7 @@ github_token: ghp_xxxxxxxxxxxxx
 syncthing_gui_pass: mypassword
 
 # Multi-line values (SSH keys, certificates)
-ssh_key_github: |
+ssh_key_github_automation: |
     -----BEGIN OPENSSH PRIVATE KEY-----
     ...
     -----END OPENSSH PRIVATE KEY-----
@@ -167,6 +167,62 @@ ssh_key_github: |
 wifi_home: |
     [Security]
     Passphrase=your-wifi-password
+```
+
+### Adding or Rotating an SSH Key
+
+This project stores SSH private keys as sops secrets and deploys them via sops-nix. Four things must stay in sync whenever a key is added or rotated.
+
+**1. Generate the key** (`nix develop` exposes the `rotate-key` helper):
+
+```bash
+rotate-key <secret-name>              # no passphrase — automation-safe
+rotate-key <secret-name> --passphrase # prompts for a passphrase — interactive use
+```
+
+The key is written to `~/.ssh/<secret-name>`. The public key is printed for you to copy.
+
+**2. Register the public key** with the target service (GitHub SSH keys page, remote host's `~/.ssh/authorized_keys`, etc.).
+
+**3. Update `hosts/<host>/secrets.yaml`**:
+
+```bash
+sops hosts/<host>/secrets.yaml
+```
+
+Add or replace the entry (rotation: just replace the key block; new key: add the entry):
+
+```yaml
+<secret-name>: |
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    ...
+    -----END OPENSSH PRIVATE KEY-----
+```
+
+**4. If this is a new secret** (not a rotation of an existing one), update three more files:
+
+- **`hosts/<host>/secrets.nix`** — declare the runtime path and permissions:
+  ```nix
+  sops.secrets."<secret-name>" = {
+    owner = "<user>";
+    group = "users";
+    mode  = "0600";
+  };
+  ```
+
+- **`hosts/<host>/home/<user>.nix`** — wire it in (SSH `IdentityFile`, env var, etc.):
+  ```nix
+  programs.ssh.settings."example.com".IdentityFile =
+    osConfig.sops.secrets."<secret-name>".path;
+  ```
+
+- **`docs/secrets.md`** — add a row to the [Secrets Reference](#-secrets-reference) table for the host.
+
+**5. Rebuild**:
+
+```bash
+rebuild   # dev-shell alias, or:
+sudo nixos-rebuild switch --flake .#<host>
 ```
 
 ### Generate WireGuard Keys

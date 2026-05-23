@@ -13,6 +13,14 @@
 #   - nixd (Nix LSP), nixfmt (formatter)
 #   - sops, age, ssh-to-age (secrets management)
 #
+# Common tasks:
+#   - Edit secrets:  sops hosts/<host>/secrets.yaml
+#   - Rotate any SSH key (use nix develop for the rotate-key helper):
+#       ssh-keygen -t ed25519 -C "<host>-<secret-name>" -f ~/.ssh/<secret-name> -N ""
+#       # --passphrase flag omitted = no passphrase (automation-safe)
+#       # paste private key into secrets.yaml under <secret-name>
+#       # register public key with the target service
+#
 # For installation/deployment:
 #   - git, gh for cloning and pushing
 #   - nixos-install reads this repo's flake.nix
@@ -46,6 +54,8 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
+    export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+
     echo "🌍 HALLway Development Environment"
     echo ""
     echo "Available commands:"
