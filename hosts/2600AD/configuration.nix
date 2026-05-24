@@ -24,7 +24,9 @@
     loader = {
       systemd-boot = {
         enable = true;
+        configurationLimit = 4;
         memtest86.enable = true;
+        edk2-uefi-shell.enable = true;
       };
       efi.canTouchEfiVariables = true;
       timeout = 7;
@@ -33,7 +35,7 @@
     kernelPackages = pkgs.linuxPackages; # Stable kernel (guaranteed ZFS support)
 
     zfs = {
-      # allowHibernation = true;
+      unsafeAllowHibernation = true;
       # renamed to unsafeAllowHibernation in NixOS 26.05 - commented to test behavior
     };
 
@@ -65,7 +67,7 @@
 
   zramSwap = {
     enable = true;
-    memoryPercent = 80;
+    memoryPercent = 40;
   };
 
   # ════════════════

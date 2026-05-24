@@ -25,7 +25,6 @@
   home.packages = with pkgs; [
 
     # Core administration
-    git
     curl
     wget
     tmux
@@ -57,7 +56,7 @@
       "hobbs" = {
         HostName = "hobbsfamilycleaning.us";
         User = "matt";
-        IdentityFile = "~/.ssh/id_hobbs";
+        IdentityFile = osConfig.sops.secrets."ssh_key_hobbs".path;
         IdentitiesOnly = "yes";
       };
     };
@@ -66,19 +65,17 @@
   # Git configuration
   programs.git = {
     enable = true;
-    settings = {
-      user = {
-        name = "Matthew Hall";
-        email = "bittermang@duck.com";
-      };
-      commit.gpgSign = false; # Enable after GPG setup
+    settings.user = {
+      name = "Matthew Hall";
+      email = "bittermang@duck.com";
     };
   };
 
   # Shell configuration
   programs.zsh = {
     enable = true;
-    # Add zsh customizations here
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
   };
 
   programs.starship = {

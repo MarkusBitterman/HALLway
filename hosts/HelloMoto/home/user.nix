@@ -24,7 +24,6 @@ in
 
   home.packages = with pkgs; [
     # Core tooling
-    git
     mercurial
     jq
 
@@ -41,6 +40,14 @@ in
     enable = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
+  };
+
+  programs.git = {
+    enable = true;
+    settings.user = {
+      name = "Matthew Hall";
+      email = "bittermang@duck.com";
+    };
   };
 
   # ════════════════════════════════════════════════════════════════════════

@@ -20,6 +20,7 @@
   osConfig,
   pkgs,
   inputs,
+  lib,
   ...
 }:
 
@@ -34,6 +35,11 @@
     monitor = "HDMI-A-1,1368x768@59.85,0x0,1";
     keyboard = "us";
   };
+
+  # Explicit lua config type — overrides the stateVersion-based hyprlang default
+  # (home.stateVersion = "25.11" < "26.05" triggers the legacy default warning;
+  # setting this here ensures Hyprland is started in lua mode regardless)
+  wayland.windowManager.hyprland.configType = "lua";
 
   home.stateVersion = "25.11";
 
@@ -57,7 +63,6 @@
     # CORE - System utilities (universally accessible, no AppArmor enforcement)
     # ─────────────────────────────────────────────────────────────────────────
 
-    git
     curl
     wget
     rsync
@@ -65,7 +70,6 @@
     btop
     tmux
     age
-    gnupg # Encryption
     gzip
     bzip2
     xz
@@ -79,7 +83,6 @@
 
     # Editors
     neovim
-    claude-code
 
     # CLI dev tools
     gh # GitHub CLI
@@ -105,8 +108,6 @@
     lua-language-server
 
     # Nix development
-    direnv
-    nix-direnv
     nixd
     nixfmt
 
@@ -251,6 +252,8 @@
   # PROGRAM CONFIGURATION
   # ════════════════
 
+  programs.claude-code.enable = true;
+
   programs.vscodium = {
     enable = true;
     mutableExtensionsDir = true;
@@ -305,19 +308,39 @@
   # Git configuration
   programs.git = {
     enable = true;
-    settings = {
-      user = {
-        name = "Matthew Hall";
-        email = "bittermang@duck.com";
-      };
-      commit.gpgSign = false; # Enable after GPG setup
+    settings.user = {
+      name = "Matthew Hall";
+      email = "bittermang@duck.com";
+    };
+    signing = {
+      key = "03FA1C7D2F1B6078152F5A06F1C935BB179C4C2C";
+      signByDefault = true;
+      format = "openpgp";
     };
   };
+
+  programs.gpg.enable = true;
+
+  services.gpg-agent = {
+    enable = true;
+    pinentry.package = pkgs.pinentry-gnome3;
+    enableZshIntegration = true;
+    defaultCacheTtl = 86400;
+    maxCacheTtl = 86400;
+  };
+
+  home.activation.importGpgKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -f "${osConfig.sops.secrets."gpg_key".path}" ]; then
+      ${pkgs.gnupg}/bin/gpg --batch --import \
+        "${osConfig.sops.secrets."gpg_key".path}" 2>/dev/null || true
+    fi
+  '';
 
   # Shell configuration
   programs.zsh = {
     enable = true;
-    # Add zsh customizations here
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
   };
 
   programs.starship = {
