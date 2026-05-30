@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 nix develop              # Enter dev shell (loads sops, age, etc.)
 nix flake check          # Validate flake syntax — primary test command (Ctrl+Shift+T in VS Code)
-nix fmt                  # Format all .nix files with nixfmt (RFC 166)
+nix fmt                  # Format all .nix files with nixfmt (RFC 166) — also auto-runs per-file via PostToolUse hook
 nix build .#nixosConfigurations.2600AD.config.system.build.toplevel  # Build without activating
 sudo nixos-rebuild switch --flake .#2600AD          # Build and activate on 2600AD
 sudo nixos-rebuild switch --flake .#HALLpass.space  # Build and activate on VPS (run on VPS)
@@ -18,6 +18,18 @@ nix flake update <input>                            # Update single input (e.g.,
 ```
 
 Always run `nix flake check` and `nix fmt` before committing.
+
+## Skills
+
+Available Claude Code skills — invoke with the `/` prefix:
+
+| Skill | Purpose |
+|-------|---------|
+| `/update-flake-inputs [input]` | Update one or all flake inputs, validate, commit |
+| `/add-host <hostname> [--type]` | Provision new host: templates, flake.nix entry, .sops.yaml stub |
+| `/secrets-add <hostname> <name>` | Add a new sops secret with value generation and docs row |
+| `/secrets-remove <hostname> <name>` | Remove secret and all wiring references |
+| `/secrets-rotate <hostname> <name>` | Rotate secret value, print new public key |
 
 **When to update inputs**: After changing input URLs in `flake.nix`, when upstream fixes are needed, or periodically for security patches. The `flake.lock` file pins exact revisions — `nix flake update` refreshes them.
 
@@ -44,10 +56,16 @@ Non-NixOS hosts (standalone Home Manager) contain only:
 - `HALLpass.space` — Minimal VPS; WireGuard hub + Syncthing introducer/relay/discovery; nginx front; **not yet deployed** (contains placeholder values); activated with `sudo nixos-rebuild switch --flake .#HALLpass.space`
 - `HelloMoto` — Android phone (Termux + Nix, `aarch64-linux`); standalone Home Manager only; WireGuard and Syncthing via Android apps; activated with `home-manager switch --flake .#HelloMoto`
 
+### Boot Configuration (HALLpass.space)
+HALLpass.space (VPS) uses **systemd-boot** as the EFI bootloader with EFI variable write support enabled. The latest stable kernel is used (`pkgs.linuxPackages_latest`) to ensure compatibility with modern VPS hardware and security patches.
+
 ### User Model
 `users.users.<name>` in `configuration.nix` defines the account and group membership. Home Manager (`hosts/<host>/home/<user>.nix`) handles both package installation (`home.packages`) and dotfile/app configuration. There is no roles module in use.
 
 Guest user on 2600AD has an ephemeral tmpfs `/home/guest` (wiped on reboot); its packages are defined directly on `users.users.guest.packages` in `configuration.nix` since Home Manager persistence is pointless for a guest.
+
+### Security & Gaming (2600AD)
+**Steam + Bubblewrap**: Steam's `gamescopeSession` uses bubblewrap (bwrap) for sandboxing. The bwrap binary in nixpkgs is compiled with `--disable-setuid`, so unprivileged user namespaces must be used. A setuid wrapper is disabled via `security.wrappers.bwrap = lib.mkForce { setuid = false; }` to prevent immediate crashes.
 
 ### Networking (2600AD)
 2600AD currently uses NetworkManager (`networking.networkmanager.enable = true`) as a temporary fallback while systemd-networkd configuration is being stabilized. The plan is to return to `networking.useNetworkd = true` with iwd for WiFi once the Hyprland desktop is confirmed working. WiFi PSK will be a sops secret deployed to `/var/lib/iwd/<SSID>.psk`.
@@ -55,10 +73,12 @@ Guest user on 2600AD has an ephemeral tmpfs `/home/guest` (wiped on reboot); its
 ### Display Manager (2600AD)
 2600AD uses **greetd + regreet** (GTK4 Wayland-native greeter) instead of GDM. The greeter runs on cage (minimal Wayland compositor) and provides user selection, password entry, and session dropdown. Hyprland is launched via UWSM (Universal Wayland Session Manager).
 
+**Gnome Keyring Integration**: `services.gnome.gnome-keyring.enable` and `security.pam.services.greetd.enableGnomeKeyring` are enabled for PAM-based authentication (e.g., SSH key passphrases) during the greeter session.
+
 ### Desktop Environment (DOORwayDE)
 The Hyprland desktop environment is managed by [DOORwayDE](https://github.com/MarkusBitterman/DOORwayDE), a NixOS port of HyDE (HyprDots Environment). DOORwayDE is imported as a flake input and consumed as a Home Manager module.
 
-**Integration**: The module is imported in `hosts/<host>/home/<user>.nix`:
+**Integration**: The module is imported in `hosts/<host>/home/<user>.nix`. Display configuration uses Hyprland monitor syntax:
 ```nix
 { inputs, ... }:
 {
@@ -66,14 +86,18 @@ The Hyprland desktop environment is managed by [DOORwayDE](https://github.com/Ma
 
   doorwayde = {
     enable = true;
-    monitor = "HDMI-A-1,1920x1080@60,0x0,1";
+    monitor = "HDMI-A-1,1920x1080@59.85,0x0,1";  # Format: <output>,<resolution>@<refresh>,<offset>,<scale>
     keyboard = "us";
     # extraMonitors = [ "DP-1,2560x1440@144,1920x0,1" ];
   };
 }
 ```
 
+On 2600AD, the primary monitor is HDMI-A-1 at 1920x1080 (59.85 Hz). Adjust the `monitor` string for different outputs/resolutions.
+
 **What DOORwayDE manages**: Hyprland config, waybar, rofi, dunst, hyprlock, wlogout, theming, keybindings, and autostart applications. Do not duplicate these in the host's Home Manager config.
+
+**Hyprland configType**: DOORwayDE requires `wayland.windowManager.hyprland.configType = "lua"` (set in every DOORwayDE-enabled user). Non-DOORwayDE users (e.g. `guest`) use `configType = "hyprlang"`. Mixing these causes Hyprland to fail to start.
 
 **Upstream**: DOORwayDE is maintained separately at `github:MarkusBitterman/DOORwayDE`. To update: `nix flake update doorwayde`.
 

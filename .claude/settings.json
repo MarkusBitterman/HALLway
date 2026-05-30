@@ -1,0 +1,34 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "F=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty' 2>/dev/null); [[ \"$F\" == *.nix ]] && nixfmt \"$F\" 2>/dev/null || true",
+            "statusMessage": "Formatting Nix..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "F=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); if [[ \"$F\" == */secrets.yaml ]]; then echo \"{\\\"continue\\\": false, \\\"stopReason\\\": \\\"Direct edits to secrets.yaml bypass sops encryption. Use: sops $F\\\"}\"; fi"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(journalctl *)",
+      "Write(.claude/*)",
+      "Edit(.claude/*)"
+    ]
+  }
+}
