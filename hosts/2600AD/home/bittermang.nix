@@ -32,7 +32,7 @@
   # ════════════════
   doorwayde = {
     enable = true;
-    monitor = "HDMI-A-1,1368x768@59.85,0x0,1";
+    monitor = "HDMI-A-1,1920x1080@59.85,0x0,1";
     keyboard = "us";
   };
 
@@ -238,6 +238,7 @@
     gparted-full
     stress-ng
     cava
+    socat
   ];
 
   # ════════════════

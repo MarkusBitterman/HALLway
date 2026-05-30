@@ -23,10 +23,11 @@
 
   wayland.windowManager.hyprland = {
     enable = true;
+    configType = "hyprlang";
     systemd.enable = false; # UWSM handles session management at system level
     extraConfig = ''
       # Match bittermang's display config
-      monitor=HDMI-A-1,1368x768@59.85,0x0,1
+      monitor=HDMI-A-1,1920x1080@59.85,0x0,1
 
       # Startup
       exec-once = dunst &

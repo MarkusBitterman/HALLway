@@ -6,6 +6,7 @@
 
 {
   config,
+  lib,
   pkgs,
   ...
 }:
@@ -176,6 +177,9 @@
   # regreet: GTK4 greeter with user list, password entry, session selection
   # cage: minimal Wayland compositor that runs only the greeter
   # ═══════════════════════════════════════════════════════════════════════════
+  services.gnome.gnome-keyring.enable = true;
+  # and if using greetd or another login manager:
+  security.pam.services.greetd.enableGnomeKeyring = true;
 
   services.greetd = {
     enable = true;
@@ -283,6 +287,16 @@
 
   security.polkit.enable = true;
   security.apparmor.enable = true;
+  # programs.steam auto-creates a setuid bwrap wrapper when gamescopeSession.enable
+  # && gamescope.capSysNice are both true. Bubblewrap 0.11.2 is compiled
+  # --disable-setuid; the wrapper causes an immediate "setuid use of bubblewrap
+  # is not supported in this build" crash. Unprivileged user namespaces suffice.
+  security.wrappers.bwrap = lib.mkForce {
+    owner = "root";
+    group = "root";
+    source = "${pkgs.bubblewrap}/bin/bwrap";
+    setuid = false;
+  };
 
   # ════════════════
   # PROGRAMS
