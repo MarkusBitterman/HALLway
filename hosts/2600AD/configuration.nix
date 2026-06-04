@@ -6,7 +6,6 @@
 
 {
   config,
-  lib,
   pkgs,
   ...
 }:
@@ -246,6 +245,9 @@
     "/share/xdg-desktop-portal"
   ];
 
+  # Android full SDK (needed by Unity and build tools):
+  nixpkgs.config.android_sdk.accept_license = true;
+
   environment.systemPackages = with pkgs; [
     # System essentials
     nano
@@ -259,6 +261,24 @@
     # System tools
     sshfs
 
+    # Android tools, SDK, NDK
+    android-tools
+    (androidenv.composeAndroidPackages {
+      platformVersions = [
+        "34"
+        "33"
+      ];
+      abiVersions = [
+        "x86_64"
+        "arm64-v8a"
+      ];
+      buildToolsVersions = [ "34.0.0" ];
+      includeNDK = true;
+    }).androidsdk
+
+    # Unity development
+    dotnet-sdk_8
+    mono
     # Note: Steam provided by programs.steam.enable (includes steam-run)
   ];
 
@@ -287,16 +307,6 @@
 
   security.polkit.enable = true;
   security.apparmor.enable = true;
-  # programs.steam auto-creates a setuid bwrap wrapper when gamescopeSession.enable
-  # && gamescope.capSysNice are both true. Bubblewrap 0.11.2 is compiled
-  # --disable-setuid; the wrapper causes an immediate "setuid use of bubblewrap
-  # is not supported in this build" crash. Unprivileged user namespaces suffice.
-  security.wrappers.bwrap = lib.mkForce {
-    owner = "root";
-    group = "root";
-    source = "${pkgs.bubblewrap}/bin/bwrap";
-    setuid = false;
-  };
 
   # ════════════════
   # PROGRAMS
@@ -396,7 +406,7 @@
     };
     gamescope = {
       enable = true;
-      capSysNice = true;
+      capSysNice = false;
     };
     steam = {
       enable = true;
