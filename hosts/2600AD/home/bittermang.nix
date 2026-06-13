@@ -25,15 +25,20 @@
 }:
 
 {
-  imports = [ inputs.doorwayde.homeManagerModules.default ];
+  imports = [ inputs.doorway.homeManagerModules.default ];
 
   # ════════════════
-  # DOORwayDE DESKTOP ENVIRONMENT
+  # DOORway DESKTOP ENVIRONMENT
   # ════════════════
-  doorwayde = {
+  doorway = {
     enable = true;
-    monitor = "HDMI-A-1,1920x1080@59.85,0x0,1";
+    monitor = "HDMI-A-1,1920x1080@100,0x0,1";
     keyboard = "us";
+    # cursor.package defaults to pkgs.oreo-cursors-plus.
+    # cursor.name selects which of the 38 variants to use.
+    # cursor.size defaults to 24. Omit this block to keep the DOORway default.
+    cursor.name = "oreo_spark_neon_pink_bordered_cursors";
+    cursor.size = 36;
   };
 
   # Explicit lua config type — overrides the stateVersion-based hyprlang default
@@ -120,9 +125,9 @@
     # jre # jdk #handled now by jetbrains, above?
 
     # ─────────────────────────────────────────────────────────────────────────
-    # DESKTOP - Additional Wayland tools (DOORwayDE provides core Hyprland stack)
+    # DESKTOP - Additional Wayland tools (DOORway provides core Hyprland stack)
     # ─────────────────────────────────────────────────────────────────────────
-    # DOORwayDE installs: hyprland, hyprlock, hypridle, hyprpaper, hyprsunset,
+    # DOORway installs: hyprland, hyprlock, hypridle, hyprpaper, hyprsunset,
     # waybar, rofi, dunst, wlogout, kitty, grim, slurp, satty, cliphist,
     # playerctl, awww, brightnessctl, pamixer, libnotify
 
@@ -245,7 +250,7 @@
   # DESKTOP ENVIRONMENT CONFIGURATION
   # ════════════════
   # NOTE: Hyprland, waybar, rofi, dunst, and other DE components are now
-  # managed by DOORwayDE module (see doorwayde options above).
+  # managed by DOORway module (see doorway options above).
   # The module handles: compositor config, keybindings, autostart apps,
   # theming, and all HyDE-derived configurations.
 
