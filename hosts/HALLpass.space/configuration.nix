@@ -13,6 +13,31 @@ let
   # WireGuard private key via sops-nix
   serverPrivKeyFile = config.sops.secrets."wg_privatekey".path;
 
+  # ── User dotfiles (managed without Home Manager) ─────────────────────────
+  # sops-nix deploys secrets to /run/secrets/<name> by default.
+  sshConfig = pkgs.writeText "matt-ssh-config" ''
+    Host *
+      AddKeysToAgent yes
+
+    Host github.com
+      HostName github.com
+      User git
+      IdentityFile /run/secrets/ssh_key_github_automation
+      IdentitiesOnly yes
+
+    Host hobbs
+      HostName hobbsfamilycleaning.us
+      User matt
+      IdentityFile /run/secrets/ssh_key_hobbs
+      IdentitiesOnly yes
+  '';
+
+  gitConfig = pkgs.writeText "matt-gitconfig" ''
+    [user]
+      name = Matthew Hall
+      email = bittermang@duck.com
+  '';
+
   peers = {
     desktop = {
       publicKey = "xVl7ZD5oumSdXDYudc3zip0Zo3draHuniQoYQFNth1M=";
@@ -135,7 +160,18 @@ in
     ];
   };
 
-  programs.zsh.enable = true;
+  programs.zsh = {
+    enable = true;
+    autosuggestions.enable = true;
+    syntaxHighlighting.enable = true;
+  };
+
+  programs.starship.enable = true;
+
+  programs.direnv = {
+    enable = true;
+    nix-direnv.enable = true;
+  };
 
   # ═════════════════════════════════════════════════════════════════════════
   # WIREGUARD HUB
@@ -224,6 +260,10 @@ in
   systemd.tmpfiles.rules = [
     "d /srv/hallspace/_public 0755 matt users -"
     "d /srv/hg/repos          0755 matt users -"
+    # User dotfile management (replaces Home Manager)
+    "d  /home/matt/.ssh               0700 matt users -"
+    "L+ /home/matt/.ssh/config        -    -    -     - ${sshConfig}"
+    "L+ /home/matt/.gitconfig         -    -    -     - ${gitConfig}"
   ];
 
   # hgweb serves all repos under /srv/hg/repos/ on loopback.
@@ -300,8 +340,16 @@ in
     syncthing
     mercurial
     jq
-    age # age encryption (key operations, sops workflow)
-    ssh-to-age # derive age public keys from SSH ed25519 keys
+    age
+    ssh-to-age
+    # Operator / user tools (previously in home/matt.nix)
+    curl
+    wget
+    tmux
+    git
+    htop
+    ncdu
+    lsof
   ];
 
   system.stateVersion = "26.05";
