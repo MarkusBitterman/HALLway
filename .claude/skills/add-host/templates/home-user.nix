@@ -16,12 +16,12 @@
 }:
 
 {
-  imports = [ inputs.doorwayde.homeManagerModules.default ];
+  imports = [ inputs.doorway.homeManagerModules.default ];
 
   # ════════════════
-  # DOORwayDE DESKTOP ENVIRONMENT
+  # DOORway DESKTOP ENVIRONMENT
   # ════════════════
-  doorwayde = {
+  doorway = {
     enable = true;
     monitor = "HDMI-A-1,1920x1080@60,0x0,1"; # TODO: adjust for actual display
     keyboard = "us";

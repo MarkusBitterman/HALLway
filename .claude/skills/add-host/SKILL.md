@@ -15,7 +15,7 @@ Provision a new host in the HALLway flake.
 ```
 
 Type defaults:
-- `nixos-workstation` — x86_64-linux NixOS with Hyprland/DOORwayDE (like 2600AD)
+- `nixos-workstation` — x86_64-linux NixOS with Hyprland/DOORway (like 2600AD)
 - `nixos-vps` — x86_64-linux NixOS minimal server (like HALLpass.space)
 - `home-manager` — Standalone Home Manager, non-NixOS (like HelloMoto)
 

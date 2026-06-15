@@ -16,7 +16,7 @@ Update one or more flake inputs, validate, format, and commit.
 
 - No args → update ALL inputs
 - `nixpkgs` → update only nixpkgs
-- `doorwayde` → update only DOORwayDE
+- `doorway` → update only DOORway
 - `home-manager sops-nix` → space-separated list
 
 ## Steps
@@ -70,6 +70,6 @@ chore: update all flake inputs           # all
 ## Post-update notes
 
 - **nixpkgs**: Check for breaking changes in NixOS module options if `nix flake check` raises warnings
-- **doorwayde**: Rebuild 2600AD to verify DOORwayDE integration — `sudo nixos-rebuild switch --flake .#2600AD`
+- **doorway**: Rebuild 2600AD to verify DOORway integration — `sudo nixos-rebuild switch --flake .#2600AD`
 - **home-manager**: `home.stateVersion` pins behavior; no action needed unless bumping it intentionally
 - **sops-nix**: Generally safe; verify secrets still decrypt after rebuild

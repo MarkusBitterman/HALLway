@@ -14,7 +14,7 @@ sudo nixos-rebuild switch --flake .#HALLpass.space  # Build and activate on VPS 
 sops hosts/2600AD/secrets.yaml                      # Edit encrypted secrets (decrypt/edit/re-encrypt)
 sops updatekeys hosts/2600AD/secrets.yaml           # Rekey after adding recipients to .sops.yaml
 nix flake update                                    # Update all inputs to latest
-nix flake update <input>                            # Update single input (e.g., doorwayde, nixpkgs)
+nix flake update <input>                            # Update single input (e.g., doorway, nixpkgs)
 ```
 
 Always run `nix flake check` and `nix fmt` before committing.
@@ -38,7 +38,7 @@ Available Claude Code skills — invoke with the `/` prefix:
 ### Flake (`flake.nix`)
 Entry point. Defines `nixosConfigurations` (NixOS hosts), `homeConfigurations` (non-NixOS hosts), and `devShells.default`. `nixosModules.default` is exported but contains no active modules — host configs compose Home Manager and sops-nix directly. `modules/userRoles.nix` exists but is **not imported anywhere** (dead code from a removed design; candidate for deletion).
 
-**Inputs**: `nixpkgs` (unstable), `home-manager`, `sops-nix`, `flake-utils`, `doorwayde`
+**Inputs**: `nixpkgs` (unstable), `home-manager`, `sops-nix`, `flake-utils`, `doorway`
 
 ### Hosts (`hosts/`)
 NixOS hosts contain:
@@ -75,16 +75,16 @@ Guest user on 2600AD has an ephemeral tmpfs `/home/guest` (wiped on reboot); its
 
 **Gnome Keyring Integration**: `services.gnome.gnome-keyring.enable` and `security.pam.services.greetd.enableGnomeKeyring` are enabled for PAM-based authentication (e.g., SSH key passphrases) during the greeter session.
 
-### Desktop Environment (DOORwayDE)
-The Hyprland desktop environment is managed by [DOORwayDE](https://github.com/MarkusBitterman/DOORwayDE), a NixOS port of HyDE (HyprDots Environment). DOORwayDE is imported as a flake input and consumed as a Home Manager module.
+### Desktop Environment (DOORway)
+The Hyprland desktop environment is managed by [DOORway](https://github.com/MarkusBitterman/DOORway), a NixOS port of HyDE (HyprDots Environment). DOORway is imported as a flake input and consumed as a Home Manager module.
 
 **Integration**: The module is imported in `hosts/<host>/home/<user>.nix`. Display configuration uses Hyprland monitor syntax:
 ```nix
 { inputs, ... }:
 {
-  imports = [ inputs.doorwayde.homeManagerModules.default ];
+  imports = [ inputs.doorway.homeManagerModules.default ];
 
-  doorwayde = {
+  doorway = {
     enable = true;
     monitor = "HDMI-A-1,1920x1080@59.85,0x0,1";  # Format: <output>,<resolution>@<refresh>,<offset>,<scale>
     keyboard = "us";
@@ -95,11 +95,11 @@ The Hyprland desktop environment is managed by [DOORwayDE](https://github.com/Ma
 
 On 2600AD, the primary monitor is HDMI-A-1 at 1920x1080 (59.85 Hz). Adjust the `monitor` string for different outputs/resolutions.
 
-**What DOORwayDE manages**: Hyprland config, waybar, rofi, dunst, hyprlock, wlogout, theming, keybindings, and autostart applications. Do not duplicate these in the host's Home Manager config.
+**What DOORway manages**: Hyprland config, waybar, rofi, dunst, hyprlock, wlogout, theming, keybindings, and autostart applications. Do not duplicate these in the host's Home Manager config.
 
-**Hyprland configType**: DOORwayDE requires `wayland.windowManager.hyprland.configType = "lua"` (set in every DOORwayDE-enabled user). Non-DOORwayDE users (e.g. `guest`) use `configType = "hyprlang"`. Mixing these causes Hyprland to fail to start.
+**Hyprland configType**: DOORway requires `wayland.windowManager.hyprland.configType = "lua"` (set in every DOORway-enabled user). Non-DOORway users (e.g. `guest`) use `configType = "hyprlang"`. Mixing these causes Hyprland to fail to start.
 
-**Upstream**: DOORwayDE is maintained separately at `github:MarkusBitterman/DOORwayDE`. To update: `nix flake update doorwayde`.
+**Upstream**: DOORway is maintained separately at `github:MarkusBitterman/DOORway`. To update: `nix flake update doorway`.
 
 ### WireGuard Overlay
 The HALLpass WireGuard subnet is `10.23.11.0/24`:

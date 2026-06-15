@@ -23,9 +23,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # DOORwayDE - Hyprland desktop environment (HyDE port)
-    doorwayde = {
-      url = "github:MarkusBitterman/DOORwayDE";
+    # DOORway - Hyprland desktop environment
+    doorway = {
+      url = "github:MarkusBitterman/DOORway";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -37,7 +37,7 @@
       flake-utils,
       home-manager,
       sops-nix,
-      doorwayde,
+      doorway,
       ...
     }:
     let
@@ -111,14 +111,6 @@
           system = "x86_64-linux";
           modules = [
             ./hosts/HALLpass.space/configuration.nix
-
-            home-manager.nixosModules.home-manager
-            {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = false;
-              home-manager.users.matt = import ./hosts/HALLpass.space/home/matt.nix;
-            }
-
             sops-nix.nixosModules.sops
           ];
         };

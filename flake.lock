@@ -1,22 +1,22 @@
 {
   "nodes": {
-    "doorwayde": {
+    "doorway": {
       "inputs": {
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1780436840,
-        "narHash": "sha256-D5Ik+wvjyWSkV8tSLDzuO821riPBm7p8+2a8HttXdjk=",
+        "lastModified": 1781379771,
+        "narHash": "sha256-EibwC7twdYNMHrdFjfwrk9teo+NPsvvsGGYzSQlZy/c=",
         "owner": "MarkusBitterman",
-        "repo": "DOORwayDE",
-        "rev": "eefc3a46adc76895a8916772fbff76222229a63e",
+        "repo": "DOORway",
+        "rev": "e611174b94f5f875aa693a1eefee81e6d51429f9",
         "type": "github"
       },
       "original": {
         "owner": "MarkusBitterman",
-        "repo": "DOORwayDE",
+        "repo": "DOORway",
         "type": "github"
       }
     },
@@ -45,11 +45,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1780593650,
-        "narHash": "sha256-CHo7k65YTL3HY+WQVedDTupji+LMgNlKCdrtRHZFAK4=",
+        "lastModified": 1781365335,
+        "narHash": "sha256-zqDBhXMzfbdlO7F2bGHe7MOtB3xngd/+4ieMHDC+ZXo=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "447fd9ff62501dae7206dfe180ee89f8de27b7d5",
+        "rev": "5b6f5733726a1b2ccafb5dec6ac4ca7299fad66c",
         "type": "github"
       },
       "original": {
@@ -60,11 +60,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1780243769,
-        "narHash": "sha256-x5UQuRsH3MqI0U9afaXSNqzTPSeZlRLvFAav2Ux1pNw=",
+        "lastModified": 1781074563,
+        "narHash": "sha256-md8WlXOlfnIeHeOScMTTHFyf2d6iaTwPl2apR5EQ3P4=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "331800de5053fcebacf6813adb5db9c9dca22a0c",
+        "rev": "9ae611a455b90cf061d8f332b977e387bda8e1ca",
         "type": "github"
       },
       "original": {
@@ -76,7 +76,7 @@
     },
     "root": {
       "inputs": {
-        "doorwayde": "doorwayde",
+        "doorway": "doorway",
         "flake-utils": "flake-utils",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",

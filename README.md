@@ -157,11 +157,11 @@ sudo systemd-cryptenroll --tpm2-device=auto /dev/<luks-device>
 The `flake.lock` file pins exact versions of all dependencies. To pull in upstream changes:
 
 ```bash
-# Update all inputs (nixpkgs, home-manager, doorwayde, etc.)
+# Update all inputs (nixpkgs, home-manager, doorway, etc.)
 nix flake update
 
 # Update a single input
-nix flake update doorwayde
+nix flake update doorway
 nix flake update nixpkgs
 
 # Then rebuild to apply
@@ -260,4 +260,4 @@ sops updatekeys hosts/<host>/secrets.yaml
 
 ### Related Projects
 
-- [DOORwayDE](https://github.com/MarkusBitterman/DOORwayDE) — Hyprland desktop environment (HyDE port for NixOS); imported as a Home Manager module to manage the complete Wayland desktop stack
+- [DOORway](https://github.com/MarkusBitterman/DOORway) — Hyprland desktop environment (HyDE port for NixOS); imported as a Home Manager module to manage the complete Wayland desktop stack

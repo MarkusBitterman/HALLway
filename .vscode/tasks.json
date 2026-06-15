@@ -163,12 +163,12 @@
       "description": "Which flake input to update?",
       "type": "pickString",
       "options": [
-        "doorwayde",
+        "doorway",
         "nixpkgs",
         "home-manager",
         "sops-nix"
       ],
-      "default": "doorwayde"
+      "default": "doorway"
     }
   ]
 }
