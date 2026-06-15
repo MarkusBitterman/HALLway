@@ -22,15 +22,17 @@
 
 ## Quick Start
 
-**Already deployed?** Rebuild after config changes:
+**Already deployed?** Rebuild after config changes from 2600AD:
 
 ```bash
-# From the VPS:
-sudo nixos-rebuild switch --flake /etc/nixos#HALLpass.space
-
-# Or from 2600AD via SSH:
-ssh matt@hallpass.space "cd /etc/nixos && sudo nixos-rebuild switch --flake .#HALLpass.space"
+# Build locally on 2600AD, copy closure to VPS, activate remotely:
+NIX_SSHOPTS="-i $ADMIN_KEY" sudo nixos-rebuild switch \
+  --flake .#HALLpass.space \
+  --target-host matt@hallpass.space \
+  --use-remote-sudo
 ```
+
+This builds the entire system on the workstation (no VPS resources used) then pushes the pre-built closure over SSH and activates it. `$ADMIN_KEY` is set automatically inside `nix develop`.
 
 **Fresh deploy?** See [Installation](#installation) below.
 
@@ -48,8 +50,7 @@ HALLpass.space is a small VPS (25GB class) that provides central infrastructure 
 
 ## Configuration Model
 
-- System config: [configuration.nix](configuration.nix)
-- Home Manager user profile: [home/matt.nix](home/matt.nix)
+- System config: [configuration.nix](configuration.nix) — packages, shell, user dotfiles, all services
 - sops-nix secret mappings: [secrets.nix](secrets.nix)
 - Hardware profile: [hardware-configuration.nix](hardware-configuration.nix)
 
@@ -76,15 +77,17 @@ HALLpass.space is a small VPS (25GB class) that provides central infrastructure 
 
 ### Phase 2: Deploy
 
-```bash
-# SSH into VPS as root
-ssh root@<vps-ip>
+Build and deploy from 2600AD — the workstation handles all compilation, the VPS only receives and activates the pre-built closure:
 
-# Clone and deploy
-mkdir -p /etc/nixos && cd /etc/nixos
-git clone https://github.com/MarkusBitterman/HALLway.git .
-nixos-rebuild switch --flake .#HALLpass.space
+```bash
+# From 2600AD (inside nix develop so $ADMIN_KEY is set):
+NIX_SSHOPTS="-i $ADMIN_KEY" sudo nixos-rebuild switch \
+  --flake .#HALLpass.space \
+  --target-host matt@hallpass.space \
+  --use-remote-sudo
 ```
+
+> If this is the very first NixOS install on the VPS (bare Vultr image), you may need to bootstrap by SSHing in as root first. See [Full Step-by-Step](#full-step-by-step) below.
 
 ### Phase 3: Post-Deployment (from 2600AD)
 
@@ -166,7 +169,7 @@ The desktop public key is already populated (`xVl7ZD5o...`).
 
 ### Standard
 
-This is a VPS deployment, not a bare-metal install. Clone the repo and run `nixos-rebuild switch`.
+This is a VPS deployment, not a bare-metal install. Build on 2600AD and push via `nixos-rebuild --target-host`.
 
 ### Full Step-by-Step
 
@@ -224,17 +227,17 @@ git push origin main
 
 #### Deploy
 
-From the VPS (SSH in as root or via console):
+From 2600AD (preferred — builds locally, no VPS resources consumed):
 
 ```bash
-# Clone config
-sudo mkdir -p /etc/nixos
-cd /etc/nixos
-sudo git clone https://github.com/MarkusBitterman/HALLway.git .
-
-# Build and activate
-sudo nixos-rebuild switch --flake .#HALLpass.space
+# Inside nix develop so $ADMIN_KEY is set:
+NIX_SSHOPTS="-i $ADMIN_KEY" sudo nixos-rebuild switch \
+  --flake .#HALLpass.space \
+  --target-host matt@hallpass.space \
+  --use-remote-sudo
 ```
+
+`nixos-rebuild` evaluates the flake and builds everything locally, then streams only missing store paths to the VPS over SSH and activates the new generation remotely.
 
 On first activation:
 - `systemd-tmpfiles` creates `/srv/hallspace/_public/` and `/srv/hg/repos/`
