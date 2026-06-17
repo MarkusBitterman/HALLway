@@ -13,13 +13,7 @@
   # ─────────────────────────────────────────────────────────────────────────
   # SSH Keys
   # ─────────────────────────────────────────────────────────────────────────
-  sops.secrets."ssh_key_github_automation" = {
-    owner = "matt";
-    group = "users";
-    mode = "0600";
-  };
-
-  sops.secrets."ssh_key_hobbs" = {
+  sops.secrets."ssh_key_github" = {
     owner = "matt";
     group = "users";
     mode = "0600";

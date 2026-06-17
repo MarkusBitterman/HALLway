@@ -22,13 +22,7 @@ let
     Host github.com
       HostName github.com
       User git
-      IdentityFile /run/secrets/ssh_key_github_automation
-      IdentitiesOnly yes
-
-    Host hobbs
-      HostName hobbsfamilycleaning.us
-      User matt
-      IdentityFile /run/secrets/ssh_key_hobbs
+      IdentityFile /run/secrets/ssh_key_github
       IdentitiesOnly yes
   '';
 
