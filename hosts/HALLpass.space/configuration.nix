@@ -103,10 +103,6 @@ in
   ];
   nixpkgs.config.allowUnfree = false;
 
-  # Passwordless sudo for wheel — required for nixos-rebuild --target-host
-  # activation, which runs sudo over a non-interactive SSH pipe (no TTY).
-  security.sudo.wheelNeedsPassword = false;
-
   # Strip NixOS documentation tools from the default closure.
   # These pull in w3m, groff, texinfo, libX11, fontconfig, and the full
   # GTK/cairo stack — none of which belong on a headless VPS.

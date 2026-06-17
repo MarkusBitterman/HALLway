@@ -25,14 +25,20 @@
 **Already deployed?** Rebuild after config changes from 2600AD:
 
 ```bash
-# Build locally on 2600AD, copy closure to VPS, activate remotely:
-NIX_SSHOPTS="-i $ADMIN_KEY" sudo nixos-rebuild switch \
+sudo nixos-rebuild switch \
   --flake .#HALLpass.space \
   --target-host matt@hallpass.space \
-  --use-remote-sudo
+  --elevate=sudo \
+  --ask-elevate-password
 ```
 
-This builds the entire system on the workstation (no VPS resources used) then pushes the pre-built closure over SSH and activates it. `$ADMIN_KEY` is set automatically inside `nix develop`.
+- Builds the entire system locally (no VPS resources consumed)
+- Copies only missing store paths to the VPS over SSH
+- Prompts for the remote `matt` sudo password locally, then pipes it — no TTY required
+- SSH key is resolved via `~/.ssh/config` (`Host hallpass hallpass.space` → `ssh_key_hallpass`)
+- Store paths are signed by 2600AD's `hallway-2600AD-1` key; the VPS verifies them via `extra-trusted-public-keys`
+
+**Fresh deploy?** See [Installation](#installation) below.
 
 **Fresh deploy?** See [Installation](#installation) below.
 
@@ -80,14 +86,18 @@ HALLpass.space is a small VPS (25GB class) that provides central infrastructure 
 Build and deploy from 2600AD — the workstation handles all compilation, the VPS only receives and activates the pre-built closure:
 
 ```bash
-# From 2600AD (inside nix develop so $ADMIN_KEY is set):
-NIX_SSHOPTS="-i $ADMIN_KEY" sudo nixos-rebuild switch \
+sudo nixos-rebuild switch \
   --flake .#HALLpass.space \
   --target-host matt@hallpass.space \
-  --use-remote-sudo
+  --elevate=sudo \
+  --ask-elevate-password
 ```
 
-> If this is the very first NixOS install on the VPS (bare Vultr image), you may need to bootstrap by SSHing in as root first. See [Full Step-by-Step](#full-step-by-step) below.
+`--ask-elevate-password` prompts for the remote sudo password before the SSH session, then pipes it to the remote `sudo` — no TTY or passwordless sudo needed.
+
+> **Prerequisites**: `~/.ssh/config` on 2600AD must have a `Host hallpass hallpass.space` block using `ssh_key_hallpass`, and 2600AD's `/etc/nix/signing-key.secret` must exist (see [Signing Key Setup](#signing-key-setup)).
+>
+> If this is the very first NixOS install on the VPS (bare Vultr image), you may need to bootstrap the remote nix config first. See [Full Step-by-Step](#full-step-by-step) below.
 
 ### Phase 3: Post-Deployment (from 2600AD)
 
@@ -161,6 +171,27 @@ The desktop public key is already populated (`xVl7ZD5o...`).
 
 ---
 
+## Signing Key Setup
+
+Store paths built on 2600AD are signed before transfer so the VPS can verify them cryptographically. This is a one-time setup on 2600AD.
+
+**Generate the key** (already done — key is at `/etc/nix/signing-key.secret`):
+```bash
+sudo nix-store --generate-binary-cache-key "hallway-2600AD-1" \
+  /etc/nix/signing-key.secret /etc/nix/signing-key.pub
+```
+
+**2600AD** signs all built paths via `nix.settings.secret-key-files = [ "/etc/nix/signing-key.secret" ]` in `hosts/2600AD/configuration.nix`.
+
+**HALLpass.space** trusts the key via `nix.settings.extra-trusted-public-keys` in `configuration.nix`:
+```
+hallway-2600AD-1:rvtwr8Jr9wex7ztumxgymRCpBempIhzlAfPoEE8vDsI=
+```
+
+If 2600AD is ever rebuilt from scratch, regenerate the key, update `extra-trusted-public-keys` in this config, and redeploy.
+
+---
+
 ## Installation
 
 **Target**: Minimal VPS (Vultr, 25GB disk)
@@ -227,15 +258,17 @@ git push origin main
 
 #### Deploy
 
-From 2600AD (preferred — builds locally, no VPS resources consumed):
+From 2600AD (builds locally, no VPS resources consumed):
 
 ```bash
-# Inside nix develop so $ADMIN_KEY is set:
-NIX_SSHOPTS="-i $ADMIN_KEY" sudo nixos-rebuild switch \
+sudo nixos-rebuild switch \
   --flake .#HALLpass.space \
   --target-host matt@hallpass.space \
-  --use-remote-sudo
+  --elevate=sudo \
+  --ask-elevate-password
 ```
+
+SSH key is resolved automatically via `Host hallpass hallpass.space` in `~/.ssh/config` (managed by Home Manager, uses `ssh_key_hallpass` sops secret). `--ask-elevate-password` prompts for the remote sudo password locally and pipes it — the password requirement on the VPS is intentional security: key compromise alone is not sufficient for root access.
 
 `nixos-rebuild` evaluates the flake and builds everything locally, then streams only missing store paths to the VPS over SSH and activates the new generation remotely.
 
