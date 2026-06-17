@@ -93,6 +93,11 @@ in
   # Small VPS: no swap file, optimize store usage.
   zramSwap.enable = true;
   nix.settings.auto-optimise-store = true;
+  # Allow wheel users to import unsigned store paths (required for --target-host deploys).
+  nix.settings.trusted-users = [
+    "root"
+    "@wheel"
+  ];
   nixpkgs.config.allowUnfree = false;
 
   # ═════════════════════════════════════════════════════════════════════════
