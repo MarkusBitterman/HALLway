@@ -10,7 +10,7 @@ nix flake check          # Validate flake syntax — primary test command (Ctrl+
 nix fmt                  # Format all .nix files with nixfmt (RFC 166) — also auto-runs per-file via PostToolUse hook
 nix build .#nixosConfigurations.2600AD.config.system.build.toplevel  # Build without activating
 sudo nixos-rebuild switch --flake .#2600AD          # Build and activate on 2600AD
-sudo nixos-rebuild switch --flake .#HALLpass.space --target-host matt@hallpass.space --elevate=sudo  # Build locally on 2600AD, deploy to VPS (SSH key via ~/.ssh/config)
+sudo nixos-rebuild switch --flake .#HALLpass.space --target-host matt@hallpass.space --elevate=sudo  # Build locally, deploy to VPS (add --ask-elevate-password on first deploy)
 sops hosts/2600AD/secrets.yaml                      # Edit encrypted secrets (decrypt/edit/re-encrypt)
 sops updatekeys hosts/2600AD/secrets.yaml           # Rekey after adding recipients to .sops.yaml
 nix flake update                                    # Update all inputs to latest
