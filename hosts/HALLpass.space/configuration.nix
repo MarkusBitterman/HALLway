@@ -93,13 +93,13 @@ in
   # Small VPS: no swap file, optimize store usage.
   zramSwap.enable = true;
   nix.settings.auto-optimise-store = true;
-  # nix-copy-closure uses nix-store --serve (not the daemon), so trusted-users
-  # alone doesn't help. require-sigs = false lets the VPS accept unsigned store
-  # paths from the deploying workstation — safe for a private trusted host.
-  nix.settings.require-sigs = false;
   nix.settings.trusted-users = [
     "root"
     "@wheel"
+  ];
+  # Accept store paths signed by 2600AD's Nix signing key.
+  nix.settings.extra-trusted-public-keys = [
+    "hallway-2600AD-1:rvtwr8Jr9wex7ztumxgymRCpBempIhzlAfPoEE8vDsI="
   ];
   nixpkgs.config.allowUnfree = false;
 

@@ -302,7 +302,7 @@
         IdentityFile = osConfig.sops.secrets."ssh_key_hobbs".path;
         IdentitiesOnly = "yes";
       };
-      "hallpass" = {
+      "hallpass hallpass.space" = {
         HostName = "136.244.101.171";
         User = "matt";
         IdentityFile = osConfig.sops.secrets."ssh_key_hallpass".path;

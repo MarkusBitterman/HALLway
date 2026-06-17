@@ -160,6 +160,8 @@
       "nix-command"
       "flakes"
     ];
+    # Sign all locally-built store paths so HALLpass.space can verify them.
+    secret-key-files = [ "/etc/nix/signing-key.secret" ];
   };
   nixpkgs.config.allowUnfree = true;
 
