@@ -93,7 +93,10 @@ in
   # Small VPS: no swap file, optimize store usage.
   zramSwap.enable = true;
   nix.settings.auto-optimise-store = true;
-  # Allow wheel users to import unsigned store paths (required for --target-host deploys).
+  # nix-copy-closure uses nix-store --serve (not the daemon), so trusted-users
+  # alone doesn't help. require-sigs = false lets the VPS accept unsigned store
+  # paths from the deploying workstation — safe for a private trusted host.
+  nix.settings.require-sigs = false;
   nix.settings.trusted-users = [
     "root"
     "@wheel"
