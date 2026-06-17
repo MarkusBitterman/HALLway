@@ -238,10 +238,10 @@ in
       WorkingDirectory = "/var/lib/syncthing-discovery";
       ExecStart = ''
         ${pkgs.syncthing-discovery}/bin/stdiscosrv \
-          -listen=10.23.11.1:8443 \
-          -db-dir=/var/lib/syncthing-discovery/db \
-          -cert=/var/lib/syncthing-discovery/cert.pem \
-          -key=/var/lib/syncthing-discovery/key.pem
+          --listen=10.23.11.1:8443 \
+          --db-dir=/var/lib/syncthing-discovery/db \
+          --cert=/var/lib/syncthing-discovery/cert.pem \
+          --key=/var/lib/syncthing-discovery/key.pem
       '';
       Restart = "on-failure";
       RestartSec = 3;
