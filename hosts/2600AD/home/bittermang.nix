@@ -48,6 +48,34 @@
     fonts.ui.size = 15;
     fonts.monospace.name = "JetBrainsMono Nerd Font Mono";
     fonts.monospace.size = 13;
+
+    # Cyberpunk/wizard aesthetic:
+    # Organic-but-edgy corners — not phone-UI soft, not razor sharp.
+    theme.rounding = 14;
+    # Tighter inner gap so the glowing borders are the visual frame,
+    # generous outer gap so the wallpaper breathes behind everything.
+    theme.gapsIn = 4;
+    theme.gapsOut = 18;
+    # Thick border — matugen paints these with wallpaper accent neons.
+    # At 4px the animated border glow is unmissable from across the room.
+    theme.borderSize = 4;
+    # High-quality blur — lets the neon wallpaper bleed through surfaces.
+    theme.blur.size = 8;
+    theme.blur.passes = 4;
+
+    # Lean into translucency: wallpaper neons show through windows.
+    # Active is still legible from a distance; inactive floats in the glow.
+    input.activeOpacity = 0.88;
+    input.inactiveOpacity = 0.70;
+
+    # LimeFrenzy: overshot spring on open/close + borderangle loop.
+    # The looping animated border is the centrepiece of the cyberpunk look —
+    # it continuously rotates the matugen accent gradient around each window.
+    animations.preset = "LimeFrenzy";
+
+    # Anurati — space/sci-fi typeface, retro-futuristic. Suits the Atari VCS.
+    lock.layout = "Anurati";
+
     # iwgtk (already in home.packages below) is the WiFi frontend here;
     # nm-applet would be redundant and confusing in the tray.
     networkApplet.enable = false;
