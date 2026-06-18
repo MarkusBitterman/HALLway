@@ -45,11 +45,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781819330,
-        "narHash": "sha256-W1hI9tXy2xI2eBM/9xOKyJ+VD7eMRqj/4S2Ow3YBOfg=",
+        "lastModified": 1781820056,
+        "narHash": "sha256-uc+FkLQXjUk2CDD+GsXUtw2vXSgRAjjKz6ZrdSaFL7w=",
         "owner": "MarkusBitterman",
         "repo": "DOORway",
-        "rev": "44d2f5d885fbc94fefe752b9aed4470ed35e53ef",
+        "rev": "bbc640d2269084a8fd9604c133d025db0537685f",
         "type": "github"
       },
       "original": {

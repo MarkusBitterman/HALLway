@@ -48,6 +48,9 @@
     fonts.ui.size = 15;
     fonts.monospace.name = "JetBrainsMono Nerd Font Mono";
     fonts.monospace.size = 13;
+    # iwgtk (already in home.packages below) is the WiFi frontend here;
+    # nm-applet would be redundant and confusing in the tray.
+    networkApplet.enable = false;
   };
 
   # Explicit lua config type — overrides the stateVersion-based hyprlang default
