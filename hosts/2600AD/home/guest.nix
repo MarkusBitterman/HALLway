@@ -8,48 +8,24 @@
 # "Clean room" on login, "garbage collection" on logout.
 #
 # Packages come from host-level `users.users.guest.packages` in configuration.nix.
-# This file configures the guest desktop environment.
+# This file configures the guest desktop environment via DOORway.
 #
 # ════════════════════
 
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 {
   home.stateVersion = "25.11";
 
-  # ════════════════
-  # HYPRLAND - Minimal guest desktop
-  # ════════════════
+  imports = [ inputs.doorway.homeManagerModules.default ];
 
-  wayland.windowManager.hyprland = {
+  doorway = {
     enable = true;
-    configType = "hyprlang";
-    systemd.enable = false; # UWSM handles session management at system level
-    extraConfig = ''
-      # Match bittermang's display config
-      monitor=HDMI-A-1,1920x1080@59.85,0x0,1
-
-      # Startup
-      exec-once = dunst &
-      exec-once = waybar &
-      exec-once = hyprpaper &
-
-      # Basic keybindings
-      bind = SUPER, Return, exec, kitty
-      bind = SUPER, D, exec, rofi -show drun
-      bind = SUPER, Q, killactive,
-
-      # Volume controls
-      bind = , XF86AudioRaiseVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+
-      bind = , XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
-      bind = , XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
-    '';
-  };
-
-  # XDG portals for Wayland
-  xdg.portal = {
-    enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-hyprland ];
+    monitor = "HDMI-A-1,1920x1080@59.85,0x0,1";
+    keyboard = "us";
+    # Packages (kitty, rofi, waybar, etc.) are provided at the system level
+    # via users.users.guest.packages in configuration.nix — skip HM duplication.
+    installPackages = false;
   };
 
   # ════════════════

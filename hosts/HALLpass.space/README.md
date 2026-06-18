@@ -50,7 +50,7 @@ HALLpass.space is a small VPS (25GB class) that provides central infrastructure 
 
 - **WireGuard hub** (`wg-hallspace`, `10.23.11.1/24`) — desktop and phone connect as peers
 - **Syncthing introducer** — private relay (`strelaysrv`) and discovery (`stdiscosrv`) accessible only over WireGuard
-- **Static web** (`hallpass.space`) — serves `/srv/hallspace/_public/`
+- **Static web** (`hallpass.space`) — serves `/srv/www/hallpass.space/_public/`
 - **Mercurial hosting** (`hg.hallpass.space`) — `hgweb` serving repos from `/srv/hg/repos/`; nginx TLS termination via ACME
 - **SSH push target** — `hg clone ssh://matt@hallpass.space//srv/hg/repos/<name>`
 
@@ -273,7 +273,7 @@ SSH key is resolved automatically via `Host hallpass hallpass.space` in `~/.ssh/
 `nixos-rebuild` evaluates the flake and builds everything locally, then streams only missing store paths to the VPS over SSH and activates the new generation remotely.
 
 On first activation:
-- `systemd-tmpfiles` creates `/srv/hallspace/_public/` and `/srv/hg/repos/`
+- `systemd-tmpfiles` creates `/srv/www/hallpass.space/_public/` and `/srv/hg/repos/`
 - sops-nix decrypts all secrets using the host's SSH key
 - lego requests `*.hallpass.space` + `hallpass.space` cert via Vultr DNS-01
 - nginx, hgweb, WireGuard (hub only until peers added), and Syncthing all start

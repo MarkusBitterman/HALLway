@@ -34,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Gamescope Vulkan fix** (2600AD): Added `debug { full_cm_proto = true }` to Hyprland config for Steam/gamescope compatibility
 - **HALLpass.space host**: Second HALLway host — minimal VPS acting as WireGuard hub, Syncthing introducer/relay/discovery, nginx edge, and Mercurial server
 - **Mercurial hosting** (`hg.hallpass.space`): `hgweb` systemd service serving repos from `/srv/hg/repos/**`; nginx reverse proxy with ACME TLS
-- **Static web** (`hallpass.space`): nginx vhost serving `/srv/hallspace/_public/`; ACME TLS via Let's Encrypt
+- **Static web** (`hallpass.space`): nginx vhost serving `/srv/www/hallpass.space/_public/`; ACME TLS via Let's Encrypt
 - **iwd WiFi management** (2600AD): Replaced NetworkManager with `networking.wireless.iwd`; systemd-networkd now manages both ethernet and WiFi; `iwgtk` tray app launched at Hyprland startup
 - **`wifi-home` secret** (2600AD): WiFi credentials deployed as an iwd PSK file at `/var/lib/iwd/<SSID>.psk`
 - **Hyprland session registration** (2600AD): `programs.hyprland.enable = true` in system config — installs the `.desktop` session file so GDM shows Hyprland as a session option
@@ -59,7 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Infrastructure
 
-- `systemd.tmpfiles.rules` creates `/srv/hallspace/_public/` and `/srv/hg/repos/` on HALLpass.space activation
+- `systemd.tmpfiles.rules` creates `/srv/www/hallpass.space/_public/` and `/srv/hg/repos/` on HALLpass.space activation
 - `recommendedProxySettings = true` added to nginx on HALLpass.space for proper reverse proxy headers
 
 ---

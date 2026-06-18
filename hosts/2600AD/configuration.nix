@@ -317,13 +317,9 @@
   programs = {
     mtr.enable = true;
     zsh.enable = true;
-    # Registers the Hyprland session with GDM and enables polkit, XWayland,
-    # xdg-desktop-portal-hyprland, and graphics support system-wide.
-    hyprland = {
-      enable = true;
-      withUWSM = true; # Universal Wayland Session Manager (recommended since 24.11)
-      xwayland.enable = true;
-    };
+    # Hyprland session registration, UWSM, XWayland, and xdg-desktop-portal-hyprland
+    # are managed by DOORway's nixosModules.default (imported in flake.nix).
+    # The Hyprland version is pinned in DOORway's flake.lock.
     nix-ld = {
       enable = true;
       # Libraries exposed to foreign (non-Nix) ELF binaries via nix-ld.

@@ -22,11 +22,11 @@ HALLpass.space configuration exists but has never been deployed. Placeholder val
   - `RELAY_SERVER_ID` (from `journalctl -u syncthing.service`)
 - [ ] After phone WireGuard/Syncthing setup: replace `PHONE_SYNCTHING_DEVICE_ID`
 - [ ] Initialize HALLway repo on server: `ssh matt@hallpass.space "hg init /srv/hg/repos/hallway"`
-- [ ] Place an `index.html` at `/srv/hallspace/_public/index.html`
+- [ ] Place an `index.html` at `/srv/www/hallpass.space/_public/index.html`
 
 ## HALLpass.space — Web + Mercurial
 
-- [x] nginx virtual hosts: `hallpass.space` (static `/srv/hallspace/_public/`) and `hg.hallpass.space` (Mercurial proxy to loopback hgweb)
+- [x] nginx virtual hosts: `hallpass.space` (static `/srv/www/hallpass.space/_public/`) and `hg.hallpass.space` (Mercurial proxy to loopback hgweb)
 - [x] ACME/TLS via Let's Encrypt (`enableACME + forceSSL` on both vhosts)
 - [x] hgweb systemd service (port 8085, repos at `/srv/hg/repos/**`)
 - [x] `age` and `ssh-to-age` in system packages for on-server key operations

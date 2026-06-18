@@ -85,6 +85,10 @@
         "2600AD" = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
+            # DOORway NixOS module: registers Hyprland session, enables UWSM + XWayland,
+            # and pins the Hyprland version from DOORway's flake.lock.
+            inputs.doorway.nixosModules.default
+
             # Host-specific configuration
             ./hosts/2600AD/configuration.nix
 

@@ -39,6 +39,15 @@
     # cursor.size defaults to 24. Omit this block to keep the DOORway default.
     cursor.name = "oreo_spark_neon_pink_bordered_cursors";
     cursor.size = 36;
+    # Fonts scaled for a 20" 1080p monitor viewed from several feet.
+    # Atkinson Hyperlegible: designed by the Braille Institute for maximum
+    # letter-distinction at a distance (0/O, l/I/1 never ambiguous). Already
+    # used on MarkusBitterman.github.io as the code font.
+    # JetBrains Mono is already available via DOORway deps (bar/interface font).
+    fonts.ui.name = "Atkinson Hyperlegible";
+    fonts.ui.size = 15;
+    fonts.monospace.name = "JetBrainsMono Nerd Font Mono";
+    fonts.monospace.size = 13;
   };
 
   # Explicit lua config type — overrides the stateVersion-based hyprlang default
@@ -135,6 +144,7 @@
     pavucontrol # Audio control
     polkit_gnome # Authentication agent
     iwgtk # WiFi manager (iwd frontend, Wayland tray)
+    atkinson-hyperlegible # UI font (doorway.fonts.ui.name = "Atkinson Hyperlegible")
 
     # ─────────────────────────────────────────────────────────────────────────
     # GAMING - Gaming tools (Steam installed system-wide)

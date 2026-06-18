@@ -254,7 +254,7 @@ in
 
   # Persistent directories for static site and Mercurial repos
   systemd.tmpfiles.rules = [
-    "d /srv/hallspace/_public 0755 matt users -"
+    "d /srv/www/hallpass.space/_public 0755 matt users -"
     "d /srv/hg/repos          0755 matt users -"
     # User dotfile management (replaces Home Manager)
     "d  /home/matt/.ssh               0700 matt users -"
@@ -292,11 +292,11 @@ in
       locations."/".return = "444";
     };
 
-    # Static site — place files in /srv/hallspace/_public/
+    # Static site — place files in /srv/www/hallpass.space/_public/
     virtualHosts."hallpass.space" = {
       useACMEHost = "hallpass.space";
       forceSSL = true;
-      root = "/srv/hallspace/_public";
+      root = "/srv/www/hallpass.space/_public";
       locations."/" = {
         tryFiles = "$uri $uri/ =404";
       };
