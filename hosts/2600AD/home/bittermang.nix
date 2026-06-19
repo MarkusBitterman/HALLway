@@ -79,6 +79,15 @@
     # iwgtk (already in home.packages below) is the WiFi frontend here;
     # nm-applet would be redundant and confusing in the tray.
     networkApplet.enable = false;
+
+    # PirateWeather widget — shows current temp in bar, hourly in popup.
+    # Prereq: add a sops secret named "pirate_weather_api_key" whose decrypted
+    # content is exactly:  PIRATE_WEATHER_API_KEY=<your_key>
+    # Then: sops.secrets."pirate_weather_api_key" = { owner = "bittermang"; };
+    weather.enable = true;
+    weather.zipCode = "52240";
+    weather.updateFrequency = 15;
+    weather.pirateWeatherApiKeyFile = osConfig.sops.secrets."pirate_weather_api_key".path;
   };
 
   # Explicit lua config type — overrides the stateVersion-based hyprlang default

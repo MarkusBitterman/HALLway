@@ -59,6 +59,15 @@
     mode = "0400";
   };
 
+  # PirateWeather API key — systemd EnvironmentFile format:
+  #   PIRATE_WEATHER_API_KEY=<your_key>
+  # Add the encrypted value to secrets.yaml before rebuilding.
+  sops.secrets."pirate_weather_api_key" = {
+    owner = "bittermang";
+    group = "users";
+    mode = "0400";
+  };
+
   # ─────────────────────────────────────────────────────────────────────────
   # WireGuard
   # ─────────────────────────────────────────────────────────────────────────
