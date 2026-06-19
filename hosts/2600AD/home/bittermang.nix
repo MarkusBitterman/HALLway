@@ -88,6 +88,11 @@
     weather.zipCode = "52240";
     weather.updateFrequency = 15;
     weather.pirateWeatherApiKeyFile = osConfig.sops.secrets."pirate_weather_api_key".path;
+
+    # Night light follows actual sunrise/sunset from PirateWeather.
+    # Iowa City sunset ranges from ~5:15 PM (Dec) to ~8:45 PM (Jun) — a 3.5-hour
+    # swing that makes any fixed schedule wrong half the year.
+    blueLight.schedule.useWeatherTimes = true;
   };
 
   # Explicit lua config type — overrides the stateVersion-based hyprlang default
@@ -151,7 +156,6 @@
     gnumake
     gcc
     pkg-config
-    python3
     uv
     nodejs
 
