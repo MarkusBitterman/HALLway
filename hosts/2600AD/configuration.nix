@@ -1,5 +1,5 @@
 # ╔════════════════╗
-# ║  HALLway - Host: 2600AD                 ║
+# ║  HALLway - Host: 2600AD                                                   ║
 # ║  Atari VCS 800 Gaming/Media Workstation                                   ║
 # ║  https://github.com/markusbittermang/hallway                              ║
 # ╚════════════════╝
@@ -74,54 +74,64 @@
   # NETWORKING
   # ════════════════
 
-  networking.hostId = "76fe1b68"; # Required for ZFS
-  networking.hostName = "2600AD";
-  # networking.useNetworkd = true;
-  networking.networkmanager.enable = true; # iwd + systemd-networkd instead; GNOME would enable this implicitly; we have enabled it implicitly becuase attemnpting to switch to NetworkD has not gone well
+  networking = {
+    hostId = "76fe1b68"; # required for ZFS
+    hostName = "2600AD";
+    # useNetworkd = true;
+    networkmanager.enable = true; # temporary fallback; systemd-networkd migration pending
 
-  # WiFi managed by iwd; DHCP handed to systemd-networkd
-  # networking.wireless.iwd = {
-  #  enable = true;
-  #  settings.DriverQuirks.DefaultInterface = true;
-  #};
+    # WiFi via iwd with systemd-networkd (future):
+    # wireless.iwd = {
+    #   enable = true;
+    #   settings.DriverQuirks.DefaultInterface = true;
+    # };
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # DNS (AdGuard public resolvers)
-  # ─────────────────────────────────────────────────────────────────────────
-  networking.nameservers = [
-    "94.140.14.14"
-    "94.140.15.15"
-    "2a10:50c0::ad1:ff"
-    "2a10:50c0::ad2:ff"
-  ];
+    # ─────────────────────────────────────────────────────────────────────────
+    # DNS (AdGuard public resolvers)
+    # ─────────────────────────────────────────────────────────────────────────
+    nameservers = [
+      "94.140.14.14"
+      "94.140.15.15"
+      "2a10:50c0::ad1:ff"
+      "2a10:50c0::ad2:ff"
+    ];
 
-  # ─────────────────────────────────────────────────────────────────────────
-  # HALLpass overlay network (WireGuard)
-  # ─────────────────────────────────────────────────────────────────────────
-  # Subnet: 10.23.11.0/24
-  #   - HALLpass.space (hub):  10.23.11.1
-  #   - 2600AD (this host):    10.23.11.80
-  #   - HelloMoto (phone):     10.23.11.64
-  #
-  # NOTE: Using IP endpoint instead of hostname avoids DNS chicken-and-egg
-  # when routing DNS through the tunnel. Get VPS IP with: dig +short hallpass.space
-  #
-  # networking.firewall.checkReversePath = "loose"; # Required for WireGuard rpfilter
-  #
-  # networking.wireguard.interfaces.wg-hallpass = {
-  #   ips = [ "10.23.11.80/24" ];
-  #   privateKeyFile = config.sops.secrets."wg_privatekey".path;
-  #
-  #   peers = [
-  #     {
-  #       publicKey = "894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=";
-  #       presharedKeyFile = config.sops.secrets."wg_psk".path;
-  #       endpoint = "hallpass.space:51820"; # TODO: replace with IP once VPS is deployed
-  #       allowedIPs = [ "10.23.11.0/24" ];
-  #       persistentKeepalive = 25;
-  #     }
-  #   ];
-  # };
+    # ─────────────────────────────────────────────────────────────────────────
+    # HALLpass overlay network (WireGuard)
+    # ─────────────────────────────────────────────────────────────────────────
+    # Subnet: 10.23.11.0/24
+    #   - HALLpass.space (hub):  10.23.11.1
+    #   - 2600AD (this host):    10.23.11.80
+    #   - HelloMoto (phone):     10.23.11.64
+    #
+    # NOTE: Using IP endpoint instead of hostname avoids DNS chicken-and-egg
+    # when routing DNS through the tunnel. Get VPS IP with: dig +short hallpass.space
+    #
+    # firewall.checkReversePath = "loose"; # Required for WireGuard rpfilter
+    #
+    # wireguard.interfaces.wg-hallpass = {
+    #   ips = [ "10.23.11.80/24" ];
+    #   privateKeyFile = config.sops.secrets."wg_privatekey".path;
+    #
+    #   peers = [
+    #     {
+    #       publicKey = "894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=";
+    #       presharedKeyFile = config.sops.secrets."wg_psk".path;
+    #       endpoint = "hallpass.space:51820"; # TODO: replace with IP once VPS is deployed
+    #       allowedIPs = [ "10.23.11.0/24" ];
+    #       persistentKeepalive = 25;
+    #     }
+    #   ];
+    # };
+
+    firewall = {
+      enable = true;
+      interfaces.wg-hallpass = {
+        allowedTCPPorts = [ 22000 ];
+        allowedUDPPorts = [ 22000 ];
+      };
+    };
+  };
 
   # Don't block boot waiting for ALL interfaces — any one coming up is enough.
   systemd.network.wait-online.anyInterface = true;
@@ -142,17 +152,22 @@
   #   };
   # };
 
-  networking.firewall = {
-    enable = true;
-    interfaces.wg-hallpass = {
-      allowedTCPPorts = [ 22000 ];
-      allowedUDPPorts = [ 22000 ];
-    };
-  };
-
   # ════════════════
   # NIX
   # ════════════════
+
+  # Substitute until nixpkgs fixes afdko/otfautohint breakage in cantarell-fonts-0.311
+  nixpkgs = {
+    overlays = [
+      (final: prev: {
+        cantarell-fonts = prev.liberation_ttf;
+      })
+    ];
+    config = {
+      allowUnfree = true;
+      android_sdk.accept_license = true;
+    };
+  };
 
   nix.settings = {
     auto-optimise-store = true;
@@ -163,7 +178,6 @@
     # Sign all locally-built store paths so HALLpass.space can verify them.
     secret-key-files = [ "/etc/nix/signing-key.secret" ];
   };
-  nixpkgs.config.allowUnfree = true;
 
   # ════════════════
   # LOCALIZATION
@@ -172,54 +186,10 @@
   time.timeZone = "America/Chicago";
   i18n.defaultLocale = "en_US.UTF-8";
 
-  # ═══════════════════════════════════════════════════════════════════════════
-  # DISPLAY MANAGER (greetd + regreet - Wayland-native)
-  # ═══════════════════════════════════════════════════════════════════════════
-  # regreet: GTK4 greeter with user list, password entry, session selection
-  # cage: minimal Wayland compositor that runs only the greeter
-  # ═══════════════════════════════════════════════════════════════════════════
-  services.gnome.gnome-keyring.enable = true;
-  # and if using greetd or another login manager:
-  security.pam.services.greetd.enableGnomeKeyring = true;
-
-  services.greetd = {
-    enable = true;
-    settings = {
-      default_session = {
-        command = "${pkgs.cage}/bin/cage -s -- ${pkgs.regreet}/bin/regreet";
-        user = "greeter";
-      };
-    };
-  };
-
-  # regreet configuration
-  programs.regreet = {
-    enable = true;
-    settings = {
-      background = {
-        fit = "Cover";
-        # path = "/path/to/wallpaper.png"; # Optional: add a login wallpaper
-      };
-      GTK = {
-        application_prefer_dark_theme = true;
-      };
-    };
-  };
-
-  # Prevent console spam on greetd TTY
-  systemd.services.greetd.serviceConfig = {
-    Type = "idle";
-    StandardInput = "tty";
-    StandardOutput = "tty";
-    StandardError = "journal";
-    TTYReset = true;
-    TTYVHangup = true;
-    TTYVTDisallocate = true;
-  };
-
   # ════════════════
   # ENVIRONMENT
   # ════════════════
+
   virtualisation.docker = {
     enable = true;
     storageDriver = "zfs";
@@ -239,50 +209,49 @@
     ''; # Allow gamescope to set SCHED_FIFO on game processes for better performance
   };
 
-  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  environment = {
+    sessionVariables.NIXOS_OZONE_WL = "1";
 
-  # XDG portal paths for Home Manager
-  environment.pathsToLink = [
-    "/share/applications"
-    "/share/xdg-desktop-portal"
-  ];
+    # XDG portal paths for Home Manager
+    pathsToLink = [
+      "/share/applications"
+      "/share/xdg-desktop-portal"
+    ];
 
-  # Android full SDK (needed by Unity and build tools):
-  nixpkgs.config.android_sdk.accept_license = true;
+    systemPackages = with pkgs; [
+      # System essentials
+      nano
+      gcc
+      python314Packages.numpy
 
-  environment.systemPackages = with pkgs; [
-    # System essentials
-    nano
-    gcc
-    python314Packages.numpy
+      # Themes
+      tela-icon-theme
+      oreo-cursors-plus
 
-    # Themes
-    tela-icon-theme
-    oreo-cursors-plus
+      # System tools
+      sshfs
 
-    # System tools
-    sshfs
+      # Android tools, SDK, NDK
+      android-tools
+      (androidenv.composeAndroidPackages {
+        platformVersions = [
+          "34"
+          "33"
+        ];
+        abiVersions = [
+          "x86_64"
+          "arm64-v8a"
+        ];
+        buildToolsVersions = [ "34.0.0" ];
+        includeNDK = true;
+      }).androidsdk
 
-    # Android tools, SDK, NDK
-    android-tools
-    (androidenv.composeAndroidPackages {
-      platformVersions = [
-        "34"
-        "33"
-      ];
-      abiVersions = [
-        "x86_64"
-        "arm64-v8a"
-      ];
-      buildToolsVersions = [ "34.0.0" ];
-      includeNDK = true;
-    }).androidsdk
-
-    # Unity development
-    dotnet-sdk_8
-    mono
-    # Note: Steam provided by programs.steam.enable (includes steam-run)
-  ];
+      # Unity development
+      dotnet-sdk_8
+      mono
+      # Note: Steam provided by programs.steam.enable (includes steam-run)
+    ];
+  };
 
   fonts.packages = with pkgs; [
     corefonts
@@ -307,8 +276,10 @@
   # SECURITY
   # ════════════════
 
-  security.polkit.enable = true;
-  security.apparmor.enable = true;
+  security = {
+    polkit.enable = true;
+    apparmor.enable = true;
+  };
 
   # ════════════════
   # PROGRAMS
@@ -395,7 +366,6 @@
         libxcb-image
         libxcb-keysyms
         libxcb-render-util
-
       ];
     };
     gnupg.agent = {
@@ -425,59 +395,61 @@
   # SERVICES
   # ════════════════
 
-  services.openssh.enable = true;
+  services = {
+    openssh.enable = true;
 
-  services.syncthing = {
-    enable = true;
-    user = "bittermang";
-    group = "users";
-    dataDir = "/home/bittermang";
-    configDir = "/home/bittermang/.config/syncthing";
-    guiAddress = "127.0.0.1:8384";
-    guiPasswordFile = config.sops.secrets."syncthing_gui_pass".path;
-    overrideDevices = true;
-    overrideFolders = true;
+    syncthing = {
+      enable = true;
+      user = "bittermang";
+      group = "users";
+      dataDir = "/home/bittermang";
+      configDir = "/home/bittermang/.config/syncthing";
+      guiAddress = "127.0.0.1:8384";
+      guiPasswordFile = config.sops.secrets."syncthing_gui_pass".path;
+      overrideDevices = true;
+      overrideFolders = true;
 
-    settings = {
-      devices = {
-        hallpass = {
-          id = "HALLPASS_SYNCTHING_DEVICE_ID";
-          addresses = [
-            "tcp://10.23.11.1:22000"
-            "quic://10.23.11.1:22000"
+      settings = {
+        devices = {
+          hallpass = {
+            id = "HALLPASS_SYNCTHING_DEVICE_ID";
+            addresses = [
+              "tcp://10.23.11.1:22000"
+              "quic://10.23.11.1:22000"
+            ];
+            introducer = true;
+          };
+
+          Nintendo64 = {
+            id = "RNQ46P5-MED5PWA-2UAPW2O-VVA6FUK-34KPUAQ-GAEATTS-ONCPRMN-YKJ77QH";
+            addresses = [
+              "tcp://10.23.11.64:22000"
+              "quic://10.23.11.64:22000"
+            ];
+          };
+        };
+
+        folders = {
+          Documents = {
+            id = "Documents";
+            path = "/home/bittermang/Documents";
+            devices = [ "Nintendo64" ];
+          };
+        };
+
+        options = {
+          globalAnnounceEnabled = true;
+          globalAnnounceServers = [
+            "https://10.23.11.1:8443/?id=DISCOVERY_SERVER_ID"
           ];
-          introducer = true;
-        };
-
-        Nintendo64 = {
-          id = "RNQ46P5-MED5PWA-2UAPW2O-VVA6FUK-34KPUAQ-GAEATTS-ONCPRMN-YKJ77QH";
-          addresses = [
-            "tcp://10.23.11.64:22000"
-            "quic://10.23.11.64:22000"
+          localAnnounceEnabled = false;
+          natEnabled = false;
+          relaysEnabled = true;
+          listenAddresses = [
+            "default"
+            "relay://10.23.11.1:22067/?id=RELAY_SERVER_ID"
           ];
         };
-      };
-
-      folders = {
-        Documents = {
-          id = "Documents";
-          path = "/home/bittermang/Documents";
-          devices = [ "Nintendo64" ];
-        };
-      };
-
-      options = {
-        globalAnnounceEnabled = true;
-        globalAnnounceServers = [
-          "https://10.23.11.1:8443/?id=DISCOVERY_SERVER_ID"
-        ];
-        localAnnounceEnabled = false;
-        natEnabled = false;
-        relaysEnabled = true;
-        listenAddresses = [
-          "default"
-          "relay://10.23.11.1:22067/?id=RELAY_SERVER_ID"
-        ];
       };
     };
   };
@@ -486,59 +458,61 @@
   # USERS (direct NixOS + Home Manager)
   # ════════════════
 
-  users.users.bittermang = {
-    isNormalUser = true;
-    description = "Matthew Hall";
-    uid = 1000;
-    shell = pkgs.zsh;
-    extraGroups = [
-      "wheel"
-      "audio"
-      "video"
-      "input"
-      "gamemode"
-      "kvm"
-      "adbusers"
-      "docker"
-    ];
-  };
+  users.users = {
+    bittermang = {
+      isNormalUser = true;
+      description = "Matthew Hall";
+      uid = 1000;
+      shell = pkgs.zsh;
+      extraGroups = [
+        "wheel"
+        "audio"
+        "video"
+        "input"
+        "gamemode"
+        "kvm"
+        "adbusers"
+        "docker"
+      ];
+    };
 
-  users.users.guest = {
-    isNormalUser = true;
-    description = "Guest Session";
-    uid = 1001;
-    shell = pkgs.bash;
-    extraGroups = [
-      "audio"
-      "video"
-    ];
+    guest = {
+      isNormalUser = true;
+      description = "Guest Session";
+      uid = 1001;
+      shell = pkgs.bash;
+      extraGroups = [
+        "audio"
+        "video"
+      ];
 
-    # Guest packages remain system-level (tmpfs home is wiped on reboot)
-    packages = with pkgs; [
-      # Core
-      git
-      curl
-      wget
-      btop
+      # Guest packages remain system-level (tmpfs home is wiped on reboot)
+      packages = with pkgs; [
+        # Core
+        git
+        curl
+        wget
+        btop
 
-      # Desktop
-      kitty
-      rofi
-      pcmanfm
-      waybar
-      dunst
-      hyprpaper
-      pavucontrol
-      playerctl
-      polkit_gnome
-      xdg-desktop-portal-hyprland
+        # Desktop
+        kitty
+        rofi
+        pcmanfm
+        waybar
+        dunst
+        hyprpaper
+        pavucontrol
+        playerctl
+        polkit_gnome
+        xdg-desktop-portal-hyprland
 
-      # Viewers
-      loupe
-      mpv
-      vlc
-      spotify
-    ];
+        # Viewers
+        loupe
+        mpv
+        vlc
+        spotify
+      ];
+    };
   };
 
   # Guest clean room (ephemeral home)
