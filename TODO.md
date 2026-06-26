@@ -58,6 +58,15 @@ DOORway is a Nix Home Manager module derived from HyDE (Arch Hyprland). Once sta
 - [x] `iwgtk` in Home Manager packages + Hyprland exec-once for WiFi tray management
 - [x] Create home WiFi secret (now in `hosts/2600AD/secrets.yaml` via sops)
 
+## Upstream Pins to Unpin
+
+These flake inputs are pinned to work around upstream bugs. Check periodically and unpin once the fix lands.
+
+- [ ] **DOORway: hyprland pin** (`flake.nix` input `hyprland.url` pinned to `7a75ce5f`, 2026-06-18)
+  - **Blocked by**: `hyprland-guiutils@071d4df` missing `pango` in its Nix `buildInputs`, after `hyprgraphics@090db94` (Jun 24) added `TextResource.hpp` which includes `<pango/pango-font.h>`
+  - **Fix lands when**: `hyprwm/hyprland-guiutils` declares `pango`/`pangocairo` in its `callPackage` args (watch `hyprland-guiutils/default.nix` in the Hyprland repo)
+  - **How to unpin**: In `~/Developments/DOORway/flake.nix`, change `hyprland.url` back to `"github:hyprwm/Hyprland"` (no commit hash), then run `nix flake update hyprland` in DOORway, commit + push, then `nix flake update doorway` in HALLway
+
 ## Codebase Cleanup
 
 - [ ] Delete `modules/userRoles.nix` — not imported anywhere, superseded design
