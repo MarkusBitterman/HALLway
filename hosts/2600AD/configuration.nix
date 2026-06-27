@@ -24,12 +24,12 @@
     loader = {
       systemd-boot = {
         enable = true;
-        configurationLimit = 4;
+        configurationLimit = 7;
         memtest86.enable = true;
         edk2-uefi-shell.enable = true;
       };
       efi.canTouchEfiVariables = true;
-      timeout = 7;
+      timeout = 14;
     };
 
     kernelPackages = pkgs.linuxPackages; # Stable kernel (guaranteed ZFS support)

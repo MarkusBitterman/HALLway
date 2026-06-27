@@ -45,11 +45,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1782512049,
-        "narHash": "sha256-7gYPLN+s4Fb6Ik+5zOc8/JyBTowqo0H/QbS4GeIsYjA=",
+        "lastModified": 1782514342,
+        "narHash": "sha256-++7PKWY5x7Yc8R+2/gq3zZ5LVQhCnpKU//5Mtkmja84=",
         "owner": "MarkusBitterman",
         "repo": "DOORway",
-        "rev": "5ad298e1c6c3cc28b3858cbf56dcedfdce2e436e",
+        "rev": "4bc90fdb6fa63fec5382bc6ee659cb0c00859a38",
         "type": "github"
       },
       "original": {
@@ -122,11 +122,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1782423922,
-        "narHash": "sha256-qPNd6lUohHP5gcJhqQ7rLV87RwIx0xYR2A4Frb9Zjc4=",
+        "lastModified": 1782522538,
+        "narHash": "sha256-CvOaUvJ+mXlxU3m2cPWKcOAhtKETsPUYhq+Xa5ewBp4=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "5d320ab301cfaaca7d32514f13815d19d109f5f4",
+        "rev": "8d8a6cc50ddc60748791a14ee1163c865ec57635",
         "type": "github"
       },
       "original": {

@@ -1,6 +1,6 @@
 # ╔════════════════╗
-# ║  HALLway                                                                  ║
-# ║  hosts/HALLpass.space/configuration.nix - VPS Introducer Node             ║
+# ║  HALLway - Host: HALLpass.space                                           ║
+# ║  VPS Introducer Node — WireGuard hub, Syncthing relay, web front          ║
 # ║  https://github.com/markusbittermang/hallway                              ║
 # ╚════════════════╝
 
@@ -10,7 +10,6 @@ let
   wgIf = "wg-hallspace";
   wgPort = 51820;
 
-  # WireGuard private key via sops-nix
   serverPrivKeyFile = config.sops.secrets."wg_privatekey".path;
 
   # ── User dotfiles (managed without Home Manager) ─────────────────────────
@@ -43,15 +42,13 @@ let
     };
   };
 
-  # Syncthing GUI password secret (plaintext file; Syncthing hashes it)
   guiPassFile = config.sops.secrets."syncthing_gui_pass".path;
 
-  # ── ACME / TLS ──────────────────────────────────────────────────────────────
-  # Credentials file for lego's Vultr DNS-01 provider.
-  # File content (sourced as shell env): VULTR_API_KEY=your-key-here
+  # ── ACME / TLS ─────────────────────────────────────────────────────────────
+  # File must contain: VULTR_API_KEY=<your-api-key>
   acmeCredFile = config.sops.secrets."acme_vultr_api_key".path;
 
-  # ── Mercurial web server ────────────────────────────────────────────────────
+  # ── Mercurial web server ───────────────────────────────────────────────────
   hgPort = 8085;
   hgRepoDir = "/srv/hg/repos";
   hgwebConf = pkgs.writeText "hgweb.conf" ''
@@ -70,37 +67,48 @@ in
     ./secrets.nix
   ];
 
-  # ═════════════════════════════════════════════════════════════════════════
+  # ════════════════
   # BOOT
-  # ═════════════════════════════════════════════════════════════════════════
+  # ════════════════
 
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  boot.kernelPackages = pkgs.linuxPackages_latest;
-
-  # ═════════════════════════════════════════════════════════════════════════
-  # BASE SYSTEM
-  # ═════════════════════════════════════════════════════════════════════════
-
-  networking.hostName = "hallpass";
-  networking.useNetworkd = true;
-  systemd.network.enable = true;
-  systemd.network.networks."10-wan" = {
-    matchConfig.Name = "en*";
-    networkConfig.DHCP = "yes";
+  boot = {
+    loader = {
+      systemd-boot.enable = true;
+      efi.canTouchEfiVariables = true;
+    };
+    kernelPackages = pkgs.linuxPackages_latest; # latest for VPS hardware compat; hardening via sysctl + security.*
   };
 
-  # Small VPS: no swap file, optimize store usage.
+  # ════════════════
+  # BASE SYSTEM
+  # ════════════════
+
+  networking = {
+    hostName = "hallpass";
+    useNetworkd = true;
+  };
+
+  systemd.network = {
+    enable = true;
+    networks."10-wan" = {
+      matchConfig.Name = "en*";
+      networkConfig.DHCP = "yes";
+    };
+  };
+
   zramSwap.enable = true;
-  nix.settings.auto-optimise-store = true;
-  nix.settings.trusted-users = [
-    "root"
-    "@wheel"
-  ];
-  # Accept store paths signed by 2600AD's Nix signing key.
-  nix.settings.extra-trusted-public-keys = [
-    "hallway-2600AD-1:rvtwr8Jr9wex7ztumxgymRCpBempIhzlAfPoEE8vDsI="
-  ];
+
+  nix.settings = {
+    auto-optimise-store = true;
+    trusted-users = [
+      "root"
+      "@wheel"
+    ];
+    # Accept store paths signed by 2600AD's Nix signing key.
+    extra-trusted-public-keys = [
+      "hallway-2600AD-1:rvtwr8Jr9wex7ztumxgymRCpBempIhzlAfPoEE8vDsI="
+    ];
+  };
   nixpkgs.config.allowUnfree = false;
 
   # Strip NixOS documentation tools from the default closure.
@@ -108,12 +116,52 @@ in
   # GTK/cairo stack — none of which belong on a headless VPS.
   environment.defaultPackages = [ ];
 
-  # ═════════════════════════════════════════════════════════════════════════
+  # ════════════════
   # SECURITY HARDENING
-  # ═════════════════════════════════════════════════════════════════════════
+  # ════════════════
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Kernel hardening
+  # ─────────────────────────────────────────────────────────────────────────
+
+  # Blacklist protocols not used on this host — common CVE surface
+  boot.blacklistedKernelModules = [
+    "dccp"
+    "sctp"
+    "rds"
+    "tipc"
+  ];
+
+  boot.kernel.sysctl = {
+    # ── Kernel / memory ──────────────────────────────────────────────────
+    "kernel.dmesg_restrict" = 1; # non-root cannot read kernel ring buffer
+    "kernel.kptr_restrict" = 2; # hide kernel symbol addresses in /proc
+    "kernel.yama.ptrace_scope" = 2; # only admins may ptrace
+    "kernel.unprivileged_bpf_disabled" = 1; # restrict BPF to root
+    "net.core.bpf_jit_harden" = 2; # constant blinding for BPF JIT
+
+    # ── Network ───────────────────────────────────────────────────────────
+    "net.ipv4.conf.all.accept_redirects" = 0;
+    "net.ipv4.conf.default.accept_redirects" = 0;
+    "net.ipv6.conf.all.accept_redirects" = 0;
+    "net.ipv4.conf.all.send_redirects" = 0;
+    "net.ipv4.conf.all.accept_source_route" = 0;
+    "net.ipv6.conf.all.accept_source_route" = 0;
+    "net.ipv4.conf.all.log_martians" = 1; # log invalid source-route packets
+    "net.ipv4.icmp_echo_ignore_broadcasts" = 1;
+    "net.ipv4.tcp_syncookies" = 1; # SYN flood protection
+    "net.ipv4.tcp_rfc1337" = 1; # TIME_WAIT assassination protection
+  };
+
+  services.fail2ban = {
+    enable = true;
+    maxretry = 5;
+    bantime = "1h";
+  };
 
   services.openssh = {
     enable = true;
+    ports = [ 2222 ];
     openFirewall = false;
     settings = {
       PermitRootLogin = "no";
@@ -129,13 +177,36 @@ in
     };
   };
 
-  security.apparmor.enable = true;
+  security = {
+    protectKernelImage = true; # prevent /dev/mem and live kernel patching
+    apparmor.enable = true;
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # ACME / TLS
+    # ─────────────────────────────────────────────────────────────────────────
+    # Single wildcard cert covers hallpass.space and all current/future subdomains.
+    # DNS-01 challenge: lego creates a TXT record via Vultr API — no A record needed.
+    # group = "nginx" required when using useACMEHost — enableACME would set this automatically.
+    acme = {
+      acceptTerms = true;
+      defaults = {
+        email = "bittermang@duck.com";
+        dnsProvider = "vultr";
+        environmentFile = acmeCredFile;
+      };
+      certs."hallpass.space" = {
+        domain = "*.hallpass.space";
+        extraDomainNames = [ "hallpass.space" ];
+        group = "nginx";
+      };
+    };
+  };
 
   networking.firewall = {
     enable = true;
-    # Internet-facing: SSH, HTTP/S, WireGuard only.
+    # Internet-facing: SSH (non-default port), HTTP/S, WireGuard only.
     allowedTCPPorts = [
-      22
+      2222
       80
       443
     ];
@@ -153,18 +224,20 @@ in
     };
   };
 
-  # ═════════════════════════════════════════════════════════════════════════
+  # ════════════════
   # USERS
-  # ═════════════════════════════════════════════════════════════════════════
+  # ════════════════
 
-  users.users.matt = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ];
-    createHome = true;
-    shell = pkgs.zsh;
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAYLaLlzDGnQQ7lVr5jlGRjudWfdhtGl1mEkoFXq2eCc matt@hallpass.space"
-    ];
+  users.users = {
+    matt = {
+      isNormalUser = true;
+      extraGroups = [ "wheel" ];
+      createHome = true;
+      shell = pkgs.zsh;
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAYLaLlzDGnQQ7lVr5jlGRjudWfdhtGl1mEkoFXq2eCc matt@hallpass.space"
+      ];
+    };
   };
 
   programs.zsh.enable = true;
@@ -215,16 +288,16 @@ in
         relaysEnabled = false;
       };
     };
-  };
 
-  services.syncthing.relay = {
-    enable = true;
-    pools = [ ];
-    listenAddress = "10.23.11.1";
-    statusListenAddress = "10.23.11.1";
-    port = 22067;
-    statusPort = 22070;
-    providedBy = "hallpass.space";
+    relay = {
+      enable = true;
+      pools = [ ];
+      listenAddress = "10.23.11.1";
+      statusListenAddress = "10.23.11.1";
+      port = 22067;
+      statusPort = 22070;
+      providedBy = "hallpass.space";
+    };
   };
 
   systemd.services.syncthing-discovery = {
@@ -294,7 +367,7 @@ in
 
     # Static site — place files in /srv/www/hallpass.space/_public/
     virtualHosts."hallpass.space" = {
-      useACMEHost = "hallpass.space";
+      useACMEHost = "hallpass.space"; # cert managed in SECURITY HARDENING
       forceSSL = true;
       root = "/srv/www/hallpass.space/_public";
       locations."/" = {
@@ -304,30 +377,11 @@ in
 
     # Mercurial web interface — repos at /srv/hg/repos/<name>/
     virtualHosts."hg.hallpass.space" = {
-      useACMEHost = "hallpass.space";
+      useACMEHost = "hallpass.space"; # cert managed in SECURITY HARDENING
       forceSSL = true;
       locations."/" = {
         proxyPass = "http://127.0.0.1:${toString hgPort}";
       };
-    };
-  };
-
-  security.acme = {
-    acceptTerms = true;
-    defaults = {
-      email = "bittermang@duck.com";
-      dnsProvider = "vultr";
-      # File must contain: VULTR_API_KEY=<your-api-key>
-      # (renamed from credentialsFile in NixOS 26.05)
-      environmentFile = acmeCredFile;
-    };
-    # Single wildcard cert covers hallpass.space and all current/future subdomains.
-    # DNS-01 challenge: lego creates a TXT record via Vultr API — no A record needed.
-    # group = "nginx" required when using useACMEHost — enableACME would set this automatically.
-    certs."hallpass.space" = {
-      domain = "*.hallpass.space";
-      extraDomainNames = [ "hallpass.space" ];
-      group = "nginx";
     };
   };
 

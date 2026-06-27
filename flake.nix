@@ -95,12 +95,16 @@
             # Home Manager
             home-manager.nixosModules.home-manager
             {
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = false; # Allow Home Manager to manage packages independently
-              home-manager.extraSpecialArgs = { inherit inputs; };
-              home-manager.backupFileExtension = "backup";
-              home-manager.users.bittermang = import ./hosts/2600AD/home/bittermang.nix;
-              home-manager.users.guest = import ./hosts/2600AD/home/guest.nix;
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = false; # Allow Home Manager to manage packages independently
+                extraSpecialArgs = { inherit inputs; };
+                backupFileExtension = "backup";
+                users = {
+                  bittermang = import ./hosts/2600AD/home/bittermang.nix;
+                  guest = import ./hosts/2600AD/home/guest.nix;
+                };
+              };
             }
 
             # sops-nix for secrets management
