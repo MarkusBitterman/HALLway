@@ -206,8 +206,20 @@
     enable = true;
     extraRules = ''
       ACTION=="add", SUBSYSTEM=="process", KERNEL=="*", TAG+="gamescope"
+      # Logitech Unifying receiver (046d:c52b) fires HID++ battery/chatter wake
+      # events that yank the machine out of S3 ~2s after suspend entry
+      # (hidpp_battery_0 wakeup events in /sys/class/wakeup). Keyboard wake
+      # (Dell KB216) stays enabled.
+      ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="046d", ATTR{idProduct}=="c52b", ATTR{power/wakeup}="disabled"
     ''; # Allow gamescope to set SCHED_FIFO on game processes for better performance
   };
+
+  # DOORway's hypridle suspends via suspend-then-hibernate: S3 first for quick
+  # resume, then wake to write the hibernation image after this delay so long
+  # absences cost zero power. Resume device is the encrypted swap partition.
+  systemd.sleep.extraConfig = ''
+    HibernateDelaySec=45min
+  '';
 
   environment = {
     sessionVariables.NIXOS_OZONE_WL = "1";
