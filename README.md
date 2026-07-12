@@ -1,4 +1,6 @@
-# HALLway
+<div align="center">
+  <img src="assets/brand/readme-hero.svg" width="400" alt="HALLway — a bold amber H holding still while H-shaped echoes recede down a hallway toward a lit vanishing point">
+</div>
 
 **the HALLway OS** — an operating system stack built around one idea:
 

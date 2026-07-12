@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 700" role="img" aria-labelledby="t d">
+  <title id="t">HALLway</title>
+  <desc id="d">A bold amber letter H holds still while H-shaped echoes recede down a hallway toward a lit vanishing point — a dolly zoom. Below, the HALLway wordmark.</desc>
+  <style>
+    .fly { animation: fly 3.2s linear infinite; }
+    @keyframes fly { to { transform: scale(1.25); } }
+    @media (prefers-reduced-motion: reduce) { .fly { animation: none; } }
+  </style>
+  <defs>
+    <path id="Hout" d="M-66,-80 H-32 V-17 H32 V-80 H66 V80 H32 V17 H-32 V80 H-66 Z"/>
+    <radialGradient id="lampGlow" cx="0" cy="0" r="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F0B54A" stop-opacity=".55"/>
+      <stop offset=".5" stop-color="#F0B54A" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#F0B54A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="depthFade" cx="0" cy="0" r="112" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000"/>
+      <stop offset=".1" stop-color="#000"/>
+      <stop offset=".32" stop-color="#fff"/>
+      <stop offset=".72" stop-color="#fff"/>
+      <stop offset="1" stop-color="#000"/>
+    </radialGradient>
+    <mask id="depth">
+      <rect x="-112" y="-112" width="224" height="224" fill="url(#depthFade)"/>
+    </mask>
+    <filter id="bloom" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.6" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- night stage -->
+  <rect width="560" height="700" rx="24" fill="#0F0C08"/>
+
+  <!-- dolly-zoom tunnel -->
+  <g transform="translate(280,290) scale(2.05)">
+    <circle r="46" fill="url(#lampGlow)"/>
+    <g mask="url(#depth)">
+      <g class="fly" fill="none" stroke="#EFE8DA" stroke-opacity=".5" stroke-width="2.2">
+        <use href="#Hout" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.8)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.64)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.512)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.4096)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.3277)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.2621)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.2097)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.1678)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.1342)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.1074)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.0859)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.0687)" vector-effect="non-scaling-stroke"/>
+        <use href="#Hout" transform="scale(.055)" vector-effect="non-scaling-stroke"/>
+      </g>
+    </g>
+    <use href="#Hout" fill="none" stroke="#F0B54A" stroke-width="6" filter="url(#bloom)"/>
+  </g>
+
+  <!-- wordmark: TeX Gyre Adventor outlines (bold HALL / regular way), baked as paths -->
+  <g transform="translate(80,605) scale(0.092,-0.092)" fill="#EFE8DA">
+    <path transform="translate(0,0)" d="M68 0H205V310H469V0H606V739H469V441H205V739H68Z"/>
+    <path transform="translate(680,0)" d="M7 0H158L240 191H503L582 0H733L423 739H315ZM290 322 369 546 448 322Z"/>
+    <path transform="translate(1420,0)" d="M68 0H431V131H205V739H68Z"/>
+    <path transform="translate(1860,0)" d="M68 0H431V131H205V739H68Z"/>
+  </g>
+  <g transform="translate(291.6,605) scale(0.092,-0.092)" fill="#F0B54A">
+    <path transform="translate(0,0)" d="M7 547 216 0H296L414 363L533 0H612L824 547H752L574 89L445 480H384L255 89L81 547Z"/>
+    <path transform="translate(831,0)" d="M42 272C42 109 167 -13 335 -13C428 -13 488 18 546 96V0H620V547H546V450C492 526 425 560 330 560C166 560 42 436 42 272ZM117 277C117 396 213 492 332 492C452 492 546 398 546 276C546 152 454 55 336 55C212 55 117 152 117 277Z"/>
+    <path transform="translate(1514,0)" d="M9 547 221 18 132 -192H211L527 547H448L263 111L90 547Z"/>
+  </g>
+</svg>
