@@ -34,6 +34,9 @@
     enable = true;
     monitor = "HDMI-A-1,1920x1080@100,0x0,1";
     keyboard = "us";
+    # DOORway Lock: QuickShell shader-screensaver lock (signal-cutout intro,
+    # retro-CRT shader suite). Falls back to hyprlock if the shell is down.
+    lock.backend = "doorway-lock";
     # cursor.package defaults to pkgs.oreo-cursors-plus.
     # cursor.name selects which of the 38 variants to use.
     # cursor.size defaults to 24. Omit this block to keep the DOORway default.
@@ -404,6 +407,30 @@
     enable = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
+
+    shellAliases = {
+      qqq = "exit"; # quick exit
+
+      # Navigation
+      ".." = "cd ..";
+      "..." = "cd ../..";
+
+      # ls
+      ll = "ls -lh";
+      la = "ls -lAh";
+
+      # git
+      gs = "git status";
+      gd = "git diff";
+      ga = "git add";
+      gc = "git commit";
+      gp = "git push";
+      gl = "git log --oneline --graph --decorate";
+
+      # misc
+      grep = "grep --color=auto";
+      c = "clear";
+    };
   };
 
   programs.starship = {
