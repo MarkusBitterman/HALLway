@@ -162,6 +162,17 @@
       (final: prev: {
         cantarell-fonts = prev.liberation_ttf;
       })
+      # Skip soundconverter's test suite: tests/test.py crashes with
+      # `TypeError: 'NoneType' object is not subscriptable` under the
+      # Python 3.14 default interpreter (nixos-unstable, 2026-07-08 bump).
+      # Upstream test bug, not a soundconverter runtime issue.
+      # Note: buildPythonApplication renames the check-phase toggle to
+      # `doInstallCheck` internally — plain `doCheck` is a no-op here.
+      (final: prev: {
+        soundconverter = prev.soundconverter.overrideAttrs (old: {
+          doInstallCheck = false;
+        });
+      })
     ];
     config = {
       allowUnfree = true;
@@ -206,20 +217,24 @@
     enable = true;
     extraRules = ''
       ACTION=="add", SUBSYSTEM=="process", KERNEL=="*", TAG+="gamescope"
-      # Logitech Unifying receiver (046d:c52b) fires HID++ battery/chatter wake
-      # events that yank the machine out of S3 ~2s after suspend entry
-      # (hidpp_battery_0 wakeup events in /sys/class/wakeup). Keyboard wake
-      # (Dell KB216) stays enabled.
-      ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="046d", ATTR{idProduct}=="c52b", ATTR{power/wakeup}="disabled"
     ''; # Allow gamescope to set SCHED_FIFO on game processes for better performance
   };
 
-  # DOORway's hypridle suspends via suspend-then-hibernate: S3 first for quick
-  # resume, then wake to write the hibernation image after this delay so long
-  # absences cost zero power. Resume device is the encrypted swap partition.
-  systemd.sleep.extraConfig = ''
-    HibernateDelaySec=45min
-  '';
+  # NO SLEEP ON THIS HARDWARE (Atari VCS 800, BIOS 05.32.50.0011-VCS.24).
+  # Verified 2026-07-10 — every path is broken at the platform level:
+  #   - S3 ("deep"): firmware bounces straight back out ~2s after entry with
+  #     no wake cause recorded anywhere (SCI/GPE/fixed-event counters all 0,
+  #     no wakeup source credited). Not a wake-source problem — the Logitech
+  #     receiver theory of 2026-07-03 was a red herring (battery events were
+  #     a symptom of each resume, not the cause).
+  #   - s2idle: amdgpu rejects it ("Unsupported suspend state 1", EINVAL)
+  #     because the BIOS advertises S3-style sleep; suspend fails outright.
+  #   - hibernate: image allocation fails with ENOMEM (8 GB RAM + zram
+  #     inflate the snapshot past free memory); session is never saved.
+  # DOORway's idle chain therefore ends at DPMS off (doorway.idle.timeouts
+  # .suspend defaults to null). Do not re-add HibernateDelaySec or wake-source
+  # udev rules without first fixing sleep at the firmware level (a BIOS
+  # sleep-mode toggle to s2idle, if one exists, would be the starting point).
 
   environment = {
     sessionVariables.NIXOS_OZONE_WL = "1";
