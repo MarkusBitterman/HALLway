@@ -92,8 +92,8 @@
     weather.updateFrequency = 15;
     weather.pirateWeatherApiKeyFile = osConfig.sops.secrets."pirate_weather_api_key".path;
 
-    # Atari logo as the top-left sidebar button icon.
-    bar.topLeftIcon = "atari";
+    # HALLway mark (dolly-zoom H) as the top-left sidebar button icon.
+    bar.topLeftIcon = "hallway";
 
     # Night light follows actual sunrise/sunset from PirateWeather.
     # Iowa City sunset ranges from ~5:15 PM (Dec) to ~8:45 PM (Jun) — a 3.5-hour

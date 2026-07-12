@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 200 200">
+  <!-- HALLway symbolic mark: doorway + one echo. Recolors via currentColor. -->
+  <g transform="translate(100,100)" fill="none" stroke="currentColor">
+    <path d="M-66,-80 H-32 V-17 H32 V-80 H66 V80 H32 V17 H-32 V80 H-66 Z" stroke-width="24"/>
+    <path d="M-66,-80 H-32 V-17 H32 V-80 H66 V80 H32 V17 H-32 V80 H-66 Z" transform="scale(.5)" stroke-width="15" opacity=".55"/>
+  </g>
+</svg>
