@@ -42,8 +42,6 @@ Entry point. Defines `nixosConfigurations` (NixOS hosts), `homeConfigurations` (
 - `modules/base.nix` — shared baseline via `lib.mkDefault`: systemd-boot + EFI vars, zram, nix settings (flakes, store optimization), locale, firewall, AppArmor, OpenSSH, zsh. Hosts override with plain assignments.
 - `modules/mesh.nix` — `hallway.mesh` options registry: WireGuard overlay IPs/public keys, hub endpoint and Syncthing infra IDs, per-host Syncthing device IDs. Single source of truth — host configs read `config.hallway.mesh.*` instead of hardcoding peer values. Public identifiers only; private material stays in sops.
 
-`modules/userRoles.nix` exists but is **not imported anywhere** (dead code from a removed design; candidate for deletion).
-
 **Inputs**: `nixpkgs` (unstable), `home-manager`, `sops-nix`, `flake-utils`, `doorway`
 
 ### Hosts (`hosts/`)

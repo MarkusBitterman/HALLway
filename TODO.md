@@ -69,7 +69,7 @@ These flake inputs are pinned to work around upstream bugs. Check periodically a
 
 ## Codebase Cleanup
 
-- [ ] Delete `modules/userRoles.nix` — not imported anywhere, superseded design
+- [x] Delete `modules/userRoles.nix` — not imported anywhere, superseded design (deleted 2026-07-18; AppArmor enforcement was never implemented and can't work against the world-readable Nix store)
 - [ ] Audit `hosts/2600AD/configuration.nix` `nix-ld.libraries` — JetBrains wiki entries intermixed with Wine/Proton entries; separate and annotate clearly
 
 ## Networking — Domain Model
