@@ -10,11 +10,19 @@
   ...
 }:
 
+let
+  # HALLpass mesh registry (modules/mesh.nix) — peer IPs, keys, Syncthing IDs
+  mesh = config.hallway.mesh;
+in
 {
   imports = [
     ./hardware-configuration.nix
     ./secrets.nix
   ];
+
+  # Shared baseline (modules/base.nix): systemd-boot + EFI vars, zram, flakes,
+  # locale, firewall, AppArmor, OpenSSH, zsh. Only host-specific settings and
+  # overrides below.
 
   # ════════════════
   # BOOT
@@ -23,12 +31,10 @@
   boot = {
     loader = {
       systemd-boot = {
-        enable = true;
         configurationLimit = 7;
         memtest86.enable = true;
         edk2-uefi-shell.enable = true;
       };
-      efi.canTouchEfiVariables = true;
       timeout = 14;
     };
 
@@ -65,10 +71,7 @@
     autoScrub.enable = true;
   };
 
-  zramSwap = {
-    enable = true;
-    memoryPercent = 40;
-  };
+  zramSwap.memoryPercent = 40;
 
   # ════════════════
   # NETWORKING
@@ -99,37 +102,28 @@
     # ─────────────────────────────────────────────────────────────────────────
     # HALLpass overlay network (WireGuard)
     # ─────────────────────────────────────────────────────────────────────────
-    # Subnet: 10.23.11.0/24
-    #   - HALLpass.space (hub):  10.23.11.1
-    #   - 2600AD (this host):    10.23.11.80
-    #   - HelloMoto (phone):     10.23.11.64
-    #
-    # NOTE: Using IP endpoint instead of hostname avoids DNS chicken-and-egg
-    # when routing DNS through the tunnel.
+    # Peer registry lives in modules/mesh.nix (hallway.mesh).
     #
     # firewall.checkReversePath = "loose"; # Required for WireGuard rpfilter
 
     wireguard.interfaces.wg-hallpass = {
-      ips = [ "10.23.11.80/24" ];
+      ips = [ "${mesh.hosts.desktop.wgIp}/24" ];
       privateKeyFile = config.sops.secrets."wg_privatekey".path;
 
       peers = [
         {
-          publicKey = "894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=";
+          publicKey = mesh.hosts.hallpass.wgPublicKey;
           presharedKeyFile = config.sops.secrets."wg_psk".path;
-          endpoint = "136.244.101.171:51820";
-          allowedIPs = [ "10.23.11.0/24" ];
+          endpoint = mesh.hub.endpoint;
+          allowedIPs = [ mesh.subnet ];
           persistentKeepalive = 25;
         }
       ];
     };
 
-    firewall = {
-      enable = true;
-      interfaces.wg-hallpass = {
-        allowedTCPPorts = [ 22000 ];
-        allowedUDPPorts = [ 22000 ];
-      };
+    firewall.interfaces.wg-hallpass = {
+      allowedTCPPorts = [ mesh.syncthingPort ];
+      allowedUDPPorts = [ mesh.syncthingPort ];
     };
   };
 
@@ -180,22 +174,14 @@
     };
   };
 
-  nix.settings = {
-    auto-optimise-store = true;
-    experimental-features = [
-      "nix-command"
-      "flakes"
-    ];
-    # Sign all locally-built store paths so HALLpass.space can verify them.
-    secret-key-files = [ config.sops.secrets."nix_signing_key".path ];
-  };
+  # Sign all locally-built store paths so HALLpass.space can verify them.
+  nix.settings.secret-key-files = [ config.sops.secrets."nix_signing_key".path ];
 
   # ════════════════
   # LOCALIZATION
   # ════════════════
 
   time.timeZone = "America/Chicago";
-  i18n.defaultLocale = "en_US.UTF-8";
 
   # ════════════════
   # ENVIRONMENT
@@ -303,10 +289,7 @@
   # SECURITY
   # ════════════════
 
-  security = {
-    polkit.enable = true;
-    apparmor.enable = true;
-  };
+  security.polkit.enable = true;
 
   # ════════════════
   # PROGRAMS
@@ -314,7 +297,6 @@
 
   programs = {
     mtr.enable = true;
-    zsh.enable = true;
     # Hyprland session registration, UWSM, XWayland, and xdg-desktop-portal-hyprland
     # are managed by DOORway's nixosModules.default (imported in flake.nix).
     # The Hyprland version is pinned in DOORway's flake.lock.
@@ -423,8 +405,6 @@
   # ════════════════
 
   services = {
-    openssh.enable = true;
-
     syncthing = {
       enable = true;
       user = "bittermang";
@@ -439,19 +419,19 @@
       settings = {
         devices = {
           hallpass = {
-            id = "C4JN6DN-4PSNYVR-W42VBAN-TZMVJ7A-3BLC7VX-WPO7UIL-G4YZGPU-4JERRAA";
+            id = mesh.hosts.hallpass.syncthingId;
             addresses = [
-              "tcp://10.23.11.1:22000"
-              "quic://10.23.11.1:22000"
+              "tcp://${mesh.hosts.hallpass.wgIp}:${toString mesh.syncthingPort}"
+              "quic://${mesh.hosts.hallpass.wgIp}:${toString mesh.syncthingPort}"
             ];
             introducer = true;
           };
 
           Nintendo64 = {
-            id = "RNQ46P5-MED5PWA-2UAPW2O-VVA6FUK-34KPUAQ-GAEATTS-ONCPRMN-YKJ77QH";
+            id = mesh.hosts.phone.syncthingId;
             addresses = [
-              "tcp://10.23.11.64:22000"
-              "quic://10.23.11.64:22000"
+              "tcp://${mesh.hosts.phone.wgIp}:${toString mesh.syncthingPort}"
+              "quic://${mesh.hosts.phone.wgIp}:${toString mesh.syncthingPort}"
             ];
           };
         };
@@ -475,14 +455,14 @@
         options = {
           globalAnnounceEnabled = true;
           globalAnnounceServers = [
-            "https://10.23.11.1:8443/?id=5HGZLLW-G57L5ML-MHFXSQS-X42CWXH-U7MEXVO-AQKSJYJ-AE2JZML-NSWINAV"
+            "https://${mesh.hosts.hallpass.wgIp}:${toString mesh.hub.discoveryPort}/?id=${mesh.hub.discoveryId}"
           ];
           localAnnounceEnabled = false;
           natEnabled = false;
           relaysEnabled = true;
           listenAddresses = [
             "default"
-            "relay://10.23.11.1:22067/?id=3A23ZPS-NK2CKB3-VI3RVI4-AAOEO3F-DMNLSA4-OYT6HR4-QRX6V7R-MFPBIQY"
+            "relay://${mesh.hosts.hallpass.wgIp}:${toString mesh.hub.relayPort}/?id=${mesh.hub.relayId}"
           ];
         };
       };

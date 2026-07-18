@@ -1,12 +1,20 @@
-# HALLway NixOS Modules
+# ╔════════════════╗
+# ║  HALLway                                                                  ║
+# ║  modules/default.nix - HALLway shared module aggregator                   ║
+# ╚════════════════╝
 #
-# This directory contains reusable NixOS modules that implement HALLway concepts.
+# Imported by every HALLway NixOS host (via flake.nix) and exported as
+# nixosModules.default for other flakes.
 #
 # Available modules:
-#   - (none currently; host configs compose Home Manager + security directly)
+#   - base.nix  — shared baseline defaults (boot, nix, security, services)
+#   - mesh.nix  — hallway.mesh registry: WireGuard + Syncthing public identifiers
 
 { ... }:
 
 {
-  imports = [ ];
+  imports = [
+    ./base.nix
+    ./mesh.nix
+  ];
 }

@@ -85,6 +85,9 @@
         "2600AD" = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
+            # HALLway shared modules: baseline defaults + mesh registry
+            hallwayModules.default
+
             # DOORway NixOS module: registers Hyprland session, enables UWSM + XWayland,
             # and pins the Hyprland version from DOORway's flake.lock.
             inputs.doorway.nixosModules.default
@@ -118,6 +121,9 @@
         "HALLpass.space" = nixpkgs.lib.nixosSystem {
           system = "x86_64-linux";
           modules = [
+            # HALLway shared modules: baseline defaults + mesh registry
+            hallwayModules.default
+
             ./hosts/HALLpass.space/configuration.nix
             sops-nix.nixosModules.sops
           ];

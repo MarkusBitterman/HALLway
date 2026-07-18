@@ -36,7 +36,11 @@ Available Claude Code skills — invoke with the `/` prefix:
 ## Architecture
 
 ### Flake (`flake.nix`)
-Entry point. Defines `nixosConfigurations` (NixOS hosts), `homeConfigurations` (non-NixOS hosts), and `devShells.default`. `nixosModules.default` is exported but contains no active modules — host configs compose Home Manager and sops-nix directly. `modules/userRoles.nix` exists but is **not imported anywhere** (dead code from a removed design; candidate for deletion).
+Entry point. Defines `nixosConfigurations` (NixOS hosts), `homeConfigurations` (non-NixOS hosts), and `devShells.default`. `nixosModules.default` (imported by every NixOS host and exported for other flakes) aggregates the shared modules:
+- `modules/base.nix` — shared baseline via `lib.mkDefault`: systemd-boot + EFI vars, zram, nix settings (flakes, store optimization), locale, firewall, AppArmor, OpenSSH, zsh. Hosts override with plain assignments.
+- `modules/mesh.nix` — `hallway.mesh` options registry: WireGuard overlay IPs/public keys, hub endpoint and Syncthing infra IDs, per-host Syncthing device IDs. Single source of truth — host configs read `config.hallway.mesh.*` instead of hardcoding peer values. Public identifiers only; private material stays in sops.
+
+`modules/userRoles.nix` exists but is **not imported anywhere** (dead code from a removed design; candidate for deletion).
 
 **Inputs**: `nixpkgs` (unstable), `home-manager`, `sops-nix`, `flake-utils`, `doorway`
 
@@ -107,6 +111,8 @@ The HALLpass WireGuard subnet is `10.23.11.0/24`:
 - `10.23.11.80` — 2600AD
 - `10.23.11.64` — HelloMoto (phone)
 
+These values (plus public keys, hub endpoint, and Syncthing IDs) are defined once in `modules/mesh.nix` (`hallway.mesh`) and consumed by host configs — edit the registry, not the hosts.
+
 ### Secrets (sops-nix)
 Secrets are managed with [sops-nix](https://github.com/Mic92/sops-nix), using age encryption.
 
@@ -160,9 +166,8 @@ Examples: `feat: Add TPM2 auto-unlock support`, `v0.0.1: 2600AD initial working 
 3. Add host's age public key to `.sops.yaml` and create `secrets.yaml` with `sops`
 
 ### Placeholder Values
-Several config values in `hosts/HALLpass.space/configuration.nix` and `hosts/2600AD/configuration.nix` are not yet populated — they are literal placeholder strings that must be replaced before deployment is functional:
-- `894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=` / `DESKTOP_WG_PUBLIC_KEY` / `PHONE_WG_PUBLIC_KEY` — WireGuard public keys
-- `HALLPASS_SYNCTHING_DEVICE_ID` / `PHONE_SYNCTHING_DEVICE_ID` — Syncthing device IDs
-- `DISCOVERY_SERVER_ID` / `RELAY_SERVER_ID` — Syncthing infra IDs from HALLpass.space startup logs
+All mesh identifiers now live in `modules/mesh.nix` (`hallway.mesh`). Remaining values to fill before the full mesh is functional:
+- `hosts.phone.wgPublicKey` — literal placeholder `PHONE_WG_PUBLIC_KEY`; replace with the phone's WireGuard public key
+- `hosts.hallpass.wgPublicKey` — provisional until HALLpass.space is deployed and its real key is generated
 
 See `docs/secrets.md` for the full workflow on deriving and filling these in.

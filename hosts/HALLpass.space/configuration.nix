@@ -7,8 +7,10 @@
 { config, pkgs, ... }:
 
 let
+  # HALLpass mesh registry (modules/mesh.nix) — peer IPs, keys, Syncthing IDs
+  mesh = config.hallway.mesh;
+
   wgIf = "wg-hallspace";
-  wgPort = 51820;
 
   serverPrivKeyFile = config.sops.secrets."wg_privatekey".path;
 
@@ -30,17 +32,6 @@ let
       name = Matthew Hall
       email = bittermang@duck.com
   '';
-
-  peers = {
-    desktop = {
-      publicKey = "xVl7ZD5oumSdXDYudc3zip0Zo3draHuniQoYQFNth1M=";
-      ip = "10.23.11.80/32";
-    };
-    phone = {
-      publicKey = "PHONE_WG_PUBLIC_KEY";
-      ip = "10.23.11.64/32";
-    };
-  };
 
   guiPassFile = config.sops.secrets."syncthing_gui_pass".path;
 
@@ -67,17 +58,15 @@ in
     ./secrets.nix
   ];
 
+  # Shared baseline (modules/base.nix): systemd-boot + EFI vars, zram, flakes,
+  # locale, firewall, AppArmor, OpenSSH, zsh. Only host-specific settings and
+  # overrides below.
+
   # ════════════════
   # BOOT
   # ════════════════
 
-  boot = {
-    loader = {
-      systemd-boot.enable = true;
-      efi.canTouchEfiVariables = true;
-    };
-    kernelPackages = pkgs.linuxPackages_latest; # latest for VPS hardware compat; hardening via sysctl + security.*
-  };
+  boot.kernelPackages = pkgs.linuxPackages_latest; # latest for VPS hardware compat; hardening via sysctl + security.*
 
   # ════════════════
   # BASE SYSTEM
@@ -96,10 +85,7 @@ in
     };
   };
 
-  zramSwap.enable = true;
-
   nix.settings = {
-    auto-optimise-store = true;
     trusted-users = [
       "root"
       "@wheel"
@@ -160,7 +146,6 @@ in
   };
 
   services.openssh = {
-    enable = true;
     ports = [ 2222 ];
     openFirewall = false;
     settings = {
@@ -203,25 +188,24 @@ in
   };
 
   networking.firewall = {
-    enable = true;
     # Internet-facing: SSH (non-default port), HTTP/S, WireGuard only.
     allowedTCPPorts = [
       2222
       80
       443
     ];
-    allowedUDPPorts = [ wgPort ];
+    allowedUDPPorts = [ mesh.wgPort ];
 
     # Syncthing infra (and its GUI) should only be reachable over WireGuard.
     interfaces.${wgIf} = {
       allowedTCPPorts = [
-        22000
-        22067
-        22070
-        8443
-        8384
+        mesh.syncthingPort
+        mesh.hub.relayPort
+        mesh.hub.relayStatusPort
+        mesh.hub.discoveryPort
+        8384 # Syncthing GUI
       ];
-      allowedUDPPorts = [ 22000 ];
+      allowedUDPPorts = [ mesh.syncthingPort ];
     };
   };
 
@@ -241,27 +225,25 @@ in
     };
   };
 
-  programs.zsh.enable = true;
-
   # ═════════════════════════════════════════════════════════════════════════
   # WIREGUARD HUB
   # ═════════════════════════════════════════════════════════════════════════
 
   networking.wireguard.interfaces.${wgIf} = {
-    ips = [ "10.23.11.1/24" ];
-    listenPort = wgPort;
+    ips = [ "${mesh.hosts.hallpass.wgIp}/24" ];
+    listenPort = mesh.wgPort;
     privateKeyFile = serverPrivKeyFile;
 
     peers = [
       {
-        publicKey = peers.desktop.publicKey;
+        publicKey = mesh.hosts.desktop.wgPublicKey;
         presharedKeyFile = config.sops.secrets."wg_desktop_psk".path;
-        allowedIPs = [ peers.desktop.ip ];
+        allowedIPs = [ "${mesh.hosts.desktop.wgIp}/32" ];
       }
       {
-        publicKey = peers.phone.publicKey;
+        publicKey = mesh.hosts.phone.wgPublicKey;
         # presharedKeyFile = config.sops.secrets."wg_phone_psk".path;  # TODO: generate phone PSK
-        allowedIPs = [ peers.phone.ip ];
+        allowedIPs = [ "${mesh.hosts.phone.wgIp}/32" ];
       }
     ];
   };
@@ -272,7 +254,7 @@ in
 
   services.syncthing = {
     enable = true;
-    guiAddress = "10.23.11.1:8384"; # WireGuard interface only — never bind 0.0.0.0 here
+    guiAddress = "${mesh.hosts.hallpass.wgIp}:8384"; # WireGuard interface only — never bind 0.0.0.0 here
     guiPasswordFile = guiPassFile;
     dataDir = "/var/lib/syncthing";
     configDir = "/var/lib/syncthing/config";
@@ -283,10 +265,10 @@ in
     settings = {
       devices = {
         desktop = {
-          id = "LOT5SSD-K6IIODI-O5JFTOZ-DQLQJNB-ZCKZK6X-XTHBKI3-QDBKMJK-2U55FQS";
+          id = mesh.hosts.desktop.syncthingId;
           addresses = [
-            "tcp://10.23.11.80:22000"
-            "quic://10.23.11.80:22000"
+            "tcp://${mesh.hosts.desktop.wgIp}:${toString mesh.syncthingPort}"
+            "quic://${mesh.hosts.desktop.wgIp}:${toString mesh.syncthingPort}"
           ];
         };
       };
@@ -315,10 +297,10 @@ in
     relay = {
       enable = true;
       pools = [ ];
-      listenAddress = "10.23.11.1";
-      statusListenAddress = "10.23.11.1";
-      port = 22067;
-      statusPort = 22070;
+      listenAddress = mesh.hosts.hallpass.wgIp;
+      statusListenAddress = mesh.hosts.hallpass.wgIp;
+      port = mesh.hub.relayPort;
+      statusPort = mesh.hub.relayStatusPort;
       providedBy = "hallpass.space";
     };
   };
@@ -334,7 +316,7 @@ in
       WorkingDirectory = "/var/lib/syncthing-discovery";
       ExecStart = ''
         ${pkgs.syncthing-discovery}/bin/stdiscosrv \
-          --listen=10.23.11.1:8443 \
+          --listen=${mesh.hosts.hallpass.wgIp}:${toString mesh.hub.discoveryPort} \
           --db-dir=/var/lib/syncthing-discovery/db \
           --cert=/var/lib/syncthing-discovery/cert.pem \
           --key=/var/lib/syncthing-discovery/key.pem
