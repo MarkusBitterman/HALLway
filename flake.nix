@@ -274,7 +274,10 @@
 
         # Formatter for `nix fmt` — nixfmt-tree integrates with nix fmt's
         # no-argument invocation style; plain pkgs.nixfmt reads from stdin.
-        formatter = pkgs.nixfmt-tree;
+        # Skill templates contain <PLACEHOLDER> tokens that aren't valid Nix.
+        formatter = pkgs.nixfmt-tree.override {
+          settings.global.excludes = [ ".claude/skills/*/templates/*.nix" ];
+        };
       }
     );
 }
