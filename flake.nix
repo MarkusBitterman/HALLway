@@ -138,8 +138,64 @@
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+
+        # ─────────────────────────────────────────────────────────────────────
+        # Unified activation: `nix run .` from the repo root detects the host
+        # and runs the right switch command; `nix run . -- <host>` targets one
+        # explicitly (e.g. `nix run . -- HALLpass.space` deploys the VPS).
+        # ─────────────────────────────────────────────────────────────────────
+        hallwaySwitch = pkgs.writeShellApplication {
+          name = "hallway-switch";
+          text = ''
+            usage() {
+              echo "usage: nix run . -- [2600AD | HALLpass.space | HelloMoto]" >&2
+            }
+
+            target="''${1:-}"
+
+            if [ -z "$target" ]; then
+              if [ "$(uname -o)" = "Android" ]; then
+                target="HelloMoto"
+              else
+                target="$(uname -n)"
+              fi
+            fi
+
+            case "$target" in
+              2600AD)
+                exec sudo nixos-rebuild switch --flake ".#2600AD"
+                ;;
+              HelloMoto)
+                exec home-manager switch --flake ".#HelloMoto"
+                ;;
+              hallpass | HALLpass | HALLpass.space)
+                if [ "$(uname -n)" = "hallpass" ]; then
+                  # Running on the VPS itself
+                  exec sudo nixos-rebuild switch --flake ".#HALLpass.space"
+                else
+                  # Remote deploy: build locally, push over SSH. Never wrap
+                  # this in local sudo — it breaks SSH key resolution.
+                  exec nixos-rebuild switch --flake ".#HALLpass.space" \
+                    --target-host matt@hallpass.space \
+                    --elevate=sudo --ask-elevate-password
+                fi
+                ;;
+              *)
+                echo "hallway-switch: unknown target '$target'" >&2
+                usage
+                exit 1
+                ;;
+            esac
+          '';
+        };
       in
       {
+        apps.default = {
+          type = "app";
+          program = "${hallwaySwitch}/bin/hallway-switch";
+          meta.description = "Detect the current HALLway host and run the matching switch command";
+        };
+
         devShells.default = pkgs.mkShell {
           name = "hallway-dev";
 

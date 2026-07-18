@@ -9,6 +9,8 @@ nix develop              # Enter dev shell (loads sops, age, etc.)
 nix flake check          # Validate flake syntax — primary test command (Ctrl+Shift+T in VS Code)
 nix fmt                  # Format all .nix files with nixfmt (RFC 166) — also auto-runs per-file via PostToolUse hook
 nix build .#nixosConfigurations.2600AD.config.system.build.toplevel  # Build without activating
+nix run .                # Unified activation: detects the current host, runs the right switch command
+nix run . -- HALLpass.space                         # Explicit target; from any other host this deploys the VPS remotely
 sudo nixos-rebuild switch --flake .#2600AD          # Build and activate on 2600AD
 nixos-rebuild switch --flake .#HALLpass.space --target-host matt@hallpass.space --elevate=sudo --ask-elevate-password  # Build locally on 2600AD, deploy to VPS (no local sudo — it breaks SSH key resolution)
 sops hosts/2600AD/secrets.yaml                      # Edit encrypted secrets (decrypt/edit/re-encrypt)
@@ -36,7 +38,7 @@ Available Claude Code skills — invoke with the `/` prefix:
 ## Architecture
 
 ### Flake (`flake.nix`)
-Entry point. Defines `nixosConfigurations` (NixOS hosts), `homeConfigurations` (non-NixOS hosts), and `devShells.default`. `nixosModules.default` (imported by every NixOS host and exported for other flakes) aggregates the shared modules:
+Entry point. Defines `nixosConfigurations` (NixOS hosts), `homeConfigurations` (non-NixOS hosts), `devShells.default`, and `apps.default` (the `nix run .` unified activation script). `nixosModules.default` (imported by every NixOS host and exported for other flakes) aggregates the shared modules:
 - `modules/base.nix` — shared baseline via `lib.mkDefault`: systemd-boot + EFI vars, zram, nix settings (flakes, store optimization), locale, firewall, AppArmor, OpenSSH, zsh. Hosts override with plain assignments.
 - `modules/mesh.nix` — `hallway.mesh` options registry: WireGuard overlay IPs/public keys, hub endpoint and Syncthing infra IDs, per-host Syncthing device IDs. Single source of truth — host configs read `config.hallway.mesh.*` instead of hardcoding peer values. Public identifiers only; private material stays in sops.
 
