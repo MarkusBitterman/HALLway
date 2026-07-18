@@ -215,12 +215,32 @@ in
   #     a symptom of each resume, not the cause).
   #   - s2idle: amdgpu rejects it ("Unsupported suspend state 1", EINVAL)
   #     because the BIOS advertises S3-style sleep; suspend fails outright.
-  #   - hibernate: image allocation fails with ENOMEM (8 GB RAM + zram
-  #     inflate the snapshot past free memory); session is never saved.
+  #   - hibernate: WAS broken (ENOMEM at snapshot); rescue attempt below
+  #     (2026-07-18) — see HIBERNATION RESCUE. S3/s2idle remain dead.
   # DOORway's idle chain therefore ends at DPMS off (doorway.idle.timeouts
   # .suspend defaults to null). Do not re-add HibernateDelaySec or wake-source
   # udev rules without first fixing sleep at the firmware level (a BIOS
   # sleep-mode toggle to s2idle, if one exists, would be the starting point).
+
+  # HIBERNATION RESCUE (2026-07-18).
+  # The old ENOMEM was an in-RAM snapshot allocation failure, not a swap-space
+  # problem: the kernel must build the whole image in RAM before writing it to
+  # STELLA, and pages "swapped" to zram still live in RAM, so they count toward
+  # the image instead of shrinking it. Everything else was already wired
+  # (resume=/dev/mapper/stella_crypt, zfs.unsafeAllowHibernation, 27G swap).
+  systemd.tmpfiles.rules = [
+    # image_size=0 = smallest possible image: evict everything evictable to
+    # disk swap first, snapshot only the irreducible working set. The default
+    # target (~2.2G) can never fit next to a live desktop in 5.7G usable RAM.
+    "w /sys/power/image_size - - - - 0"
+  ];
+  systemd.services.systemd-hibernate.serviceConfig = {
+    # Evacuate zram to STELLA before the snapshot so its pages leave RAM
+    # ("-" prefix = non-fatal if zram is already off), and bring it back
+    # after resume at its boot-time priority.
+    ExecStartPre = "-${pkgs.util-linux}/bin/swapoff /dev/zram0";
+    ExecStartPost = "-${pkgs.util-linux}/bin/swapon -p 5 /dev/zram0";
+  };
 
   environment = {
     sessionVariables.NIXOS_OZONE_WL = "1";

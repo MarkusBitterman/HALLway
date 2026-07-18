@@ -37,6 +37,11 @@
     # DOORway Lock: QuickShell shader-screensaver lock (signal-cutout intro,
     # retro-CRT shader suite). Falls back to hyprlock if the shell is down.
     lock.backend = "doorway-lock";
+    # Session preservation, layer 2 (layer 1 is hibernation — see the
+    # HIBERNATION RESCUE block in ../configuration.nix): snapshot running
+    # apps every 2 min, reopen them on their workspaces at next login.
+    # Covers real reboots, which hibernation by definition can't.
+    session.restore = true;
     # cursor.package defaults to pkgs.oreo-cursors-plus.
     # cursor.name selects which of the 38 variants to use.
     # cursor.size defaults to 24. Omit this block to keep the DOORway default.
