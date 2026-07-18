@@ -105,24 +105,24 @@
     #   - HelloMoto (phone):     10.23.11.64
     #
     # NOTE: Using IP endpoint instead of hostname avoids DNS chicken-and-egg
-    # when routing DNS through the tunnel. Get VPS IP with: dig +short hallpass.space
+    # when routing DNS through the tunnel.
     #
     # firewall.checkReversePath = "loose"; # Required for WireGuard rpfilter
-    #
-    # wireguard.interfaces.wg-hallpass = {
-    #   ips = [ "10.23.11.80/24" ];
-    #   privateKeyFile = config.sops.secrets."wg_privatekey".path;
-    #
-    #   peers = [
-    #     {
-    #       publicKey = "894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=";
-    #       presharedKeyFile = config.sops.secrets."wg_psk".path;
-    #       endpoint = "hallpass.space:51820"; # TODO: replace with IP once VPS is deployed
-    #       allowedIPs = [ "10.23.11.0/24" ];
-    #       persistentKeepalive = 25;
-    #     }
-    #   ];
-    # };
+
+    wireguard.interfaces.wg-hallpass = {
+      ips = [ "10.23.11.80/24" ];
+      privateKeyFile = config.sops.secrets."wg_privatekey".path;
+
+      peers = [
+        {
+          publicKey = "894D+6bHWTBC3CXPbtn9Nv/hTnk+vOnd0PrshTPMxQo=";
+          presharedKeyFile = config.sops.secrets."wg_psk".path;
+          endpoint = "136.244.101.171:51820";
+          allowedIPs = [ "10.23.11.0/24" ];
+          persistentKeepalive = 25;
+        }
+      ];
+    };
 
     firewall = {
       enable = true;
@@ -439,7 +439,7 @@
       settings = {
         devices = {
           hallpass = {
-            id = "HALLPASS_SYNCTHING_DEVICE_ID";
+            id = "C4JN6DN-4PSNYVR-W42VBAN-TZMVJ7A-3BLC7VX-WPO7UIL-G4YZGPU-4JERRAA";
             addresses = [
               "tcp://10.23.11.1:22000"
               "quic://10.23.11.1:22000"
@@ -460,21 +460,29 @@
           Documents = {
             id = "Documents";
             path = "/home/bittermang/Documents";
-            devices = [ "Nintendo64" ];
+            devices = [
+              "Nintendo64"
+              "hallpass"
+            ];
+            type = "sendreceive";
+            versioning = {
+              type = "simple";
+              params.keep = "5";
+            };
           };
         };
 
         options = {
           globalAnnounceEnabled = true;
           globalAnnounceServers = [
-            "https://10.23.11.1:8443/?id=DISCOVERY_SERVER_ID"
+            "https://10.23.11.1:8443/?id=5HGZLLW-G57L5ML-MHFXSQS-X42CWXH-U7MEXVO-AQKSJYJ-AE2JZML-NSWINAV"
           ];
           localAnnounceEnabled = false;
           natEnabled = false;
           relaysEnabled = true;
           listenAddresses = [
             "default"
-            "relay://10.23.11.1:22067/?id=RELAY_SERVER_ID"
+            "relay://10.23.11.1:22067/?id=3A23ZPS-NK2CKB3-VI3RVI4-AAOEO3F-DMNLSA4-OYT6HR4-QRX6V7R-MFPBIQY"
           ];
         };
       };

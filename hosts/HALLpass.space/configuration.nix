@@ -212,13 +212,14 @@ in
     ];
     allowedUDPPorts = [ wgPort ];
 
-    # Syncthing infra should only be reachable over WireGuard.
+    # Syncthing infra (and its GUI) should only be reachable over WireGuard.
     interfaces.${wgIf} = {
       allowedTCPPorts = [
         22000
         22067
         22070
         8443
+        8384
       ];
       allowedUDPPorts = [ 22000 ];
     };
@@ -271,7 +272,7 @@ in
 
   services.syncthing = {
     enable = true;
-    guiAddress = "127.0.0.1:8384";
+    guiAddress = "10.23.11.1:8384"; # WireGuard interface only — never bind 0.0.0.0 here
     guiPasswordFile = guiPassFile;
     dataDir = "/var/lib/syncthing";
     configDir = "/var/lib/syncthing/config";
@@ -280,7 +281,29 @@ in
     overrideDevices = false;
 
     settings = {
-      folders = { };
+      devices = {
+        desktop = {
+          id = "LOT5SSD-K6IIODI-O5JFTOZ-DQLQJNB-ZCKZK6X-XTHBKI3-QDBKMJK-2U55FQS";
+          addresses = [
+            "tcp://10.23.11.80:22000"
+            "quic://10.23.11.80:22000"
+          ];
+        };
+      };
+
+      folders = {
+        Documents = {
+          id = "Documents";
+          path = "/home/matt/Documents";
+          devices = [ "desktop" ];
+          type = "sendreceive";
+          versioning = {
+            type = "simple";
+            params.keep = "5";
+          };
+        };
+      };
+
       options = {
         globalAnnounceEnabled = false;
         localAnnounceEnabled = false;
@@ -333,6 +356,11 @@ in
     "d  /home/matt/.ssh               0700 matt users -"
     "L+ /home/matt/.ssh/config        -    -    -     - ${sshConfig}"
     "L+ /home/matt/.gitconfig         -    -    -     - ${gitConfig}"
+    # /home/matt defaults to 0700, which blocks the "syncthing" user from even
+    # traversing into it — grant search-only access without exposing directory listing.
+    "d  /home/matt                    0711 matt users -"
+    # Syncthing (runs as the dedicated "syncthing" user) needs group access to write here
+    "d  /home/matt/Documents          0775 matt syncthing -"
   ];
 
   # hgweb serves all repos under /srv/hg/repos/ on loopback.

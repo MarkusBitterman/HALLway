@@ -8,7 +8,7 @@ HALLpass.space configuration exists but has never been deployed. Placeholder val
 - [ ] Provision VPS and run `nixos-install --flake .#HALLpass.space`
 - [ ] Get VPS SSH host key and add to `.sops.yaml` as `hallpass` recipient:
   ```bash
-  ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
+  ssh-keyscan -p 2222 hallpass.space | grep ed25519 | ssh-to-age
   # Add to .sops.yaml under keys, uncomment in creation_rules, then:
   sops updatekeys hosts/HALLpass.space/secrets.yaml
   ```

@@ -25,7 +25,7 @@
 **Already deployed?** Rebuild after config changes from 2600AD:
 
 ```bash
-sudo nixos-rebuild switch \
+nixos-rebuild switch \
   --flake .#HALLpass.space \
   --target-host matt@hallpass.space \
   --elevate=sudo \
@@ -86,7 +86,7 @@ HALLpass.space is a small VPS (25GB class) that provides central infrastructure 
 Build and deploy from 2600AD — the workstation handles all compilation, the VPS only receives and activates the pre-built closure:
 
 ```bash
-sudo nixos-rebuild switch \
+nixos-rebuild switch \
   --flake .#HALLpass.space \
   --target-host matt@hallpass.space \
   --elevate=sudo \
@@ -103,7 +103,7 @@ sudo nixos-rebuild switch \
 
 1. **Add VPS host key to sops**:
    ```bash
-   ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
+   ssh-keyscan -p 2222 hallpass.space | grep ed25519 | ssh-to-age
    # Add to .sops.yaml as &host_hallpass, uncomment in creation_rules
    nix develop
    sops updatekeys hosts/HALLpass.space/secrets.yaml
@@ -159,7 +159,7 @@ nix develop
 sops hosts/HALLpass.space/secrets.yaml
 ```
 
-> **Note**: These secrets are currently encrypted for the admin key only. After first VPS boot, obtain the host SSH key with `ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age`, add it to `.sops.yaml`, and rekey with `sops updatekeys hosts/HALLpass.space/secrets.yaml`.
+> **Note**: These secrets are already rekeyed for both the admin key and the VPS host key. To rotate after a reinstall, get the new host key with `ssh-keyscan -p 2222 hallpass.space | grep ed25519 | ssh-to-age`, add it to `.sops.yaml`, and rekey with `sops updatekeys hosts/HALLpass.space/secrets.yaml`.
 
 ## Placeholder Values
 
@@ -217,7 +217,7 @@ This host uses a **DNS-01 ACME challenge** rather than HTTP-01:
 **1. Get the VPS SSH host key (for sops rekey)**
 
 ```bash
-ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
+ssh-keyscan -p 2222 hallpass.space | grep ed25519 | ssh-to-age
 # → age1xxxx...
 ```
 
@@ -261,7 +261,7 @@ git push origin main
 From 2600AD (builds locally, no VPS resources consumed):
 
 ```bash
-sudo nixos-rebuild switch \
+nixos-rebuild switch \
   --flake .#HALLpass.space \
   --target-host matt@hallpass.space \
   --elevate=sudo \
@@ -283,7 +283,7 @@ On first activation:
 **Add VPS to sops (if not done in pre-flight)**
 
 ```bash
-ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
+ssh-keyscan -p 2222 hallpass.space | grep ed25519 | ssh-to-age
 # Add to .sops.yaml, update creation_rules
 sops updatekeys hosts/HALLpass.space/secrets.yaml
 ```
@@ -336,7 +336,7 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) in the repository root for:
 
 | Port | Protocol | Service |
 |------|----------|---------|
-| 22 | TCP | SSH |
+| 2222 | TCP | SSH |
 | 80 | TCP | nginx (HTTP redirect to HTTPS) |
 | 443 | TCP | nginx HTTPS |
 | 51820 | UDP | WireGuard |

@@ -364,6 +364,7 @@
       };
       "hallpass hallpass.space" = {
         HostName = "136.244.101.171";
+        Port = 2222;
         User = "matt";
         IdentityFile = osConfig.sops.secrets."ssh_key_hallpass".path;
         IdentitiesOnly = "yes";

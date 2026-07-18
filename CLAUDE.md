@@ -10,7 +10,7 @@ nix flake check          # Validate flake syntax — primary test command (Ctrl+
 nix fmt                  # Format all .nix files with nixfmt (RFC 166) — also auto-runs per-file via PostToolUse hook
 nix build .#nixosConfigurations.2600AD.config.system.build.toplevel  # Build without activating
 sudo nixos-rebuild switch --flake .#2600AD          # Build and activate on 2600AD
-sudo nixos-rebuild switch --flake .#HALLpass.space --target-host matt@hallpass.space --elevate=sudo --ask-elevate-password  # Build locally on 2600AD, deploy to VPS
+nixos-rebuild switch --flake .#HALLpass.space --target-host matt@hallpass.space --elevate=sudo --ask-elevate-password  # Build locally on 2600AD, deploy to VPS (no local sudo — it breaks SSH key resolution)
 sops hosts/2600AD/secrets.yaml                      # Edit encrypted secrets (decrypt/edit/re-encrypt)
 sops updatekeys hosts/2600AD/secrets.yaml           # Rekey after adding recipients to .sops.yaml
 nix flake update                                    # Update all inputs to latest
@@ -129,7 +129,7 @@ Secrets are referenced in NixOS config via `config.sops.secrets."<name>".path`, 
 
 **Runtime decryption**: Uses the SSH host key (`/etc/ssh/ssh_host_ed25519_key`) converted to age format.
 
-**Current gap**: HALLpass.space secrets are encrypted for the admin key only — the VPS host key is not yet known. After first VPS boot: get host key with `ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age`, add to `.sops.yaml`, then run `sops updatekeys hosts/HALLpass.space/secrets.yaml`.
+**HALLpass.space host key**: Already rekeyed — `.sops.yaml` includes `&host_hallpass` and `hosts/HALLpass.space/secrets.yaml` is encrypted for both admin and host keys. To rotate after a reinstall: `ssh-keyscan -p 2222 hallpass.space | grep ed25519 | ssh-to-age` (sshd listens on 2222, not 22), add to `.sops.yaml`, then run `sops updatekeys hosts/HALLpass.space/secrets.yaml`.
 
 ### Version Control
 Currently Git with GitHub as origin. **Plan**: migrate primary VCS to Mercurial (Hg), self-hosted at `hg.hallpass.space` (once HALLpass.space is deployed). GitHub will become a read-only mirror. Copilot has been replaced by Claude Code.

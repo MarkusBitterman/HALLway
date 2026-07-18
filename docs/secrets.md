@@ -307,7 +307,7 @@ Then pull on the remote host.
 #    (host key not known yet)
 
 # 2. After first boot, get host key:
-ssh-keyscan hallpass.space | grep ed25519 | ssh-to-age
+ssh-keyscan -p 2222 hallpass.space | grep ed25519 | ssh-to-age
 
 # 3. Add to .sops.yaml, uncomment in creation_rules
 
